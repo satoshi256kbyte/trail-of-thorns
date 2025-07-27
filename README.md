@@ -72,6 +72,34 @@ npm run format:check
 npm run type-check
 ```
 
+### リリース管理
+
+```bash
+# セマンティックバージョニングでリリース
+npm run release
+
+# 特定バージョンでリリース
+npm run release -- --release-as minor
+```
+
+## Git規約
+
+### コミットメッセージ
+
+このプロジェクトでは[Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/)に従ってコミットメッセージを記述してください。
+
+```bash
+# 基本形式
+<type>[optional scope]: <description>
+
+# 例
+feat: プレイヤーキャラクターの移動システムを追加
+fix(battle): ターン制戦闘でのダメージ計算バグを修正
+docs: READMEにセットアップ手順を追加
+```
+
+詳細は `.kiro/steering/git-conventions.md` を参照してください。
+
 ## プロジェクト構成
 
 ```text
@@ -105,4 +133,3 @@ npm run type-check
 ## ライセンス
 
 MIT License
-# trail-of-thorns
