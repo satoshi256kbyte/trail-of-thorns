@@ -1,12 +1,19 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  roots: ['<rootDir>/src', '<rootDir>/tests'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  roots: ['<rootDir>/src', '<rootDir>/game', '<rootDir>/tests'],
   testMatch: ['**/__tests__/**/*.+(ts|tsx|js)', '**/*.(test|spec).+(ts|tsx|js)'],
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
   },
-  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/main.ts'],
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    'game/src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!game/src/**/*.d.ts',
+    '!src/main.ts',
+  ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
@@ -17,7 +24,7 @@ module.exports = {
       statements: 90,
     },
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
 };

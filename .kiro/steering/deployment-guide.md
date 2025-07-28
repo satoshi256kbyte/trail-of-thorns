@@ -102,7 +102,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-      
+
       - run: npm ci
       - run: npm run test
       - run: npm run build
@@ -111,30 +111,30 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
           cache: 'npm'
-      
+
       - run: npm ci
       - run: npm run build
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-1
-      
+
       - name: Deploy CDK
         run: npm run cdk:deploy
-      
+
       - name: Upload to S3
         run: aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
-      
+
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
 ```
@@ -155,18 +155,12 @@ jobs:
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject"
-      ],
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
       "Resource": "arn:aws:s3:::phaser-rpg-bucket/*"
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "cloudfront:CreateInvalidation"
-      ],
+      "Action": ["cloudfront:CreateInvalidation"],
       "Resource": "*"
     }
   ]
@@ -187,8 +181,15 @@ const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'Securi
   securityHeadersBehavior: {
     contentTypeOptions: { override: true },
     frameOptions: { frameOption: cloudfront.FrameOptions.DENY, override: true },
-    referrerPolicy: { referrerPolicy: cloudfront.ReferrerPolicyHeaderValue.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true },
-    strictTransportSecurity: { accessControlMaxAge: Duration.seconds(31536000), includeSubdomains: true, override: true },
+    referrerPolicy: {
+      referrerPolicy: cloudfront.ReferrerPolicyHeaderValue.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+      override: true,
+    },
+    strictTransportSecurity: {
+      accessControlMaxAge: Duration.seconds(31536000),
+      includeSubdomains: true,
+      override: true,
+    },
   },
 });
 ```
@@ -244,17 +245,21 @@ const budget = new budgets.CfnBudget(this, 'MonthlyBudget', {
     timeUnit: 'MONTHLY',
     budgetType: 'COST',
   },
-  notificationsWithSubscribers: [{
-    notification: {
-      notificationType: 'ACTUAL',
-      comparisonOperator: 'GREATER_THAN',
-      threshold: 80,
+  notificationsWithSubscribers: [
+    {
+      notification: {
+        notificationType: 'ACTUAL',
+        comparisonOperator: 'GREATER_THAN',
+        threshold: 80,
+      },
+      subscribers: [
+        {
+          subscriptionType: 'EMAIL',
+          address: 'admin@example.com',
+        },
+      ],
     },
-    subscribers: [{
-      subscriptionType: 'EMAIL',
-      address: 'admin@example.com',
-    }],
-  }],
+  ],
 });
 ```
 

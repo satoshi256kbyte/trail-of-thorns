@@ -1,47 +1,42 @@
 import * as Phaser from 'phaser';
+import { GameConfig } from '../game/src/config/GameConfig';
+import { HelloWorldScene } from '../game/src/scenes/HelloWorldScene';
 
-class MainScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'MainScene' });
-    }
+// GameConfigクラスのインスタンスを作成
+const gameConfig = new GameConfig();
 
-    preload(): void {
-        // アセットの読み込み処理
-    }
+// 設定の検証を実行
+if (!gameConfig.validateConfig()) {
+    console.error('Game configuration validation failed');
+    throw new Error('Invalid game configuration');
+}
 
-    create(): void {
-        // ゲームオブジェクトの初期化
-        const text = this.add.text(960, 540, 'Phaser3 Simulation RPG', {
-            fontSize: '64px',
-            color: '#ffffff',
-        });
-        text.setOrigin(0.5);
-    }
+// Phaser設定を取得
+const config: Phaser.Types.Core.GameConfig = gameConfig.getConfig();
 
-    update(): void {
-        // ゲームループ処理
+// シーン配列にHelloWorldSceneを登録
+config.scene = [HelloWorldScene];
+
+// デバッグ用の設定情報をコンソールに出力
+if (process.env.NODE_ENV === 'development') {
+    gameConfig.logConfig();
+    console.log('Development mode: Debug information enabled');
+}
+
+// ゲーム開始
+const game = new Phaser.Game(config);
+
+// デバッグ用のグローバルゲームオブジェクトを追加
+declare global {
+    interface Window {
+        game: Phaser.Game;
+        gameConfig: GameConfig;
     }
 }
 
-const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.AUTO,
-    width: 1920,
-    height: 1080,
-    parent: 'game-container',
-    backgroundColor: '#2c3e50',
-    scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-    },
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { x: 0, y: 0 },
-            debug: false,
-        },
-    },
-    scene: MainScene,
-};
+// グローバルオブジェクトとして公開（デバッグ用）
+window.game = game;
+window.gameConfig = gameConfig;
 
-// ゲーム開始
-new Phaser.Game(config);
+console.log('Game initialized successfully');
+console.log('Global objects available: window.game, window.gameConfig');

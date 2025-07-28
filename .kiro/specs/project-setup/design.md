@@ -48,7 +48,7 @@ export class GameConfig {
   static readonly GAME_WIDTH = 1920;
   static readonly GAME_HEIGHT = 1080;
   static readonly BACKGROUND_COLOR = '#2c3e50';
-  
+
   static getConfig(): Phaser.Types.Core.GameConfig {
     return {
       type: Phaser.AUTO,
@@ -78,28 +78,28 @@ export class GameConfig {
 ```typescript
 export class HelloWorldScene extends Phaser.Scene {
   private helloText?: Phaser.GameObjects.Text;
-  
+
   constructor() {
     super({ key: 'HelloWorldScene' });
   }
-  
+
   preload(): void {
     // 将来的なアセット読み込み用
   }
-  
+
   create(): void {
     this.createHelloWorldText();
     this.setupBackground();
   }
-  
+
   update(): void {
     // ゲームループ処理（現在は空）
   }
-  
+
   private createHelloWorldText(): void {
     // Hello Worldテキストの作成
   }
-  
+
   private setupBackground(): void {
     // 背景の設定
   }
@@ -142,11 +142,11 @@ interface IGameConfig {
 ```typescript
 abstract class BaseScene extends Phaser.Scene {
   protected abstract sceneKey: string;
-  
+
   constructor(key: string) {
     super({ key });
   }
-  
+
   abstract preload(): void;
   abstract create(): void;
   abstract update(): void;
@@ -165,7 +165,7 @@ abstract class BaseScene extends Phaser.Scene {
 
 ```typescript
 // グローバルエラーハンドラー
-window.addEventListener('error', (event) => {
+window.addEventListener('error', event => {
   console.error('Game Error:', event.error);
   // 将来的にはエラー報告システムに送信
 });
@@ -195,15 +195,15 @@ if (process.env.NODE_ENV === 'development') {
 // HelloWorldScene.test.ts
 describe('HelloWorldScene', () => {
   let scene: HelloWorldScene;
-  
+
   beforeEach(() => {
     scene = new HelloWorldScene();
   });
-  
+
   test('should create scene with correct key', () => {
     expect(scene.scene.key).toBe('HelloWorldScene');
   });
-  
+
   test('should have required methods', () => {
     expect(typeof scene.preload).toBe('function');
     expect(typeof scene.create).toBe('function');
@@ -219,7 +219,7 @@ describe('HelloWorldScene', () => {
 describe('GameConfig', () => {
   test('should return valid Phaser config', () => {
     const config = GameConfig.getConfig();
-    
+
     expect(config.width).toBe(1920);
     expect(config.height).toBe(1080);
     expect(config.backgroundColor).toBe('#2c3e50');

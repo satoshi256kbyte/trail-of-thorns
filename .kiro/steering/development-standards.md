@@ -13,27 +13,27 @@
 
 ```typescript
 // インポート順序
-import * as Phaser from 'phaser';           // 外部ライブラリ
-import { GameConfig } from '../config';     // 内部モジュール
-import { Player } from './Player';          // 同階層
+import * as Phaser from 'phaser'; // 外部ライブラリ
+import { GameConfig } from '../config'; // 内部モジュール
+import { Player } from './Player'; // 同階層
 
 // クラス定義
 export class GameScene extends Phaser.Scene {
   // プロパティ
   private player: Player;
-  
+
   // コンストラクタ
   constructor() {
     super({ key: 'GameScene' });
   }
-  
+
   // Phaserライフサイクルメソッド
-  preload(): void { }
-  create(): void { }
-  update(): void { }
-  
+  preload(): void {}
+  create(): void {}
+  update(): void {}
+
   // プライベートメソッド
-  private setupPlayer(): void { }
+  private setupPlayer(): void {}
 }
 ```
 

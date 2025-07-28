@@ -5,7 +5,7 @@
     "node": true,
     "jest": true
   },
-  "extends": ["eslint:recommended", "@typescript-eslint/recommended", "prettier"],
+  "extends": ["eslint:recommended", "prettier"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",
@@ -16,7 +16,8 @@
     "prettier/prettier": "error",
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/explicit-function-return-type": "warn"
+    "@typescript-eslint/explicit-function-return-type": "warn",
+    "no-unused-vars": "off"
   },
   "ignorePatterns": ["dist/", "node_modules/", "coverage/"]
 }

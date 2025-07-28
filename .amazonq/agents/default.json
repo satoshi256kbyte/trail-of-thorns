@@ -5,43 +5,32 @@
   "mcpServers": {
     "awslabs.core-mcp-server": {
       "command": "uvx",
-      "args": [
-        "awslabs.core-mcp-server@latest"
-      ],
+      "args": ["awslabs.core-mcp-server@latest"],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       }
     },
     "awslabs.aws-documentation-mcp-server": {
       "command": "uvx",
-      "args": [
-        "awslabs.aws-documentation-mcp-server@latest"
-      ],
+      "args": ["awslabs.aws-documentation-mcp-server@latest"],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       }
     },
     "awslabs.cfn-mcp-server": {
       "command": "uvx",
-      "args": [
-        "awslabs.cfn-mcp-server@latest"
-      ]
+      "args": ["awslabs.cfn-mcp-server@latest"]
     },
     "awslabs.cdk-mcp-server": {
       "command": "uvx",
-      "args": [
-        "awslabs.cdk-mcp-server@latest"
-      ],
+      "args": ["awslabs.cdk-mcp-server@latest"],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR"
       }
     },
     "context7": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ]
+      "args": ["-y", "@upstash/context7-mcp"]
     },
     "phaser-mcp-server": {
       "command": "docker",
@@ -72,13 +61,7 @@
     "fileSearch",
     "executeBash"
   ],
-  "allowedTools": [
-    "fsRead",
-    "fsWrite",
-    "fsReplace",
-    "listDirectory",
-    "fileSearch"
-  ],
+  "allowedTools": ["fsRead", "fsWrite", "fsReplace", "listDirectory", "fileSearch"],
   "toolsSettings": {
     "execute_bash": {
       "alwaysAllow": [
@@ -95,10 +78,7 @@
       ]
     }
   },
-  "includedFiles": [
-    "AmazonQ.md",
-    "README.md",
-    ".amazonq/rules/**/*.md"
-  ],
-  "resources": []
+  "includedFiles": ["AmazonQ.md", "README.md", ".amazonq/rules/**/*.md"],
+  "resources": [],
+  "promptHooks": []
 }

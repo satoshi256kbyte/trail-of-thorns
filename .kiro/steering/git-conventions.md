@@ -153,16 +153,20 @@ feat(game/scenes): バトルシーンの実装
 
 ```markdown
 ## 変更内容
+
 - 何を変更したか
 
 ## 動機・背景
+
 - なぜこの変更が必要か
 
 ## テスト
+
 - [ ] ユニットテスト追加
 - [ ] 手動テスト実施
 
 ## 関連Issue
+
 Closes #123
 ```
 
@@ -177,39 +181,12 @@ Closes #123
     "type-enum": [
       2,
       "always",
-      [
-        "feat",
-        "fix",
-        "docs",
-        "style",
-        "refactor",
-        "perf",
-        "test",
-        "chore",
-        "game",
-        "editor",
-        "data",
-        "server",
-        "infra"
-      ]
+      ["feat", "fix", "docs", "style", "refactor", "perf", "test", "chore", "game", "editor", "data", "server", "infra"]
     ],
     "scope-enum": [
       2,
       "always",
-      [
-        "scenes",
-        "entities",
-        "systems",
-        "ui",
-        "assets",
-        "components",
-        "api",
-        "cdk",
-        "build",
-        "ci",
-        "deps",
-        "config"
-      ]
+      ["scenes", "entities", "systems", "ui", "assets", "components", "api", "cdk", "build", "ci", "deps", "config"]
     ]
   }
 }
