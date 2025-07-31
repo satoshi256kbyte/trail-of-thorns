@@ -26,5 +26,6 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    'phaser3spectorjs': '<rootDir>/tests/mocks/phaser3spectorjs.js',
   },
 };
