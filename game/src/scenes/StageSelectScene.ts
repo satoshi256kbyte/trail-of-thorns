@@ -429,34 +429,159 @@ export class StageSelectScene extends Phaser.Scene {
         try {
             console.log(`Stage selected: ${stage.name} (${stage.id})`);
 
-            // Prepare stage data to pass to gameplay scene
+            // Validate that GameplayScene exists
+            if (!SceneTransition.validateSceneKey(this, 'GameplayScene')) {
+                console.error('GameplayScene not found in scene manager');
+                this.showError('GameplayScene not available. Please check the game configuration.');
+                return;
+            }
+
+            // Show loading state
+            this.showLoadingState('Loading stage...');
+
+            // Prepare comprehensive stage data to pass to gameplay scene
             const stageSceneData: SceneData = {
                 selectedStage: stage,
                 fromScene: 'StageSelectScene',
                 action: 'stageSelected',
                 timestamp: Date.now(),
                 playerData: {
-                    // Placeholder for future player data
+                    // Placeholder for future player data integration
                     level: 1,
-                    experience: 0
+                    experience: 0,
+                    unlockedStages: this.getUnlockedStageIds()
+                },
+                gameplayConfig: {
+                    // Pass gameplay configuration options
+                    debugMode: false,
+                    autoSaveEnabled: true,
+                    difficultyModifier: this.getDifficultyModifier(stage.difficulty)
                 }
             };
 
-            // For now, since we don't have a gameplay scene yet,
-            // we'll transition back to title screen with stage data
-            // In future tasks, this will transition to the actual gameplay scene
-            console.log(`Passing stage data to next scene:`, stageSceneData);
+            console.log(`Transitioning to GameplayScene with stage data:`, stageSceneData);
 
-            // Use smooth transition with stage data
+            // Use smooth transition to GameplayScene with stage data
             await SceneTransition.transitionTo(
                 this,
-                'TitleScene', // Will be changed to 'GameplayScene' in future tasks
-                TransitionType.ZOOM_IN,
+                'GameplayScene',
+                TransitionType.FADE,
                 stageSceneData
             );
+
         } catch (error) {
             console.error('Error handling stage selection:', error);
+            this.showError(`Failed to start stage: ${error.message || error}`);
+        } finally {
+            // Hide loading state
+            this.hideLoadingState();
         }
+    }
+
+    /**
+     * Get list of unlocked stage IDs for player data
+     * @returns Array of unlocked stage IDs
+     */
+    private getUnlockedStageIds(): string[] {
+        return this.stageData
+            .filter(stage => stage.isUnlocked)
+            .map(stage => stage.id);
+    }
+
+    /**
+     * Get difficulty modifier based on stage difficulty
+     * @param difficulty - Stage difficulty level (1-5)
+     * @returns Difficulty modifier value
+     */
+    private getDifficultyModifier(difficulty: number): number {
+        // Convert difficulty level to modifier (1.0 = normal, higher = harder)
+        return 0.5 + (difficulty * 0.25); // Range: 0.75 to 1.75
+    }
+
+    /**
+     * Show loading state during stage transition
+     * @param message - Loading message to display
+     */
+    private showLoadingState(message: string): void {
+        // Disable all interactive elements
+        this.stageButtons.forEach(button => button.setInteractive(false));
+        if (this.backButton) {
+            this.backButton.setInteractive(false);
+        }
+
+        // Show loading overlay
+        const loadingOverlay = this.add.graphics()
+            .fillStyle(0x000000, 0.7)
+            .fillRect(0, 0, GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT)
+            .setDepth(1000);
+
+        const loadingText = this.add.text(
+            GameConfig.GAME_WIDTH / 2,
+            GameConfig.GAME_HEIGHT / 2,
+            message,
+            {
+                fontSize: '24px',
+                color: '#ffffff',
+                fontFamily: 'Arial',
+                align: 'center'
+            }
+        ).setOrigin(0.5).setDepth(1001);
+
+        // Store references for cleanup
+        this.data.set('loadingOverlay', loadingOverlay);
+        this.data.set('loadingText', loadingText);
+    }
+
+    /**
+     * Hide loading state
+     */
+    private hideLoadingState(): void {
+        // Re-enable interactive elements
+        this.stageButtons.forEach(button => button.setInteractive(true));
+        if (this.backButton) {
+            this.backButton.setInteractive(true);
+        }
+
+        // Remove loading overlay
+        const loadingOverlay = this.data.get('loadingOverlay');
+        const loadingText = this.data.get('loadingText');
+
+        if (loadingOverlay) {
+            loadingOverlay.destroy();
+            this.data.remove('loadingOverlay');
+        }
+
+        if (loadingText) {
+            loadingText.destroy();
+            this.data.remove('loadingText');
+        }
+    }
+
+    /**
+     * Show error message to user
+     * @param message - Error message to display
+     */
+    private showError(message: string): void {
+        const errorText = this.add.text(
+            GameConfig.GAME_WIDTH / 2,
+            GameConfig.GAME_HEIGHT / 2 + 100,
+            message,
+            {
+                fontSize: '18px',
+                color: '#ff6666',
+                fontFamily: 'Arial',
+                align: 'center',
+                backgroundColor: '#000000',
+                padding: { x: 20, y: 10 }
+            }
+        ).setOrigin(0.5).setDepth(2000);
+
+        // Auto-remove error after 3 seconds
+        this.time.delayedCall(3000, () => {
+            if (errorText) {
+                errorText.destroy();
+            }
+        });
     }
 
     /**
