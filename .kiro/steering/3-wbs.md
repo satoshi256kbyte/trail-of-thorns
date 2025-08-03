@@ -38,7 +38,7 @@
 - [x] ビルドシステム機能の検証
 - [x] テストカバレッジレポートと検証の追加
 - [x] 最終統合テストと検証
-- [Spec](.kiro/specs/project-setup)
+- [Spec](.kiro/specs/0.1-project-setup)
 
 ### 0.2 タイトル・メニューシステム
 
@@ -52,7 +52,7 @@
 - [x] キーボードナビゲーションサポートを追加
 - [x] ステージと設定用のJSONデータファイルを作成
 - [x] 全シーンをメインゲームフローに統合
-- [Spec](.kiro/specs/title-menu-screen)
+- [Spec](.kiro/specs/0.2-title-menu-screen)
 
 ### 0.3 データ管理・エディターシステム
 
@@ -72,28 +72,8 @@
 - [ ] テストスイートと品質保証の実装
 - [ ] パフォーマンスとユーザーエクスペリエンスの最適化
 - [ ] ドキュメントとデプロイメントセットアップの作成
-- [Spec](.kiro/specs/admin-dashboard)
-- [x] ステージと設定用のJSONデータファイルを作成
+- [Spec](.kiro/specs/0.3-admin-dashboard)
 - [x] 全シーンをメインゲームフローに統合
-
-### 0.3 データ管理・エディターシステム [Spec](.kiro/specs/admin-dashboard)
-
-- [x] 管理ダッシュボードプロジェクト構造とコア依存関係のセットアップ
-- [x] コアデータ型と検証スキーマの実装
-- [x] アプリケーションレイアウトとナビゲーション構造の作成
-- [x] ファイルシステム統合とデータ管理の実装
-- [x] アプリケーション状態管理システムの構築
-- [x] キャラクター管理インターフェースの作成
-- [x] アイテムと装備管理システムの実装
-- [x] ステージ/マップエディターインターフェースの構築
-- [x] リアルタイムプレビューシステムの実装
-- [x] データ関係と依存関係管理の構築
-- [x] 包括的なデータインポートシステムの実装
-- [x] データエクスポートと検証システムの構築
-- [x] 包括的なエラーハンドリングとユーザーフィードバックの追加
-- [ ] テストスイートと品質保証の実装
-- [ ] パフォーマンスとユーザーエクスペリエンスの最適化
-- [ ] ドキュメントとデプロイメントセットアップの作成
 
 ## フェーズ1: ゲーム基盤システム
 
@@ -114,7 +94,7 @@
 - [x] アクションメニューUI
 - [x] 情報パネル（キャラクター詳細表示）
 - [x] ポーズメニュー実装
-- [Spec](.kiro/specs/gameplay-scene-foundation)
+- [Spec](.kiro/specs/1.1-gameplay-scene-foundation)
 - [x] ターン表示UI
 - [x] アクションメニューUI
 - [x] 情報パネル（キャラクター詳細表示）
@@ -136,8 +116,8 @@
 - [x] マップ検証機能（配置可能性チェック）
 - [x] デバッグ用マップ情報表示
 - [x] マップ切り替え機能
-- [Spec](.kiro/specs/gameplay-scene-foundation)
-- [Spec](.kiro/specs/admin-dashboard)
+- [Spec](.kiro/specs/1.1-gameplay-scene-foundation)
+- [Spec](.kiro/specs/0.3-admin-dashboard)
 
 ### 1.3 キャラクター基盤システム
 
@@ -155,7 +135,7 @@
 - [x] キャラクター座標管理
 - [x] 配置可能位置の判定
 - [x] キャラクター同士の重複チェック
-- [Spec](.kiro/specs/gameplay-scene-foundation)
+- [Spec](.kiro/specs/1.1-gameplay-scene-foundation)
 
 ### 1.4 ターン制システム基盤
 
@@ -173,7 +153,7 @@
 - [x] 状態の保存・復元機能
 - [x] 勝利・敗北条件の判定
 - [x] ゲーム進行状況の管理
-- [Spec](.kiro/specs/gameplay-scene-foundation)
+- [Spec](.kiro/specs/1.1-gameplay-scene-foundation)
 
 ## フェーズ2: 移動・戦闘システム
 
@@ -194,7 +174,7 @@
 - [x] 移動中断・キャンセル機能
 - [x] 移動完了後の処理
 - [x] 移動に伴う状態変更
-- [Spec](.kiro/specs/character-movement-system)
+- [Spec](.kiro/specs/2.1-character-movement-system)
 
 - [x] 移動アニメーション実装
 - [x] 段階的移動（1マスずつ）
