@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import {
   NotificationProvider,
@@ -34,7 +34,9 @@ describe('NotificationSystem', () => {
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
     jest.useRealTimers();
   });
 
@@ -101,7 +103,9 @@ describe('NotificationSystem', () => {
     expect(screen.getByText('Success message')).toBeInTheDocument();
 
     // Fast-forward time
-    jest.advanceTimersByTime(6000);
+    act(() => {
+      jest.advanceTimersByTime(6000);
+    });
 
     // Wait for the state update to complete
     await waitFor(

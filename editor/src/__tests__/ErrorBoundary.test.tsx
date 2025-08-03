@@ -13,33 +13,30 @@ const ThrowError: React.FC<{ shouldThrow: boolean }> = ({ shouldThrow }) => {
 
 // Mock window.location.reload
 const mockReload = jest.fn();
-const mockLocation = {
-  reload: mockReload,
-  href: 'http://localhost:3000',
-  origin: 'http://localhost:3000',
-  protocol: 'http:',
-  host: 'localhost:3000',
-  hostname: 'localhost',
-  port: '3000',
-  pathname: '/',
-  search: '',
-  hash: '',
-};
 
-Object.defineProperty(window, 'location', {
-  value: mockLocation,
-  writable: true,
-});
+// Store original location
+const originalLocation = window.location;
+
+// Mock location object
+const mockLocation = {
+  ...originalLocation,
+  reload: mockReload,
+};
 
 describe('ErrorBoundary', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Suppress console.error for these tests
     jest.spyOn(console, 'error').mockImplementation(() => {});
+    // Mock location for each test
+    delete (window as any).location;
+    window.location = mockLocation as any;
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+    // Restore original location
+    window.location = originalLocation;
   });
 
   it('renders children when there is no error', () => {

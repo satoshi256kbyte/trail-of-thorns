@@ -127,7 +127,7 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
                       </ListItemIcon>
                       <ListItemText
                         primary={
-                          <Box component="span">
+                          <span>
                             <Typography
                               variant="body2"
                               component="span"
@@ -142,7 +142,7 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
                             >
                               {error.message}
                             </Typography>
-                          </Box>
+                          </span>
                         }
                         secondary={
                           <Box sx={{ mt: 1 }}>
