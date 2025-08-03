@@ -1,4 +1,4 @@
-# Phaser3 Simulation RPG
+# Trail Of Thorns
 
 Phaser3とTypeScriptを使用した2DシミュレーションRPGプロジェクトです。
 
