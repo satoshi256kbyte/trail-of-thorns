@@ -1,58 +1,58 @@
 {
-    "stages": [
-        {
-            "id": "stage-001",
-            "name": "Forest Path",
-            "description": "A peaceful introduction to the world",
-            "isUnlocked": true,
-            "thumbnail": "assets/thumbnails/forest-path.png",
-            "difficulty": 1,
-            "order": 1
-        },
-        {
-            "id": "stage-002",
-            "name": "Mountain Pass",
-            "description": "Treacherous terrain awaits",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/mountain-pass.png",
-            "difficulty": 2,
-            "order": 2
-        },
-        {
-            "id": "stage-003",
-            "name": "Dark Cave",
-            "description": "Mysterious depths hide ancient secrets",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/dark-cave.png",
-            "difficulty": 3,
-            "order": 3
-        },
-        {
-            "id": "stage-004",
-            "name": "Crystal Lake",
-            "description": "Serene waters with hidden dangers",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/crystal-lake.png",
-            "difficulty": 2,
-            "order": 4
-        },
-        {
-            "id": "stage-005",
-            "name": "Ancient Ruins",
-            "description": "Forgotten civilization's last remnants",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/ancient-ruins.png",
-            "difficulty": 4,
-            "order": 5
-        },
-        {
-            "id": "stage-006",
-            "name": "Dragon's Lair",
-            "description": "The ultimate challenge awaits brave heroes",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/dragons-lair.png",
-            "difficulty": 5,
-            "order": 6
-        }
-    ]
+  "stages": [
+    {
+      "id": "stage-001",
+      "name": "Forest Path",
+      "description": "A peaceful introduction to the world",
+      "isUnlocked": true,
+      "thumbnail": "assets/thumbnails/forest-path.png",
+      "difficulty": 1,
+      "order": 1
+    },
+    {
+      "id": "stage-002",
+      "name": "Mountain Pass",
+      "description": "Treacherous terrain awaits",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/mountain-pass.png",
+      "difficulty": 2,
+      "order": 2
+    },
+    {
+      "id": "stage-003",
+      "name": "Dark Cave",
+      "description": "Mysterious depths hide ancient secrets",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/dark-cave.png",
+      "difficulty": 3,
+      "order": 3
+    },
+    {
+      "id": "stage-004",
+      "name": "Crystal Lake",
+      "description": "Serene waters with hidden dangers",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/crystal-lake.png",
+      "difficulty": 2,
+      "order": 4
+    },
+    {
+      "id": "stage-005",
+      "name": "Ancient Ruins",
+      "description": "Forgotten civilization's last remnants",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/ancient-ruins.png",
+      "difficulty": 4,
+      "order": 5
+    },
+    {
+      "id": "stage-006",
+      "name": "Dragon's Lair",
+      "description": "The ultimate challenge awaits brave heroes",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/dragons-lair.png",
+      "difficulty": 5,
+      "order": 6
+    }
+  ]
 }

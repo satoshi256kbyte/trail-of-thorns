@@ -41,13 +41,13 @@ const ItemList: React.FC<ItemListProps> = ({
 
   const filteredItems = useMemo(() => {
     const itemArray = Object.values(items);
-    
-    return itemArray.filter((item) => {
+
+    return itemArray.filter(item => {
       // Category filter
       if (categoryFilter !== 'all' && item.type !== categoryFilter) {
         return false;
       }
-      
+
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -57,36 +57,57 @@ const ItemList: React.FC<ItemListProps> = ({
           item.tags?.some(tag => tag.toLowerCase().includes(query))
         );
       }
-      
+
       return true;
     });
   }, [items, categoryFilter, searchQuery]);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'common': return '#9e9e9e';
-      case 'uncommon': return '#4caf50';
-      case 'rare': return '#2196f3';
-      case 'epic': return '#9c27b0';
-      case 'legendary': return '#ff9800';
-      default: return '#9e9e9e';
+      case 'common':
+        return '#9e9e9e';
+      case 'uncommon':
+        return '#4caf50';
+      case 'rare':
+        return '#2196f3';
+      case 'epic':
+        return '#9c27b0';
+      case 'legendary':
+        return '#ff9800';
+      default:
+        return '#9e9e9e';
     }
   };
 
   const getItemTypeIcon = (type: ItemType) => {
     switch (type) {
-      case 'weapon': return '⚔️';
-      case 'armor': return '🛡️';
-      case 'consumable': return '🧪';
-      case 'key': return '🗝️';
-      default: return '📦';
+      case 'weapon':
+        return '⚔️';
+      case 'armor':
+        return '🛡️';
+      case 'consumable':
+        return '🧪';
+      case 'key':
+        return '🗝️';
+      default:
+        return '📦';
     }
   };
 
   return (
-    <Paper elevation={1} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Paper
+      elevation={1}
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
           <Typography variant="h6">Items ({filteredItems.length})</Typography>
           <Button
             variant="contained"
@@ -97,25 +118,29 @@ const ItemList: React.FC<ItemListProps> = ({
             New Item
           </Button>
         </Box>
-        
+
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
           <TextField
             fullWidth
             size="small"
             placeholder="Search items..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             InputProps={{
-              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+              startAdornment: (
+                <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+              ),
             }}
           />
-          
+
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>Category</InputLabel>
             <Select
               value={categoryFilter}
               label="Category"
-              onChange={(e) => setCategoryFilter(e.target.value as ItemType | 'all')}
+              onChange={e =>
+                setCategoryFilter(e.target.value as ItemType | 'all')
+              }
             >
               <MenuItem value="all">All</MenuItem>
               <MenuItem value="weapon">Weapons</MenuItem>
@@ -131,13 +156,13 @@ const ItemList: React.FC<ItemListProps> = ({
         {filteredItems.length === 0 ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-              {searchQuery || categoryFilter !== 'all' 
-                ? 'No items match your filters' 
+              {searchQuery || categoryFilter !== 'all'
+                ? 'No items match your filters'
                 : 'No items created yet'}
             </Typography>
           </Box>
         ) : (
-          filteredItems.map((item) => (
+          filteredItems.map(item => (
             <ListItem key={item.id} disablePadding>
               <ListItemButton
                 selected={selectedId === item.id}

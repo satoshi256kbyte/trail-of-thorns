@@ -47,14 +47,17 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
   const errorCount = errors.filter(e => e.severity === 'error').length;
   const warningCount = errors.filter(e => e.severity === 'warning').length;
 
-  const groupedErrors = errors.reduce((acc, error) => {
-    const key = error.path[0] || 'general';
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(error);
-    return acc;
-  }, {} as Record<string, ValidationError[]>);
+  const groupedErrors = errors.reduce(
+    (acc, error) => {
+      const key = error.path[0] || 'general';
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(error);
+      return acc;
+    },
+    {} as Record<string, ValidationError[]>
+  );
 
   return (
     <Paper elevation={2} sx={{ mb: 2 }}>
@@ -90,7 +93,11 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
                     label={sectionErrors.length}
                     size="small"
                     sx={{ ml: 1 }}
-                    color={sectionErrors.some(e => e.severity === 'error') ? 'error' : 'warning'}
+                    color={
+                      sectionErrors.some(e => e.severity === 'error')
+                        ? 'error'
+                        : 'warning'
+                    }
                   />
                 </Typography>
               </AccordionSummary>
@@ -101,7 +108,9 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
                       key={index}
                       sx={{
                         cursor: onFieldClick ? 'pointer' : 'default',
-                        '&:hover': onFieldClick ? { bgcolor: 'action.hover' } : {},
+                        '&:hover': onFieldClick
+                          ? { bgcolor: 'action.hover' }
+                          : {},
                         borderRadius: 1,
                       }}
                       onClick={() => onFieldClick?.(error.field)}
@@ -110,16 +119,27 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
                         {error.severity === 'error' ? (
                           <ErrorIcon color="error" data-testid="ErrorIcon" />
                         ) : (
-                          <WarningIcon color="warning" data-testid="WarningIcon" />
+                          <WarningIcon
+                            color="warning"
+                            data-testid="WarningIcon"
+                          />
                         )}
                       </ListItemIcon>
                       <ListItemText
                         primary={
                           <Box component="span">
-                            <Typography variant="body2" component="span" sx={{ fontWeight: 'medium' }}>
+                            <Typography
+                              variant="body2"
+                              component="span"
+                              sx={{ fontWeight: 'medium' }}
+                            >
                               {error.field}:
                             </Typography>
-                            <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+                            <Typography
+                              variant="body2"
+                              component="span"
+                              sx={{ ml: 1 }}
+                            >
                               {error.message}
                             </Typography>
                           </Box>
@@ -127,12 +147,20 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
                         secondary={
                           <Box sx={{ mt: 1 }}>
                             {error.value !== undefined && (
-                              <Typography variant="caption" display="block" sx={{ fontFamily: 'monospace' }}>
+                              <Typography
+                                variant="caption"
+                                display="block"
+                                sx={{ fontFamily: 'monospace' }}
+                              >
                                 Current value: {JSON.stringify(error.value)}
                               </Typography>
                             )}
                             {error.suggestion && (
-                              <Typography variant="caption" display="block" color="text.secondary">
+                              <Typography
+                                variant="caption"
+                                display="block"
+                                color="text.secondary"
+                              >
                                 💡 {error.suggestion}
                               </Typography>
                             )}

@@ -17,7 +17,11 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { Add as AddIcon, Search as SearchIcon, Map as MapIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Search as SearchIcon,
+  Map as MapIcon,
+} from '@mui/icons-material';
 import { Stage } from '../types';
 
 interface StageListProps {
@@ -37,27 +41,31 @@ const StageList: React.FC<StageListProps> = ({
   searchQuery,
   onSearchChange,
 }) => {
-  const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>(
+    'all'
+  );
 
   const filteredStages = useMemo(() => {
     const stageArray = Object.values(stages);
-    
-    return stageArray.filter((stage) => {
+
+    return stageArray.filter(stage => {
       // Difficulty filter
       if (difficultyFilter !== 'all' && stage.difficulty !== difficultyFilter) {
         return false;
       }
-      
+
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
           stage.name.toLowerCase().includes(query) ||
           stage.description.toLowerCase().includes(query) ||
-          stage.objectives.some(obj => obj.description.toLowerCase().includes(query))
+          stage.objectives.some(obj =>
+            obj.description.toLowerCase().includes(query)
+          )
         );
       }
-      
+
       return true;
     });
   }, [stages, difficultyFilter, searchQuery]);
@@ -79,9 +87,19 @@ const StageList: React.FC<StageListProps> = ({
   };
 
   return (
-    <Paper elevation={1} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Paper
+      elevation={1}
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
           <Typography variant="h6">Stages ({filteredStages.length})</Typography>
           <Button
             variant="contained"
@@ -92,25 +110,29 @@ const StageList: React.FC<StageListProps> = ({
             New Stage
           </Button>
         </Box>
-        
+
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
           <TextField
             fullWidth
             size="small"
             placeholder="Search stages..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             InputProps={{
-              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+              startAdornment: (
+                <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+              ),
             }}
           />
-          
+
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>Difficulty</InputLabel>
             <Select
               value={difficultyFilter}
               label="Difficulty"
-              onChange={(e) => setDifficultyFilter(e.target.value as number | 'all')}
+              onChange={e =>
+                setDifficultyFilter(e.target.value as number | 'all')
+              }
             >
               <MenuItem value="all">All</MenuItem>
               <MenuItem value={1}>Easy (1-2)</MenuItem>
@@ -127,13 +149,13 @@ const StageList: React.FC<StageListProps> = ({
         {filteredStages.length === 0 ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-              {searchQuery || difficultyFilter !== 'all' 
-                ? 'No stages match your filters' 
+              {searchQuery || difficultyFilter !== 'all'
+                ? 'No stages match your filters'
                 : 'No stages created yet'}
             </Typography>
           </Box>
         ) : (
-          filteredStages.map((stage) => (
+          filteredStages.map(stage => (
             <ListItem key={stage.id} disablePadding>
               <ListItemButton
                 selected={selectedId === stage.id}

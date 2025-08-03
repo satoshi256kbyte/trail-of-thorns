@@ -38,21 +38,35 @@ const TileSelector: React.FC<TileSelectorProps> = ({
     { id: 'sand', name: 'Sand', type: 'sand', passable: true, icon: '🏖️' },
     { id: 'wall', name: 'Wall', type: 'wall', passable: false, icon: '🧱' },
     { id: 'door', name: 'Door', type: 'door', passable: true, icon: '🚪' },
-    { id: 'chest', name: 'Chest Tile', type: 'chest', passable: true, icon: '📦' },
+    {
+      id: 'chest',
+      name: 'Chest Tile',
+      type: 'chest',
+      passable: true,
+      icon: '📦',
+    },
   ];
 
   const tiles = availableAssets.length > 0 ? availableAssets : defaultTiles;
 
   const getTileColor = (type: string): string => {
     switch (type) {
-      case 'grass': return '#4caf50';
-      case 'stone': return '#9e9e9e';
-      case 'water': return '#2196f3';
-      case 'sand': return '#ffeb3b';
-      case 'wall': return '#424242';
-      case 'door': return '#8d6e63';
-      case 'chest': return '#ff9800';
-      default: return '#e0e0e0';
+      case 'grass':
+        return '#4caf50';
+      case 'stone':
+        return '#9e9e9e';
+      case 'water':
+        return '#2196f3';
+      case 'sand':
+        return '#ffeb3b';
+      case 'wall':
+        return '#424242';
+      case 'door':
+        return '#8d6e63';
+      case 'chest':
+        return '#ff9800';
+      default:
+        return '#e0e0e0';
     }
   };
 
@@ -61,12 +75,16 @@ const TileSelector: React.FC<TileSelectorProps> = ({
       <Typography variant="subtitle2" gutterBottom>
         Tile Palette
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ mb: 2, display: 'block' }}
+      >
         Click a tile to select it, then click on the map to place
       </Typography>
 
       <List sx={{ p: 0 }}>
-        {tiles.map((tile) => (
+        {tiles.map(tile => (
           <ListItem key={tile.id} disablePadding>
             <ListItemButton
               selected={selectedTile?.id === tile.id}

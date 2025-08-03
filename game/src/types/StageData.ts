@@ -3,26 +3,26 @@
  * Represents a single stage with all its properties
  */
 export interface StageData {
-    /** Unique identifier for the stage */
-    id: string;
+  /** Unique identifier for the stage */
+  id: string;
 
-    /** Display name of the stage */
-    name: string;
+  /** Display name of the stage */
+  name: string;
 
-    /** Brief description of the stage */
-    description: string;
+  /** Brief description of the stage */
+  description: string;
 
-    /** Whether the stage is available for selection */
-    isUnlocked: boolean;
+  /** Whether the stage is available for selection */
+  isUnlocked: boolean;
 
-    /** Path to the stage thumbnail image (optional) */
-    thumbnail?: string;
+  /** Path to the stage thumbnail image (optional) */
+  thumbnail?: string;
 
-    /** Difficulty level (1-5) */
-    difficulty: number;
+  /** Difficulty level (1-5) */
+  difficulty: number;
 
-    /** Display order in the stage selection grid */
-    order: number;
+  /** Display order in the stage selection grid */
+  order: number;
 }
 
 /**
@@ -30,8 +30,8 @@ export interface StageData {
  * Contains all stages loaded from JSON
  */
 export interface StagesConfig {
-    /** Array of all available stages */
-    stages: StageData[];
+  /** Array of all available stages */
+  stages: StageData[];
 }
 
 /**
@@ -39,12 +39,12 @@ export interface StagesConfig {
  * Used for error handling and validation
  */
 export interface StageLoadResult {
-    /** Whether the loading was successful */
-    success: boolean;
+  /** Whether the loading was successful */
+  success: boolean;
 
-    /** Loaded stages data (if successful) */
-    stages?: StageData[];
+  /** Loaded stages data (if successful) */
+  stages?: StageData[];
 
-    /** Error message (if failed) */
-    error?: string;
+  /** Error message (if failed) */
+  error?: string;
 }

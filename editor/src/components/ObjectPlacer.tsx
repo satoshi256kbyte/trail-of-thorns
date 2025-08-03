@@ -44,12 +44,16 @@ const ObjectPlacer: React.FC<ObjectPlacerProps> = ({
       <Typography variant="subtitle2" gutterBottom>
         Object Types
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ mb: 2, display: 'block' }}
+      >
         Select an object type, then click on the map to place
       </Typography>
 
       <List sx={{ p: 0 }}>
-        {objectTypes.map((objType) => (
+        {objectTypes.map(objType => (
           <ListItem key={objType.type} disablePadding>
             <ListItemButton
               selected={selectedObject === objType.type}
@@ -69,10 +73,7 @@ const ObjectPlacer: React.FC<ObjectPlacerProps> = ({
                   {objType.icon}
                 </Avatar>
               </ListItemAvatar>
-              <ListItemText
-                primary={objType.name}
-                secondary={objType.type}
-              />
+              <ListItemText primary={objType.name} secondary={objType.type} />
             </ListItemButton>
           </ListItem>
         ))}
@@ -119,7 +120,7 @@ const ObjectPlacer: React.FC<ObjectPlacerProps> = ({
         </Typography>
       ) : (
         <List sx={{ p: 0, maxHeight: 200, overflow: 'auto' }}>
-          {objects.map((obj) => {
+          {objects.map(obj => {
             const objType = objectTypes.find(t => t.type === obj.type);
             return (
               <ListItem

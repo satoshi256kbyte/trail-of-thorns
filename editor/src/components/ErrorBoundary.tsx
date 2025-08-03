@@ -8,7 +8,10 @@ import {
   Paper,
   Stack,
 } from '@mui/material';
-import { Refresh as RefreshIcon, BugReport as BugReportIcon } from '@mui/icons-material';
+import {
+  Refresh as RefreshIcon,
+  BugReport as BugReportIcon,
+} from '@mui/icons-material';
 
 interface Props {
   children: ReactNode;
@@ -85,7 +88,9 @@ class ErrorBoundary extends Component<Props, State> {
           <Paper elevation={3} sx={{ p: 4, maxWidth: 600 }}>
             <Stack spacing={3}>
               <Box sx={{ textAlign: 'center' }}>
-                <BugReportIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
+                <BugReportIcon
+                  sx={{ fontSize: 64, color: 'error.main', mb: 2 }}
+                />
                 <Typography variant="h4" gutterBottom>
                   Something went wrong
                 </Typography>
@@ -119,22 +124,24 @@ class ErrorBoundary extends Component<Props, State> {
                 >
                   Reload Page
                 </Button>
-                <Button
-                  variant="outlined"
-                  onClick={this.handleReset}
-                >
+                <Button variant="outlined" onClick={this.handleReset}>
                   Try Again
                 </Button>
               </Stack>
 
-              {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
-                <Alert severity="info">
-                  <AlertTitle>Development Info</AlertTitle>
-                  <Typography variant="body2" component="pre" sx={{ fontSize: '0.75rem' }}>
-                    {this.state.error?.stack}
-                  </Typography>
-                </Alert>
-              )}
+              {process.env.NODE_ENV === 'development' &&
+                this.state.errorInfo && (
+                  <Alert severity="info">
+                    <AlertTitle>Development Info</AlertTitle>
+                    <Typography
+                      variant="body2"
+                      component="pre"
+                      sx={{ fontSize: '0.75rem' }}
+                    >
+                      {this.state.error?.stack}
+                    </Typography>
+                  </Alert>
+                )}
             </Stack>
           </Paper>
         </Box>

@@ -11,12 +11,16 @@ import {
   Error as ErrorIcon,
   CheckCircle as SuccessIcon,
   Warning as WarningIcon,
-
 } from '@mui/icons-material';
 import ErrorBoundary from './components/ErrorBoundary';
-import { NotificationProvider, useNotification } from './components/NotificationSystem';
+import {
+  NotificationProvider,
+  useNotification,
+} from './components/NotificationSystem';
 import LoadingOverlay from './components/LoadingOverlay';
-import ValidationErrorDisplay, { ValidationError } from './components/ValidationErrorDisplay';
+import ValidationErrorDisplay, {
+  ValidationError,
+} from './components/ValidationErrorDisplay';
 import ConfirmationDialog from './components/ConfirmationDialog';
 import HelpTooltip from './components/HelpTooltip';
 import { useLoadingState } from './hooks/useLoadingState';
@@ -25,8 +29,15 @@ import { useErrorHandler } from './hooks/useErrorHandler';
 const AppContent: React.FC = () => {
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const { handleError, handleAsyncError } = useErrorHandler();
-  const { isLoading, message, progress, startLoading, stopLoading, updateProgress } = useLoadingState();
-  
+  const {
+    isLoading,
+    message,
+    progress,
+    startLoading,
+    stopLoading,
+    updateProgress,
+  } = useLoadingState();
+
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     type: 'delete' | 'save' | 'discard' | 'warning' | 'info';
@@ -75,12 +86,12 @@ const AppContent: React.FC = () => {
 
   const handleTestLoading = async () => {
     startLoading('Processing data...');
-    
+
     for (let i = 0; i <= 100; i += 10) {
       await new Promise(resolve => setTimeout(resolve, 200));
       updateProgress(i, `Processing... ${i}%`);
     }
-    
+
     stopLoading();
     showSuccess('Processing completed!');
   };
@@ -104,7 +115,8 @@ const AppContent: React.FC = () => {
       open: true,
       type: 'delete',
       title: 'Delete Character',
-      message: 'Are you sure you want to delete this character? This action cannot be undone.',
+      message:
+        'Are you sure you want to delete this character? This action cannot be undone.',
       onConfirm: () => {
         setConfirmDialog(prev => ({ ...prev, open: false }));
         showSuccess('Character deleted successfully');
@@ -125,20 +137,23 @@ const AppContent: React.FC = () => {
             documentationUrl="https://github.com/your-repo/docs"
           />
         </Box>
-        
+
         <Typography variant="h6" component="h2" gutterBottom>
           2D Simulation RPG Data Editor
         </Typography>
-        
+
         <Typography variant="body1" sx={{ mb: 4 }}>
-          Welcome to the admin dashboard for managing game data. This demo shows the error handling and user feedback system.
+          Welcome to the admin dashboard for managing game data. This demo shows
+          the error handling and user feedback system.
         </Typography>
 
         {/* Validation Errors Demo */}
         <ValidationErrorDisplay
           errors={validationErrors}
           title="Demo Validation Errors"
-          onFieldClick={(field) => showInfo(`Clicked on field: ${field}`, 'Field Navigation')}
+          onFieldClick={field =>
+            showInfo(`Clicked on field: ${field}`, 'Field Navigation')
+          }
         />
 
         {/* Demo Controls */}
@@ -146,7 +161,7 @@ const AppContent: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Error Handling & Feedback Demo
           </Typography>
-          
+
           <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
             <Button
               variant="contained"
@@ -155,7 +170,7 @@ const AppContent: React.FC = () => {
             >
               Test Notifications
             </Button>
-            
+
             <Button
               variant="contained"
               onClick={handleTestLoading}
@@ -163,7 +178,7 @@ const AppContent: React.FC = () => {
             >
               Test Loading
             </Button>
-            
+
             <Button
               variant="outlined"
               color="error"
@@ -172,7 +187,7 @@ const AppContent: React.FC = () => {
             >
               Test Error
             </Button>
-            
+
             <Button
               variant="outlined"
               color="error"
@@ -180,7 +195,7 @@ const AppContent: React.FC = () => {
             >
               Test Async Error
             </Button>
-            
+
             <Button
               variant="outlined"
               color="warning"
@@ -194,8 +209,9 @@ const AppContent: React.FC = () => {
 
         <Paper elevation={1} sx={{ p: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            This demo showcases the comprehensive error handling and user feedback system including:
-            notifications, loading states, validation errors, confirmation dialogs, and help tooltips.
+            This demo showcases the comprehensive error handling and user
+            feedback system including: notifications, loading states, validation
+            errors, confirmation dialogs, and help tooltips.
           </Typography>
         </Paper>
       </Box>

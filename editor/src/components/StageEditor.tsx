@@ -16,7 +16,14 @@ import {
   Divider,
 } from '@mui/material';
 import { Save as SaveIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { Stage, TileData, StageObject, EnemySpawn, Objective, Reward } from '../types';
+import {
+  Stage,
+  TileData,
+  StageObject,
+  EnemySpawn,
+  Objective,
+  Reward,
+} from '../types';
 import MapGrid from './MapGrid';
 import TileSelector from './TileSelector';
 import ObjectPlacer from './ObjectPlacer';
@@ -62,11 +69,13 @@ const StageEditor: React.FC<StageEditorProps> = ({
   availableItems,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const [editMode, setEditMode] = useState<'tiles' | 'objects' | 'enemies'>('tiles');
+  const [editMode, setEditMode] = useState<'tiles' | 'objects' | 'enemies'>(
+    'tiles'
+  );
   const [selectedTile, setSelectedTile] = useState<TileAsset | null>(null);
   const [selectedObject, setSelectedObject] = useState<string | null>(null);
   const [selectedEnemy, setSelectedEnemy] = useState<string | null>(null);
-  
+
   // Form state
   const [formData, setFormData] = useState<Partial<Stage>>(() => ({
     id: stage?.id || '',
@@ -82,43 +91,54 @@ const StageEditor: React.FC<StageEditorProps> = ({
   }));
 
   // Initialize empty tiles grid if needed
-  const initializeTiles = useCallback((width: number, height: number): TileData[][] => {
-    const defaultTile: TileData = {
-      id: 'grass',
-      type: 'grass',
-      passable: true,
-    };
-    
-    return Array(height).fill(null).map(() =>
-      Array(width).fill(null).map(() => ({ ...defaultTile }))
-    );
-  }, []);
+  const initializeTiles = useCallback(
+    (width: number, height: number): TileData[][] => {
+      const defaultTile: TileData = {
+        id: 'grass',
+        type: 'grass',
+        passable: true,
+      };
+
+      return Array(height)
+        .fill(null)
+        .map(() =>
+          Array(width)
+            .fill(null)
+            .map(() => ({ ...defaultTile }))
+        );
+    },
+    []
+  );
 
   // Ensure tiles array matches size
   const tiles = useMemo(() => {
     if (!formData.tiles || formData.tiles.length === 0) {
       return initializeTiles(formData.size!.width, formData.size!.height);
     }
-    
+
     const currentTiles = formData.tiles;
     const { width, height } = formData.size!;
-    
+
     // Resize if needed
     if (currentTiles.length !== height || currentTiles[0]?.length !== width) {
       const newTiles = initializeTiles(width, height);
-      
+
       // Copy existing tiles where possible
       for (let y = 0; y < Math.min(height, currentTiles.length); y++) {
-        for (let x = 0; x < Math.min(width, currentTiles[y]?.length || 0); x++) {
+        for (
+          let x = 0;
+          x < Math.min(width, currentTiles[y]?.length || 0);
+          x++
+        ) {
           if (currentTiles[y] && currentTiles[y][x]) {
             newTiles[y][x] = currentTiles[y][x];
           }
         }
       }
-      
+
       return newTiles;
     }
-    
+
     return currentTiles;
   }, [formData.tiles, formData.size, initializeTiles]);
 
@@ -129,7 +149,7 @@ const StageEditor: React.FC<StageEditorProps> = ({
   const handleSizeChange = (dimension: 'width' | 'height', value: number) => {
     setFormData(prev => ({
       ...prev,
-      size: { ...prev.size!, [dimension]: value }
+      size: { ...prev.size!, [dimension]: value },
     }));
   };
 
@@ -151,7 +171,7 @@ const StageEditor: React.FC<StageEditorProps> = ({
       };
       setFormData(prev => ({
         ...prev,
-        objects: [...(prev.objects || []), newObject]
+        objects: [...(prev.objects || []), newObject],
       }));
     } else if (editMode === 'enemies' && selectedEnemy) {
       const newEnemy: EnemySpawn = {
@@ -161,7 +181,7 @@ const StageEditor: React.FC<StageEditorProps> = ({
       };
       setFormData(prev => ({
         ...prev,
-        enemies: [...(prev.enemies || []), newEnemy]
+        enemies: [...(prev.enemies || []), newEnemy],
       }));
     }
   };
@@ -176,7 +196,7 @@ const StageEditor: React.FC<StageEditorProps> = ({
 
   const handleSave = () => {
     if (!formData.id || !formData.name) return;
-    
+
     const stageData: Stage = {
       id: formData.id,
       name: formData.name,
@@ -189,7 +209,7 @@ const StageEditor: React.FC<StageEditorProps> = ({
       rewards: formData.rewards || [],
       difficulty: formData.difficulty || 1,
     };
-    
+
     onSave(stageData);
   };
 
@@ -213,7 +233,14 @@ const StageEditor: React.FC<StageEditorProps> = ({
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
           <Typography variant="h6">
             {stage ? 'Edit Stage' : 'New Stage'}
           </Typography>
@@ -245,7 +272,7 @@ const StageEditor: React.FC<StageEditorProps> = ({
               fullWidth
               label="Stage ID"
               value={formData.id}
-              onChange={(e) => handleInputChange('id', e.target.value)}
+              onChange={e => handleInputChange('id', e.target.value)}
               disabled={!!stage}
               size="small"
             />
@@ -255,7 +282,7 @@ const StageEditor: React.FC<StageEditorProps> = ({
               fullWidth
               label="Stage Name"
               value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
+              onChange={e => handleInputChange('name', e.target.value)}
               size="small"
             />
           </Grid>
@@ -264,7 +291,7 @@ const StageEditor: React.FC<StageEditorProps> = ({
               fullWidth
               label="Description"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={e => handleInputChange('description', e.target.value)}
               multiline
               rows={2}
               size="small"
@@ -276,7 +303,9 @@ const StageEditor: React.FC<StageEditorProps> = ({
               label="Width"
               type="number"
               value={formData.size?.width || 20}
-              onChange={(e) => handleSizeChange('width', parseInt(e.target.value) || 20)}
+              onChange={e =>
+                handleSizeChange('width', parseInt(e.target.value) || 20)
+              }
               inputProps={{ min: 5, max: 100 }}
               size="small"
             />
@@ -287,7 +316,9 @@ const StageEditor: React.FC<StageEditorProps> = ({
               label="Height"
               type="number"
               value={formData.size?.height || 15}
-              onChange={(e) => handleSizeChange('height', parseInt(e.target.value) || 15)}
+              onChange={e =>
+                handleSizeChange('height', parseInt(e.target.value) || 15)
+              }
               inputProps={{ min: 5, max: 100 }}
               size="small"
             />
@@ -321,13 +352,15 @@ const StageEditor: React.FC<StageEditorProps> = ({
         <TabPanel value={activeTab} index={0}>
           <Box sx={{ display: 'flex', height: '100%' }}>
             {/* Tool Panel */}
-            <Box sx={{ width: 300, borderRight: 1, borderColor: 'divider', p: 2 }}>
+            <Box
+              sx={{ width: 300, borderRight: 1, borderColor: 'divider', p: 2 }}
+            >
               <FormControl fullWidth size="small" sx={{ mb: 2 }}>
                 <InputLabel>Edit Mode</InputLabel>
                 <Select
                   value={editMode}
                   label="Edit Mode"
-                  onChange={(e) => setEditMode(e.target.value as any)}
+                  onChange={e => setEditMode(e.target.value as any)}
                 >
                   <MenuItem value="tiles">Tiles</MenuItem>
                   <MenuItem value="objects">Objects</MenuItem>
@@ -350,7 +383,9 @@ const StageEditor: React.FC<StageEditorProps> = ({
                   selectedObject={selectedObject}
                   onObjectSelect={setSelectedObject}
                   objects={formData.objects || []}
-                  onObjectsChange={(objects) => handleInputChange('objects', objects)}
+                  onObjectsChange={objects =>
+                    handleInputChange('objects', objects)
+                  }
                 />
               )}
 
@@ -360,7 +395,9 @@ const StageEditor: React.FC<StageEditorProps> = ({
                   selectedEnemy={selectedEnemy}
                   onEnemySelect={setSelectedEnemy}
                   enemies={formData.enemies || []}
-                  onEnemiesChange={(enemies) => handleInputChange('enemies', enemies)}
+                  onEnemiesChange={enemies =>
+                    handleInputChange('enemies', enemies)
+                  }
                 />
               )}
             </Box>

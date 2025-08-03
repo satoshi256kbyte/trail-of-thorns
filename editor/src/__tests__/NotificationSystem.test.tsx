@@ -1,7 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { NotificationProvider, useNotification } from '../components/NotificationSystem';
+import {
+  NotificationProvider,
+  useNotification,
+} from '../components/NotificationSystem';
 
 // Test component that uses the notification system
 const TestComponent: React.FC = () => {
@@ -101,9 +104,12 @@ describe('NotificationSystem', () => {
     jest.advanceTimersByTime(6000);
 
     // Wait for the state update to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Success message')).not.toBeInTheDocument();
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Success message')).not.toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
   });
 
   it('allows manual dismissal of notifications', () => {
@@ -139,7 +145,9 @@ describe('NotificationSystem', () => {
 
   it('throws error when used outside provider', () => {
     // Suppress console.error for this test
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     expect(() => {
       render(<TestComponent />);

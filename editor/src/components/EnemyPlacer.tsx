@@ -42,7 +42,8 @@ const EnemyPlacer: React.FC<EnemyPlacerProps> = ({
     'bandit',
   ];
 
-  const enemyList = availableEnemies.length > 0 ? availableEnemies : defaultEnemies;
+  const enemyList =
+    availableEnemies.length > 0 ? availableEnemies : defaultEnemies;
 
   const getEnemyIcon = (enemyId: string): string => {
     const icons: Record<string, string> = {
@@ -79,7 +80,9 @@ const EnemyPlacer: React.FC<EnemyPlacerProps> = ({
 
   const handleEnemyLevelChange = (enemyIndex: number, level: number) => {
     const updatedEnemies = enemies.map((enemy, index) =>
-      index === enemyIndex ? { ...enemy, level: Math.max(1, Math.min(100, level)) } : enemy
+      index === enemyIndex
+        ? { ...enemy, level: Math.max(1, Math.min(100, level)) }
+        : enemy
     );
     onEnemiesChange(updatedEnemies);
   };
@@ -89,12 +92,16 @@ const EnemyPlacer: React.FC<EnemyPlacerProps> = ({
       <Typography variant="subtitle2" gutterBottom>
         Enemy Types
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ mb: 2, display: 'block' }}
+      >
         Select an enemy type, then click on the map to place
       </Typography>
 
       <List sx={{ p: 0 }}>
-        {enemyList.map((enemyId) => (
+        {enemyList.map(enemyId => (
           <ListItem key={enemyId} disablePadding>
             <ListItemButton
               selected={selectedEnemy === enemyId}
@@ -116,7 +123,10 @@ const EnemyPlacer: React.FC<EnemyPlacerProps> = ({
               </ListItemAvatar>
               <ListItemText
                 primary={
-                  <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ textTransform: 'capitalize' }}
+                  >
                     {enemyId}
                   </Typography>
                 }
@@ -169,7 +179,9 @@ const EnemyPlacer: React.FC<EnemyPlacerProps> = ({
               disablePadding
               sx={{ flexDirection: 'column', alignItems: 'stretch', py: 1 }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', width: '100%' }}
+              >
                 <ListItemAvatar>
                   <Avatar
                     sx={{
@@ -185,7 +197,10 @@ const EnemyPlacer: React.FC<EnemyPlacerProps> = ({
                 </ListItemAvatar>
                 <ListItemText
                   primary={
-                    <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ textTransform: 'capitalize' }}
+                    >
                       {enemy.enemyId}
                     </Typography>
                   }
@@ -209,7 +224,9 @@ const EnemyPlacer: React.FC<EnemyPlacerProps> = ({
                   label="Level"
                   type="number"
                   value={enemy.level}
-                  onChange={(e) => handleEnemyLevelChange(index, parseInt(e.target.value) || 1)}
+                  onChange={e =>
+                    handleEnemyLevelChange(index, parseInt(e.target.value) || 1)
+                  }
                   inputProps={{ min: 1, max: 100 }}
                   sx={{ width: 80 }}
                 />

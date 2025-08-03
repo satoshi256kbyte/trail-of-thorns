@@ -1,7 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import ValidationErrorDisplay, { ValidationError } from '../components/ValidationErrorDisplay';
+import ValidationErrorDisplay, {
+  ValidationError,
+} from '../components/ValidationErrorDisplay';
 
 const mockErrors: ValidationError[] = [
   {
@@ -58,8 +60,12 @@ describe('ValidationErrorDisplay', () => {
     render(<ValidationErrorDisplay errors={mockErrors} />);
 
     expect(screen.getByText('Name is required')).toBeInTheDocument();
-    expect(screen.getByText('💡 Enter a valid character name')).toBeInTheDocument();
-    expect(screen.getByText('💡 Set HP to a positive number')).toBeInTheDocument();
+    expect(
+      screen.getByText('💡 Enter a valid character name')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('💡 Set HP to a positive number')
+    ).toBeInTheDocument();
   });
 
   it('shows current values when available', () => {

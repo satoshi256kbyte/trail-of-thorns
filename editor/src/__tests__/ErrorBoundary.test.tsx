@@ -74,7 +74,9 @@ describe('ErrorBoundary', () => {
 
     expect(screen.getByText('What you can do:')).toBeInTheDocument();
     expect(screen.getByText(/Try refreshing the page/)).toBeInTheDocument();
-    expect(screen.getByText(/Check if your data files are valid JSON/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Check if your data files are valid JSON/)
+    ).toBeInTheDocument();
   });
 
   it('calls window.location.reload when reload button is clicked', () => {
@@ -92,7 +94,7 @@ describe('ErrorBoundary', () => {
     // Create a component that can toggle error state
     const TestComponent = () => {
       const [shouldThrow, setShouldThrow] = React.useState(true);
-      
+
       return (
         <ErrorBoundary>
           <button onClick={() => setShouldThrow(false)}>Reset</button>
@@ -130,7 +132,9 @@ describe('ErrorBoundary', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     render(
       <ErrorBoundary>

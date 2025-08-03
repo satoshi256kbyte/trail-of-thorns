@@ -24,7 +24,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
     <Backdrop
       sx={{
         color: '#fff',
-        zIndex: (theme) => theme.zIndex.drawer + 1,
+        zIndex: theme => theme.zIndex.drawer + 1,
         flexDirection: 'column',
         gap: 2,
       }}
@@ -47,11 +47,11 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
             />
           </Box>
         )}
-        
+
         <Typography variant="h6" sx={{ mt: 2 }}>
           {message}
         </Typography>
-        
+
         {progress !== undefined && (
           <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
             {Math.round(progress)}%

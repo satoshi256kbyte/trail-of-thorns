@@ -22,7 +22,10 @@ const MapGrid: React.FC<MapGridProps> = ({
   editMode,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [hoveredTile, setHoveredTile] = useState<{ x: number; y: number } | null>(null);
+  const [hoveredTile, setHoveredTile] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   const width = tiles[0]?.length || 0;
@@ -38,25 +41,38 @@ const MapGrid: React.FC<MapGridProps> = ({
   // Get tile color based on type
   const getTileColor = (tile: TileData): string => {
     switch (tile.type) {
-      case 'grass': return '#4caf50';
-      case 'stone': return '#9e9e9e';
-      case 'water': return '#2196f3';
-      case 'sand': return '#ffeb3b';
-      case 'wall': return '#424242';
-      case 'door': return '#8d6e63';
-      case 'chest': return '#ff9800';
-      default: return '#e0e0e0';
+      case 'grass':
+        return '#4caf50';
+      case 'stone':
+        return '#9e9e9e';
+      case 'water':
+        return '#2196f3';
+      case 'sand':
+        return '#ffeb3b';
+      case 'wall':
+        return '#424242';
+      case 'door':
+        return '#8d6e63';
+      case 'chest':
+        return '#ff9800';
+      default:
+        return '#e0e0e0';
     }
   };
 
   // Get object color
   const getObjectColor = (type: string): string => {
     switch (type) {
-      case 'chest': return '#ff9800';
-      case 'door': return '#8d6e63';
-      case 'switch': return '#9c27b0';
-      case 'npc': return '#00bcd4';
-      default: return '#f44336';
+      case 'chest':
+        return '#ff9800';
+      case 'door':
+        return '#8d6e63';
+      case 'switch':
+        return '#9c27b0';
+      case 'npc':
+        return '#00bcd4';
+      default:
+        return '#f44336';
     }
   };
 
@@ -117,7 +133,13 @@ const MapGrid: React.FC<MapGridProps> = ({
       // Draw enemy as red circle
       ctx.fillStyle = '#f44336';
       ctx.beginPath();
-      ctx.arc(pixelX + TILE_SIZE / 2, pixelY + TILE_SIZE / 2, TILE_SIZE / 2 - 2, 0, 2 * Math.PI);
+      ctx.arc(
+        pixelX + TILE_SIZE / 2,
+        pixelY + TILE_SIZE / 2,
+        TILE_SIZE / 2 - 2,
+        0,
+        2 * Math.PI
+      );
       ctx.fill();
 
       // Draw level
@@ -125,7 +147,11 @@ const MapGrid: React.FC<MapGridProps> = ({
       ctx.font = '10px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(enemy.level.toString(), pixelX + TILE_SIZE / 2, pixelY + TILE_SIZE / 2);
+      ctx.fillText(
+        enemy.level.toString(),
+        pixelX + TILE_SIZE / 2,
+        pixelY + TILE_SIZE / 2
+      );
     });
 
     // Draw grid lines
@@ -209,7 +235,14 @@ const MapGrid: React.FC<MapGridProps> = ({
 
   return (
     <Box sx={{ position: 'relative' }}>
-      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box
+        sx={{
+          mb: 1,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <Typography variant="body2" color="text.secondary">
           Map Size: {width} × {height} | Mode: {editMode}
         </Typography>
@@ -219,7 +252,7 @@ const MapGrid: React.FC<MapGridProps> = ({
           </Typography>
         )}
       </Box>
-      
+
       <Box
         sx={{
           border: 1,
@@ -247,27 +280,74 @@ const MapGrid: React.FC<MapGridProps> = ({
       {/* Legend */}
       <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 16, height: 16, bgcolor: '#4caf50', border: 1, borderColor: 'divider' }} />
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              bgcolor: '#4caf50',
+              border: 1,
+              borderColor: 'divider',
+            }}
+          />
           <Typography variant="caption">Grass</Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 16, height: 16, bgcolor: '#9e9e9e', border: 1, borderColor: 'divider' }} />
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              bgcolor: '#9e9e9e',
+              border: 1,
+              borderColor: 'divider',
+            }}
+          />
           <Typography variant="caption">Stone</Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 16, height: 16, bgcolor: '#2196f3', border: 1, borderColor: 'divider' }} />
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              bgcolor: '#2196f3',
+              border: 1,
+              borderColor: 'divider',
+            }}
+          />
           <Typography variant="caption">Water</Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 16, height: 16, bgcolor: '#424242', border: 1, borderColor: 'divider' }} />
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              bgcolor: '#424242',
+              border: 1,
+              borderColor: 'divider',
+            }}
+          />
           <Typography variant="caption">Wall</Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 16, height: 16, bgcolor: '#f44336', borderRadius: '50%' }} />
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              bgcolor: '#f44336',
+              borderRadius: '50%',
+            }}
+          />
           <Typography variant="caption">Enemy</Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 16, height: 16, bgcolor: '#ff9800', border: 1, borderColor: 'divider' }} />
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              bgcolor: '#ff9800',
+              border: 1,
+              borderColor: 'divider',
+            }}
+          />
           <Typography variant="caption">Object</Typography>
         </Box>
       </Box>

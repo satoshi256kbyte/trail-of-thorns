@@ -16,7 +16,12 @@ import {
   Info as InfoIcon,
 } from '@mui/icons-material';
 
-export type ConfirmationType = 'delete' | 'save' | 'discard' | 'warning' | 'info';
+export type ConfirmationType =
+  | 'delete'
+  | 'save'
+  | 'discard'
+  | 'warning'
+  | 'info';
 
 interface ConfirmationDialogProps {
   open: boolean;
@@ -98,18 +103,14 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ color: `${config.color}.main` }}>
-            {config.icon}
-          </Box>
+          <Box sx={{ color: `${config.color}.main` }}>{config.icon}</Box>
           {title}
         </Box>
       </DialogTitle>
 
       <DialogContent>
         <Alert severity={config.severity} sx={{ mb: 2 }}>
-          <Typography variant="body1">
-            {message}
-          </Typography>
+          <Typography variant="body1">{message}</Typography>
         </Alert>
 
         {details && (
@@ -120,11 +121,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       </DialogContent>
 
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button
-          onClick={onCancel}
-          disabled={loading}
-          variant="outlined"
-        >
+        <Button onClick={onCancel} disabled={loading} variant="outlined">
           {cancelText}
         </Button>
         <Button
@@ -134,7 +131,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           color={config.color}
           startIcon={loading ? undefined : config.icon}
         >
-          {loading ? 'Processing...' : (confirmText || config.defaultConfirmText)}
+          {loading ? 'Processing...' : confirmText || config.defaultConfirmText}
         </Button>
       </DialogActions>
     </Dialog>

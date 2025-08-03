@@ -17,13 +17,17 @@ describe('App', () => {
 
   it('renders subtitle', () => {
     renderWithTheme(<App />);
-    expect(screen.getByText('2D Simulation RPG Data Editor')).toBeInTheDocument();
+    expect(
+      screen.getByText('2D Simulation RPG Data Editor')
+    ).toBeInTheDocument();
   });
 
   it('renders welcome message', () => {
     renderWithTheme(<App />);
     expect(
-      screen.getByText('Welcome to the admin dashboard for managing game data. This demo shows the error handling and user feedback system.')
+      screen.getByText(
+        'Welcome to the admin dashboard for managing game data. This demo shows the error handling and user feedback system.'
+      )
     ).toBeInTheDocument();
   });
 });

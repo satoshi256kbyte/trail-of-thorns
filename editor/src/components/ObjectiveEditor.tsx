@@ -39,7 +39,9 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
   onObjectivesChange,
   onRewardsChange,
 }) => {
-  const [expandedObjective, setExpandedObjective] = useState<string | false>(false);
+  const [expandedObjective, setExpandedObjective] = useState<string | false>(
+    false
+  );
   const [expandedReward, setExpandedReward] = useState<string | false>(false);
 
   const objectiveTypes: { value: ObjectiveType; label: string }[] = [
@@ -67,7 +69,11 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
     setExpandedObjective(newObjective.id);
   };
 
-  const handleUpdateObjective = (index: number, field: keyof Objective, value: any) => {
+  const handleUpdateObjective = (
+    index: number,
+    field: keyof Objective,
+    value: any
+  ) => {
     const updatedObjectives = objectives.map((obj, i) =>
       i === index ? { ...obj, [field]: value } : obj
     );
@@ -88,7 +94,11 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
     setExpandedReward(`reward_${Date.now()}`);
   };
 
-  const handleUpdateReward = (index: number, field: keyof Reward, value: any) => {
+  const handleUpdateReward = (
+    index: number,
+    field: keyof Reward,
+    value: any
+  ) => {
     const updatedRewards = rewards.map((reward, i) =>
       i === index ? { ...reward, [field]: value } : reward
     );
@@ -133,7 +143,14 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
       <Grid container spacing={3}>
         {/* Objectives Section */}
         <Grid item xs={12} md={6}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2,
+            }}
+          >
             <Typography variant="h6">
               Objectives ({objectives.length})
             </Typography>
@@ -151,7 +168,8 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
             <Card>
               <CardContent sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="body2" color="text.secondary">
-                  No objectives defined. Add at least one objective to complete the stage.
+                  No objectives defined. Add at least one objective to complete
+                  the stage.
                 </Typography>
               </CardContent>
             </Card>
@@ -161,16 +179,26 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                 <Accordion
                   key={objective.id}
                   expanded={expandedObjective === objective.id}
-                  onChange={(_, isExpanded) => setExpandedObjective(isExpanded ? objective.id : false)}
+                  onChange={(_, isExpanded) =>
+                    setExpandedObjective(isExpanded ? objective.id : false)
+                  }
                 >
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        pr: 2,
+                      }}
+                    >
                       <Typography variant="subtitle2">
                         {getObjectiveDescription(objective)}
                       </Typography>
                       <IconButton
                         size="small"
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           handleDeleteObjective(index);
                         }}
@@ -188,9 +216,15 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                           <Select
                             value={objective.type}
                             label="Objective Type"
-                            onChange={(e) => handleUpdateObjective(index, 'type', e.target.value)}
+                            onChange={e =>
+                              handleUpdateObjective(
+                                index,
+                                'type',
+                                e.target.value
+                              )
+                            }
                           >
-                            {objectiveTypes.map((type) => (
+                            {objectiveTypes.map(type => (
                               <MenuItem key={type.value} value={type.value}>
                                 {type.label}
                               </MenuItem>
@@ -204,7 +238,13 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                           size="small"
                           label="Description"
                           value={objective.description}
-                          onChange={(e) => handleUpdateObjective(index, 'description', e.target.value)}
+                          onChange={e =>
+                            handleUpdateObjective(
+                              index,
+                              'description',
+                              e.target.value
+                            )
+                          }
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -213,12 +253,21 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                           size="small"
                           label="Target"
                           value={objective.target}
-                          onChange={(e) => handleUpdateObjective(index, 'target', e.target.value)}
+                          onChange={e =>
+                            handleUpdateObjective(
+                              index,
+                              'target',
+                              e.target.value
+                            )
+                          }
                           placeholder={
-                            objective.type === 'defeat' ? 'Enemy type' :
-                            objective.type === 'collect' ? 'Item name' :
-                            objective.type === 'reach' ? 'Location name' :
-                            'Time unit'
+                            objective.type === 'defeat'
+                              ? 'Enemy type'
+                              : objective.type === 'collect'
+                                ? 'Item name'
+                                : objective.type === 'reach'
+                                  ? 'Location name'
+                                  : 'Time unit'
                           }
                         />
                       </Grid>
@@ -229,7 +278,13 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                           label="Value"
                           type="number"
                           value={objective.value}
-                          onChange={(e) => handleUpdateObjective(index, 'value', parseInt(e.target.value) || 1)}
+                          onChange={e =>
+                            handleUpdateObjective(
+                              index,
+                              'value',
+                              parseInt(e.target.value) || 1
+                            )
+                          }
                           inputProps={{ min: 1 }}
                         />
                       </Grid>
@@ -243,10 +298,15 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
 
         {/* Rewards Section */}
         <Grid item xs={12} md={6}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">
-              Rewards ({rewards.length})
-            </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2,
+            }}
+          >
+            <Typography variant="h6">Rewards ({rewards.length})</Typography>
             <Button
               variant="contained"
               size="small"
@@ -261,7 +321,8 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
             <Card>
               <CardContent sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="body2" color="text.secondary">
-                  No rewards defined. Consider adding rewards to motivate players.
+                  No rewards defined. Consider adding rewards to motivate
+                  players.
                 </Typography>
               </CardContent>
             </Card>
@@ -271,16 +332,26 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                 <Accordion
                   key={`reward_${index}`}
                   expanded={expandedReward === `reward_${index}`}
-                  onChange={(_, isExpanded) => setExpandedReward(isExpanded ? `reward_${index}` : false)}
+                  onChange={(_, isExpanded) =>
+                    setExpandedReward(isExpanded ? `reward_${index}` : false)
+                  }
                 >
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        pr: 2,
+                      }}
+                    >
                       <Typography variant="subtitle2">
                         {getRewardDescription(reward)}
                       </Typography>
                       <IconButton
                         size="small"
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           handleDeleteReward(index);
                         }}
@@ -298,9 +369,15 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                           <Select
                             value={reward.type}
                             label="Reward Type"
-                            onChange={(e) => handleUpdateReward(index, 'type', e.target.value as RewardType)}
+                            onChange={e =>
+                              handleUpdateReward(
+                                index,
+                                'type',
+                                e.target.value as RewardType
+                              )
+                            }
                           >
-                            {rewardTypes.map((type) => (
+                            {rewardTypes.map(type => (
                               <MenuItem key={type.value} value={type.value}>
                                 {type.label}
                               </MenuItem>
@@ -315,9 +392,15 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                             <Select
                               value={reward.itemId || ''}
                               label="Item"
-                              onChange={(e) => handleUpdateReward(index, 'itemId', e.target.value)}
+                              onChange={e =>
+                                handleUpdateReward(
+                                  index,
+                                  'itemId',
+                                  e.target.value
+                                )
+                              }
                             >
-                              {availableItems.map((itemId) => (
+                              {availableItems.map(itemId => (
                                 <MenuItem key={itemId} value={itemId}>
                                   {itemId}
                                 </MenuItem>
@@ -333,7 +416,13 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                           label="Amount"
                           type="number"
                           value={reward.amount}
-                          onChange={(e) => handleUpdateReward(index, 'amount', parseInt(e.target.value) || 1)}
+                          onChange={e =>
+                            handleUpdateReward(
+                              index,
+                              'amount',
+                              parseInt(e.target.value) || 1
+                            )
+                          }
                           inputProps={{ min: 1 }}
                         />
                       </Grid>
