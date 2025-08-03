@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Steerling更新時のタスク見直し",
+  "description": "Steerlingファイルが更新された際に、3-wbs.mdの内容を見直して必要に応じて更新する",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*steerling*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Steerlingファイルが更新されました。3-wbs.mdの内容を確認し、新しいSteerlingの内容に基づいてタスクの見直しや更新が必要かどうかを判断してください。必要に応じて3-wbs.mdを更新してください。"
+  }
+}

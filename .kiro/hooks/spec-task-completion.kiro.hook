@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Spec完了時の次タスクSpec作成",
+  "description": "Specのtasks.mdのタスクを完了したら、3-wbs.mdを参照して次のタスクのSpecを作成する",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/tasks.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Specのtasks.mdファイルが更新されました。全てのタスクが完了している場合は、3-wbs.mdを参照して次に実装すべきタスクのSpecを作成してください。\n\n更新されたファイル: {filePath}\n\n以下の手順で進めてください：\n1. tasks.mdの内容を確認し、全てのタスクが完了しているかチェック\n2. 完了している場合、3-wbs.mdから次に実装すべきタスクを特定\n3. 次のタスクのSpecフォルダとtasks.mdを作成\n4. 3-wbs.mdの該当タスクにSpecリンクを追加\n\nSpecは日本語で作成し、実装ガイドに従って詳細な作業項目を含めてください。"
+  }
+}
