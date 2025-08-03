@@ -167,7 +167,7 @@ export class MenuButton extends Phaser.GameObjects.Container {
       "difficulty": 1
     },
     {
-      "id": "stage-002", 
+      "id": "stage-002",
       "name": "Mountain Pass",
       "description": "Treacherous terrain awaits",
       "isUnlocked": false,
@@ -196,7 +196,7 @@ export class MenuButton extends Phaser.GameObjects.Container {
     "controls": {
       "keyBindings": {
         "up": "W",
-        "down": "S", 
+        "down": "S",
         "left": "A",
         "right": "D",
         "action": "SPACE",
@@ -268,14 +268,14 @@ export const mockStageData: StageData[] = [
     id: 'test-stage-1',
     name: 'Test Stage 1',
     description: 'First test stage',
-    isUnlocked: true
+    isUnlocked: true,
   },
   {
-    id: 'test-stage-2', 
+    id: 'test-stage-2',
     name: 'Test Stage 2',
     description: 'Second test stage',
-    isUnlocked: false
-  }
+    isUnlocked: false,
+  },
 ];
 
 export const mockConfigData: ConfigOptions = {
@@ -286,11 +286,11 @@ export const mockConfigData: ConfigOptions = {
   keyBindings: {
     up: 'W',
     down: 'S',
-    left: 'A', 
+    left: 'A',
     right: 'D',
     action: 'SPACE',
-    menu: 'ESC'
-  }
+    menu: 'ESC',
+  },
 };
 ```
 

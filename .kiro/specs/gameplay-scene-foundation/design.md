@@ -42,11 +42,11 @@ export class GameplayScene extends Phaser.Scene {
   private inputHandler: InputHandler;
   private mapRenderer: MapRenderer;
   private characterManager: CharacterManager;
-  
+
   constructor() {
     super({ key: 'GameplayScene' });
   }
-  
+
   preload(): void;
   create(): void;
   update(time: number, delta: number): void;
@@ -67,7 +67,7 @@ interface GameState {
 export class GameStateManager {
   private gameState: GameState;
   private turnOrder: Unit[];
-  
+
   initializeTurnOrder(units: Unit[]): void;
   nextTurn(): void;
   getCurrentPlayer(): 'player' | 'enemy';
@@ -82,9 +82,9 @@ export class GameStateManager {
 export class CameraController {
   private camera: Phaser.Cameras.Scene2D.Camera;
   private mapBounds: Phaser.Geom.Rectangle;
-  
+
   constructor(scene: Phaser.Scene, mapBounds: Phaser.Geom.Rectangle);
-  
+
   moveCamera(direction: 'up' | 'down' | 'left' | 'right'): void;
   focusOnPosition(x: number, y: number): void;
   setZoom(zoomLevel: number): void;
@@ -106,7 +106,7 @@ interface UIElements {
 export class UIManager {
   private scene: Phaser.Scene;
   private uiElements: UIElements;
-  
+
   createUI(): void;
   updateTurnDisplay(turnNumber: number, currentPlayer: string): void;
   showCharacterInfo(character: Unit): void;
@@ -122,7 +122,7 @@ export class MapRenderer {
   private scene: Phaser.Scene;
   private tileMap: Phaser.Tilemaps.Tilemap;
   private gridOverlay: Phaser.GameObjects.Graphics;
-  
+
   loadMap(mapData: MapData): void;
   renderGrid(): void;
   highlightTiles(positions: Position[], color: number): void;
@@ -137,7 +137,7 @@ export class MapRenderer {
 export class CharacterManager {
   private characters: Map<string, Unit>;
   private selectedCharacter?: Unit;
-  
+
   loadCharacters(characterData: Unit[]): void;
   selectCharacter(characterId: string): void;
   getCharacterAt(position: Position): Unit | null;
@@ -207,13 +207,13 @@ enum GameplayError {
   CHARACTER_LOAD_FAILED = 'CHARACTER_LOAD_FAILED',
   MAP_LOAD_FAILED = 'MAP_LOAD_FAILED',
   INVALID_ACTION = 'INVALID_ACTION',
-  CAMERA_BOUNDS_ERROR = 'CAMERA_BOUNDS_ERROR'
+  CAMERA_BOUNDS_ERROR = 'CAMERA_BOUNDS_ERROR',
 }
 
 class GameplayErrorHandler {
   static handleError(error: GameplayError, details?: any): void {
     console.error(`Gameplay Error: ${error}`, details);
-    
+
     switch (error) {
       case GameplayError.INVALID_STAGE_DATA:
         // Return to stage selection with error message
@@ -239,10 +239,9 @@ class DataValidator {
       stageData.enemyUnits?.length > 0
     );
   }
-  
+
   static validateMapBounds(position: Position, mapData: MapData): boolean {
-    return position.x >= 0 && position.x < mapData.width &&
-           position.y >= 0 && position.y < mapData.height;
+    return position.x >= 0 && position.x < mapData.width && position.y >= 0 && position.y < mapData.height;
   }
 }
 ```
@@ -257,11 +256,11 @@ describe('GameStateManager', () => {
   test('should initialize turn order based on speed', () => {
     // Test turn order calculation
   });
-  
+
   test('should advance turn correctly', () => {
     // Test turn progression
   });
-  
+
   test('should detect victory conditions', () => {
     // Test win/lose detection
   });
@@ -272,7 +271,7 @@ describe('CameraController', () => {
   test('should respect map boundaries', () => {
     // Test camera bounds
   });
-  
+
   test('should focus on target position', () => {
     // Test camera focusing
   });
@@ -286,11 +285,11 @@ describe('GameplayScene Integration', () => {
   test('should load stage data and initialize properly', () => {
     // Test complete scene initialization
   });
-  
+
   test('should handle character selection and UI updates', () => {
     // Test character interaction flow
   });
-  
+
   test('should manage turn transitions correctly', () => {
     // Test turn-based mechanics
   });
@@ -310,14 +309,14 @@ describe('GameplayScene Integration', () => {
 class DebugManager {
   private static instance: DebugManager;
   private debugMode: boolean = false;
-  
+
   enableDebugMode(): void {
     this.debugMode = true;
     this.showGridCoordinates();
     this.showCharacterStats();
     this.enableConsoleCommands();
   }
-  
+
   showGridCoordinates(): void;
   showCharacterStats(): void;
   enableConsoleCommands(): void;

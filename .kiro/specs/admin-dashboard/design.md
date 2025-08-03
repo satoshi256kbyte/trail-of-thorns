@@ -302,7 +302,7 @@ interface ValidationError {
 class ValidationManager {
   validateCharacter(character: Character): ValidationError[] {
     const errors: ValidationError[] = [];
-    
+
     try {
       CharacterSchema.parse(character);
     } catch (error) {
@@ -310,10 +310,10 @@ class ValidationManager {
         errors.push(...this.formatZodErrors(error));
       }
     }
-    
+
     return errors;
   }
-  
+
   private formatZodErrors(error: z.ZodError): ValidationError[] {
     return error.errors.map(err => ({
       field: err.path.join('.'),
@@ -334,13 +334,13 @@ class FileManager {
     try {
       const content = await file.text();
       const data = JSON.parse(content);
-      
+
       // Schema validation
       const validationResult = this.validateGameData(data);
       if (!validationResult.isValid) {
         throw new ValidationError('Invalid data format', validationResult.errors);
       }
-      
+
       return data;
     } catch (error) {
       if (error instanceof SyntaxError) {
@@ -349,22 +349,24 @@ class FileManager {
       throw error;
     }
   }
-  
+
   async exportJSON(data: GameData, filename: string): Promise<void> {
     try {
       const jsonString = JSON.stringify(data, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
-      
+
       // Use File System Access API if available
       if ('showSaveFilePicker' in window) {
         const fileHandle = await window.showSaveFilePicker({
           suggestedName: filename,
-          types: [{
-            description: 'JSON files',
-            accept: { 'application/json': ['.json'] },
-          }],
+          types: [
+            {
+              description: 'JSON files',
+              accept: { 'application/json': ['.json'] },
+            },
+          ],
         });
-        
+
         const writable = await fileHandle.createWritable();
         await writable.write(blob);
         await writable.close();
@@ -389,13 +391,13 @@ describe('CharacterEditor', () => {
   it('should validate character stats on save', () => {
     const mockCharacter = createMockCharacter();
     const mockOnSave = jest.fn();
-    
+
     render(<CharacterEditor character={mockCharacter} onSave={mockOnSave} />);
-    
+
     // Test validation logic
     fireEvent.change(screen.getByLabelText('HP'), { target: { value: '-1' } });
     fireEvent.click(screen.getByText('Save'));
-    
+
     expect(screen.getByText('HP must be greater than 0')).toBeInTheDocument();
     expect(mockOnSave).not.toHaveBeenCalled();
   });
@@ -406,7 +408,7 @@ describe('ValidationManager', () => {
   it('should return errors for invalid character data', () => {
     const invalidCharacter = { ...createMockCharacter(), hp: -1 };
     const errors = validationManager.validateCharacter(invalidCharacter);
-    
+
     expect(errors).toHaveLength(1);
     expect(errors[0].field).toBe('stats.hp');
     expect(errors[0].severity).toBe('error');
@@ -422,26 +424,26 @@ describe('Data Flow Integration', () => {
   it('should import, edit, and export character data', async () => {
     const mockData = createMockGameData();
     const mockFile = new File([JSON.stringify(mockData)], 'test.json');
-    
+
     render(<App />);
-    
+
     // Import data
     const importButton = screen.getByText('Import');
     fireEvent.click(importButton);
     // Simulate file selection
-    
+
     // Edit character
     fireEvent.click(screen.getByText('Characters'));
     fireEvent.click(screen.getByText(mockData.characters[0].name));
-    
+
     const nameInput = screen.getByLabelText('Name');
     fireEvent.change(nameInput, { target: { value: 'Updated Name' } });
     fireEvent.click(screen.getByText('Save'));
-    
+
     // Export data
     const exportButton = screen.getByText('Export');
     fireEvent.click(exportButton);
-    
+
     // Verify exported data contains changes
     expect(mockFileSystemAPI.writtenData).toContain('Updated Name');
   });
@@ -455,23 +457,23 @@ describe('Data Flow Integration', () => {
 describe('Admin Dashboard E2E', () => {
   it('should complete full workflow', async () => {
     await page.goto('http://localhost:3000');
-    
+
     // Import existing data
     await page.click('[data-testid="import-button"]');
     await page.setInputFiles('input[type="file"]', 'test-data.json');
-    
+
     // Navigate to character editor
     await page.click('[data-testid="characters-tab"]');
     await page.click('[data-testid="character-item"]:first-child');
-    
+
     // Edit character
     await page.fill('[data-testid="character-name"]', 'Test Character');
     await page.fill('[data-testid="character-hp"]', '100');
     await page.click('[data-testid="save-button"]');
-    
+
     // Verify changes
     expect(await page.textContent('[data-testid="character-name"]')).toBe('Test Character');
-    
+
     // Export data
     await page.click('[data-testid="export-button"]');
     // Verify download
