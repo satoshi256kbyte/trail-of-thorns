@@ -1,58 +1,115 @@
 import * as Phaser from 'phaser';
 import { TerrainCost, MovementAnimationConfig } from '../types/movement';
+import { BattleAnimationConfig } from '../types/battle';
 
 /**
  * Movement system configuration options
  */
 export interface MovementSystemConfig {
-  /** Enable visual feedback for movement range and paths */
-  enableVisualFeedback: boolean;
-  /** Enable path preview when hovering over destinations */
-  enablePathPreview: boolean;
-  /** Enable smooth movement animations */
-  enableMovementAnimation: boolean;
-  /** Enable debug visualization for movement calculations */
-  enableMovementDebug: boolean;
-  /** Show movement range calculations in debug mode */
-  showMovementRangeDebug: boolean;
-  /** Show pathfinding algorithm steps in debug mode */
-  showPathfindingDebug: boolean;
-  /** Show movement cost calculations in debug mode */
-  showMovementCostDebug: boolean;
-  /** Terrain cost configuration */
-  terrainCosts: TerrainCost;
-  /** Movement animation configuration */
-  animationConfig: MovementAnimationConfig;
-  /** Debug visualization colors */
-  debugColors: {
-    movementRange: number;
-    pathfinding: number;
-    movementCost: number;
-    blockedTiles: number;
-    alternativePaths: number;
-  };
+    /** Enable visual feedback for movement range and paths */
+    enableVisualFeedback: boolean;
+    /** Enable path preview when hovering over destinations */
+    enablePathPreview: boolean;
+    /** Enable smooth movement animations */
+    enableMovementAnimation: boolean;
+    /** Enable debug visualization for movement calculations */
+    enableMovementDebug: boolean;
+    /** Show movement range calculations in debug mode */
+    showMovementRangeDebug: boolean;
+    /** Show pathfinding algorithm steps in debug mode */
+    showPathfindingDebug: boolean;
+    /** Show movement cost calculations in debug mode */
+    showMovementCostDebug: boolean;
+    /** Terrain cost configuration */
+    terrainCosts: TerrainCost;
+    /** Movement animation configuration */
+    animationConfig: MovementAnimationConfig;
+    /** Debug visualization colors */
+    debugColors: {
+        movementRange: number;
+        pathfinding: number;
+        movementCost: number;
+        blockedTiles: number;
+        alternativePaths: number;
+    };
+}
+
+/**
+ * Battle system configuration options
+ */
+export interface BattleSystemConfig {
+    /** Enable battle animations */
+    enableBattleAnimations: boolean;
+    /** Enable battle sound effects */
+    enableBattleSounds: boolean;
+    /** Enable battle debug visualization */
+    enableBattleDebug: boolean;
+    /** Show damage calculations in debug mode */
+    showDamageCalculationDebug: boolean;
+    /** Show attack range calculations in debug mode */
+    showAttackRangeDebug: boolean;
+    /** Show target selection debug info */
+    showTargetSelectionDebug: boolean;
+    /** Show battle statistics */
+    showBattleStatistics: boolean;
+    /** Battle animation configuration */
+    animationConfig: BattleAnimationConfig;
+    /** Damage calculation modifiers */
+    damageModifiers: {
+        /** Global damage multiplier */
+        globalDamageMultiplier: number;
+        /** Critical hit damage multiplier */
+        criticalDamageMultiplier: number;
+        /** Minimum damage guarantee */
+        minimumDamage: number;
+        /** Maximum damage cap */
+        maximumDamage: number;
+    };
+    /** Battle balance settings */
+    balanceSettings: {
+        /** Base critical hit chance */
+        baseCriticalChance: number;
+        /** Base evasion chance */
+        baseEvasionChance: number;
+        /** Experience gain multiplier */
+        experienceMultiplier: number;
+        /** Weapon durability loss rate */
+        durabilityLossRate: number;
+    };
+    /** Debug visualization colors */
+    debugColors: {
+        attackRange: number;
+        validTargets: number;
+        invalidTargets: number;
+        damagePreview: number;
+        criticalHit: number;
+        missedAttack: number;
+    };
 }
 
 /**
  * ゲーム設定の検証用インターフェース
  */
 export interface IGameConfigValidation {
-  readonly GAME_WIDTH: number;
-  readonly GAME_HEIGHT: number;
-  readonly BACKGROUND_COLOR: string;
-  readonly TARGET_FPS: number;
-  readonly PHYSICS_DEBUG: boolean;
-  readonly MOVEMENT_SYSTEM: MovementSystemConfig;
+    readonly GAME_WIDTH: number;
+    readonly GAME_HEIGHT: number;
+    readonly BACKGROUND_COLOR: string;
+    readonly TARGET_FPS: number;
+    readonly PHYSICS_DEBUG: boolean;
+    readonly MOVEMENT_SYSTEM: MovementSystemConfig;
+    readonly BATTLE_SYSTEM: BattleSystemConfig;
 }
 
 /**
  * ゲーム設定の型定義
  */
 export interface IGameConfig extends IGameConfigValidation {
-  getConfig(): Phaser.Types.Core.GameConfig;
-  validateConfig(): boolean;
-  getMovementSystemConfig(): MovementSystemConfig;
-  updateMovementSystemConfig(config: Partial<MovementSystemConfig>): void;
+    getConfig(): Phaser.Types.Core.GameConfig;
+    validateConfig(): boolean;
+    getMovementSystemConfig(): MovementSystemConfig;
+    updateMovementSystemConfig(config: Partial<MovementSystemConfig>): void;
+    getBattleSystemConfig(): BattleSystemConfig;
+    updateBattleSystemConfig(config: Partial<BattleSystemConfig>): void;
 }
 
 /**
@@ -60,222 +117,386 @@ export interface IGameConfig extends IGameConfigValidation {
  * ゲームの基本設定を管理し、Phaserに適切な設定を提供する
  */
 export class GameConfig implements IGameConfig {
-  // 静的設定定数
-  public static readonly GAME_WIDTH = 1920;
-  public static readonly GAME_HEIGHT = 1080;
-  public static readonly BACKGROUND_COLOR = '#2c3e50';
-  public static readonly TARGET_FPS = 60;
-  public static readonly PHYSICS_DEBUG = false;
+    // 静的設定定数
+    public static readonly GAME_WIDTH = 1920;
+    public static readonly GAME_HEIGHT = 1080;
+    public static readonly BACKGROUND_COLOR = '#2c3e50';
+    public static readonly TARGET_FPS = 60;
+    public static readonly PHYSICS_DEBUG = false;
 
-  // Movement system configuration
-  public static readonly MOVEMENT_SYSTEM: MovementSystemConfig = {
-    enableVisualFeedback: true,
-    enablePathPreview: true,
-    enableMovementAnimation: true,
-    enableMovementDebug: process.env.NODE_ENV === 'development',
-    showMovementRangeDebug: false,
-    showPathfindingDebug: false,
-    showMovementCostDebug: false,
-    terrainCosts: {
-      grass: { movementCost: 1, isPassable: true },
-      forest: { movementCost: 2, isPassable: true },
-      mountain: { movementCost: 3, isPassable: true },
-      water: { movementCost: 999, isPassable: false },
-      wall: { movementCost: 999, isPassable: false },
-      road: { movementCost: 0.5, isPassable: true },
-      bridge: { movementCost: 1, isPassable: true },
-    },
-    animationConfig: {
-      moveSpeed: 200, // pixels per second
-      turnSpeed: Math.PI * 2, // radians per second (full rotation per second)
-      easing: 'Power2',
-      stepDelay: 100, // milliseconds between tile movements
-    },
-    debugColors: {
-      movementRange: 0x00ff00,
-      pathfinding: 0xff0000,
-      movementCost: 0x0000ff,
-      blockedTiles: 0xff00ff,
-      alternativePaths: 0xffff00,
-    },
-  };
-
-  // インスタンス用のプロパティ（インターフェース実装のため）
-  public readonly GAME_WIDTH = GameConfig.GAME_WIDTH;
-  public readonly GAME_HEIGHT = GameConfig.GAME_HEIGHT;
-  public readonly BACKGROUND_COLOR = GameConfig.BACKGROUND_COLOR;
-  public readonly TARGET_FPS = GameConfig.TARGET_FPS;
-  public readonly PHYSICS_DEBUG = GameConfig.PHYSICS_DEBUG;
-  public readonly MOVEMENT_SYSTEM = GameConfig.MOVEMENT_SYSTEM;
-
-  // Mutable movement system configuration for runtime updates
-  private movementSystemConfig: MovementSystemConfig;
-
-  /**
-   * Constructor - Initialize mutable configuration
-   */
-  constructor() {
-    // Deep clone the static configuration for runtime modifications
-    this.movementSystemConfig = JSON.parse(JSON.stringify(GameConfig.MOVEMENT_SYSTEM));
-  }
-
-  /**
-   * Get current movement system configuration
-   * @returns Movement system configuration
-   */
-  public getMovementSystemConfig(): MovementSystemConfig {
-    return { ...this.movementSystemConfig };
-  }
-
-  /**
-   * Update movement system configuration
-   * @param config - Partial configuration to update
-   */
-  public updateMovementSystemConfig(config: Partial<MovementSystemConfig>): void {
-    this.movementSystemConfig = { ...this.movementSystemConfig, ...config };
-    console.log('GameConfig: Movement system configuration updated:', config);
-  }
-
-  /**
-   * 適切に型付けされたPhaser.Types.Core.GameConfigを返す
-   * @returns Phaserゲーム設定オブジェクト
-   */
-  public getConfig(): Phaser.Types.Core.GameConfig {
-    return {
-      type: Phaser.AUTO,
-      width: GameConfig.GAME_WIDTH,
-      height: GameConfig.GAME_HEIGHT,
-      parent: 'game-container',
-      backgroundColor: GameConfig.BACKGROUND_COLOR,
-      fps: {
-        target: GameConfig.TARGET_FPS,
-        forceSetTimeOut: true,
-      },
-      scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: GameConfig.GAME_WIDTH,
-        height: GameConfig.GAME_HEIGHT,
-        min: {
-          width: 800,
-          height: 600,
+    // Movement system configuration
+    public static readonly MOVEMENT_SYSTEM: MovementSystemConfig = {
+        enableVisualFeedback: true,
+        enablePathPreview: true,
+        enableMovementAnimation: true,
+        enableMovementDebug: process.env.NODE_ENV === 'development',
+        showMovementRangeDebug: false,
+        showPathfindingDebug: false,
+        showMovementCostDebug: false,
+        terrainCosts: {
+            grass: { movementCost: 1, isPassable: true },
+            forest: { movementCost: 2, isPassable: true },
+            mountain: { movementCost: 3, isPassable: true },
+            water: { movementCost: 999, isPassable: false },
+            wall: { movementCost: 999, isPassable: false },
+            road: { movementCost: 0.5, isPassable: true },
+            bridge: { movementCost: 1, isPassable: true },
         },
-        max: {
-          width: GameConfig.GAME_WIDTH,
-          height: GameConfig.GAME_HEIGHT,
+        animationConfig: {
+            moveSpeed: 200, // pixels per second
+            turnSpeed: Math.PI * 2, // radians per second (full rotation per second)
+            easing: 'Power2',
+            stepDelay: 100, // milliseconds between tile movements
         },
-      },
-      physics: {
-        default: 'arcade',
-        arcade: {
-          gravity: { x: 0, y: 0 },
-          debug: GameConfig.PHYSICS_DEBUG,
+        debugColors: {
+            movementRange: 0x00ff00,
+            pathfinding: 0xff0000,
+            movementCost: 0x0000ff,
+            blockedTiles: 0xff00ff,
+            alternativePaths: 0xffff00,
         },
-      },
-      scene: [], // シーンは後で追加される
     };
-  }
 
-  /**
-   * 設定値の検証を行う
-   * @returns 設定が有効な場合はtrue、無効な場合はfalse
-   */
-  public validateConfig(): boolean {
-    try {
-      // 画面サイズの検証
-      if (GameConfig.GAME_WIDTH <= 0 || GameConfig.GAME_HEIGHT <= 0) {
-        console.error('Invalid screen dimensions');
-        return false;
-      }
+    // Battle system configuration
+    public static readonly BATTLE_SYSTEM: BattleSystemConfig = {
+        enableBattleAnimations: true,
+        enableBattleSounds: true,
+        enableBattleDebug: process.env.NODE_ENV === 'development',
+        showDamageCalculationDebug: false,
+        showAttackRangeDebug: false,
+        showTargetSelectionDebug: false,
+        showBattleStatistics: false,
+        animationConfig: {
+            attackAnimationDuration: 800,
+            damageEffectDuration: 600,
+            hpBarAnimationDuration: 400,
+            defeatAnimationDuration: 1000,
+            effectDisplayDuration: 300,
+            enableParticleEffects: true,
+            enableScreenShake: true,
+            animationSpeed: 1.0,
+        },
+        damageModifiers: {
+            globalDamageMultiplier: 1.0,
+            criticalDamageMultiplier: 1.5,
+            minimumDamage: 1,
+            maximumDamage: 9999,
+        },
+        balanceSettings: {
+            baseCriticalChance: 5,
+            baseEvasionChance: 5,
+            experienceMultiplier: 1.0,
+            durabilityLossRate: 1.0,
+        },
+        debugColors: {
+            attackRange: 0xff4444,
+            validTargets: 0x44ff44,
+            invalidTargets: 0x888888,
+            damagePreview: 0xffff44,
+            criticalHit: 0xff8844,
+            missedAttack: 0x4444ff,
+        },
+    };
 
-      // 背景色の検証（16進数カラーコード）
-      const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-      if (!colorRegex.test(GameConfig.BACKGROUND_COLOR)) {
-        console.error('Invalid background color format');
-        return false;
-      }
+    // インスタンス用のプロパティ（インターフェース実装のため）
+    public readonly GAME_WIDTH = GameConfig.GAME_WIDTH;
+    public readonly GAME_HEIGHT = GameConfig.GAME_HEIGHT;
+    public readonly BACKGROUND_COLOR = GameConfig.BACKGROUND_COLOR;
+    public readonly TARGET_FPS = GameConfig.TARGET_FPS;
+    public readonly PHYSICS_DEBUG = GameConfig.PHYSICS_DEBUG;
+    public readonly MOVEMENT_SYSTEM = GameConfig.MOVEMENT_SYSTEM;
+    public readonly BATTLE_SYSTEM = GameConfig.BATTLE_SYSTEM;
 
-      // FPSの検証
-      if (GameConfig.TARGET_FPS <= 0 || GameConfig.TARGET_FPS > 120) {
-        console.error('Invalid target FPS');
-        return false;
-      }
+    // Mutable movement system configuration for runtime updates
+    private movementSystemConfig: MovementSystemConfig;
+    // Mutable battle system configuration for runtime updates
+    private battleSystemConfig: BattleSystemConfig;
 
-      // Movement system configuration validation
-      if (!this.validateMovementSystemConfig()) {
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Config validation error:', error);
-      return false;
+    /**
+     * Constructor - Initialize mutable configuration
+     */
+    constructor() {
+        // Deep clone the static configuration for runtime modifications
+        this.movementSystemConfig = JSON.parse(JSON.stringify(GameConfig.MOVEMENT_SYSTEM));
+        this.battleSystemConfig = JSON.parse(JSON.stringify(GameConfig.BATTLE_SYSTEM));
     }
-  }
 
-  /**
-   * Validate movement system configuration
-   * @returns True if valid, false otherwise
-   */
-  private validateMovementSystemConfig(): boolean {
-    const config = this.movementSystemConfig;
-
-    // Validate animation configuration
-    if (config.animationConfig.moveSpeed <= 0) {
-      console.error('Invalid movement animation speed');
-      return false;
+    /**
+     * Get current movement system configuration
+     * @returns Movement system configuration
+     */
+    public getMovementSystemConfig(): MovementSystemConfig {
+        return { ...this.movementSystemConfig };
     }
 
-    if (config.animationConfig.turnSpeed <= 0) {
-      console.error('Invalid movement turn speed');
-      return false;
+    /**
+     * Update movement system configuration
+     * @param config - Partial configuration to update
+     */
+    public updateMovementSystemConfig(config: Partial<MovementSystemConfig>): void {
+        this.movementSystemConfig = { ...this.movementSystemConfig, ...config };
+        console.log('GameConfig: Movement system configuration updated:', config);
     }
 
-    if (config.animationConfig.stepDelay < 0) {
-      console.error('Invalid movement step delay');
-      return false;
+    /**
+     * Get current battle system configuration
+     * @returns Battle system configuration
+     */
+    public getBattleSystemConfig(): BattleSystemConfig {
+        return { ...this.battleSystemConfig };
     }
 
-    // Validate terrain costs
-    for (const [terrainType, terrainData] of Object.entries(config.terrainCosts)) {
-      if (terrainData.movementCost < 0) {
-        console.error(
-          `Invalid movement cost for terrain ${terrainType}: ${terrainData.movementCost}`
+    /**
+     * Update battle system configuration
+     * @param config - Partial configuration to update
+     */
+    public updateBattleSystemConfig(config: Partial<BattleSystemConfig>): void {
+        this.battleSystemConfig = { ...this.battleSystemConfig, ...config };
+        console.log('GameConfig: Battle system configuration updated:', config);
+    }
+
+    /**
+     * 適切に型付けされたPhaser.Types.Core.GameConfigを返す
+     * @returns Phaserゲーム設定オブジェクト
+     */
+    public getConfig(): Phaser.Types.Core.GameConfig {
+        return {
+            type: Phaser.AUTO,
+            width: GameConfig.GAME_WIDTH,
+            height: GameConfig.GAME_HEIGHT,
+            parent: 'game-container',
+            backgroundColor: GameConfig.BACKGROUND_COLOR,
+            fps: {
+                target: GameConfig.TARGET_FPS,
+                forceSetTimeOut: true,
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: GameConfig.GAME_WIDTH,
+                height: GameConfig.GAME_HEIGHT,
+                min: {
+                    width: 800,
+                    height: 600,
+                },
+                max: {
+                    width: GameConfig.GAME_WIDTH,
+                    height: GameConfig.GAME_HEIGHT,
+                },
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { x: 0, y: 0 },
+                    debug: GameConfig.PHYSICS_DEBUG,
+                },
+            },
+            scene: [], // シーンは後で追加される
+        };
+    }
+
+    /**
+     * 設定値の検証を行う
+     * @returns 設定が有効な場合はtrue、無効な場合はfalse
+     */
+    public validateConfig(): boolean {
+        try {
+            // 画面サイズの検証
+            if (GameConfig.GAME_WIDTH <= 0 || GameConfig.GAME_HEIGHT <= 0) {
+                console.error('Invalid screen dimensions');
+                return false;
+            }
+
+            // 背景色の検証（16進数カラーコード）
+            const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+            if (!colorRegex.test(GameConfig.BACKGROUND_COLOR)) {
+                console.error('Invalid background color format');
+                return false;
+            }
+
+            // FPSの検証
+            if (GameConfig.TARGET_FPS <= 0 || GameConfig.TARGET_FPS > 120) {
+                console.error('Invalid target FPS');
+                return false;
+            }
+
+            // Movement system configuration validation
+            if (!this.validateMovementSystemConfig()) {
+                return false;
+            }
+
+            // Battle system configuration validation
+            if (!this.validateBattleSystemConfig()) {
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Config validation error:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Validate movement system configuration
+     * @returns True if valid, false otherwise
+     */
+    private validateMovementSystemConfig(): boolean {
+        const config = this.movementSystemConfig;
+
+        // Validate animation configuration
+        if (config.animationConfig.moveSpeed <= 0) {
+            console.error('Invalid movement animation speed');
+            return false;
+        }
+
+        if (config.animationConfig.turnSpeed <= 0) {
+            console.error('Invalid movement turn speed');
+            return false;
+        }
+
+        if (config.animationConfig.stepDelay < 0) {
+            console.error('Invalid movement step delay');
+            return false;
+        }
+
+        // Validate terrain costs
+        for (const [terrainType, terrainData] of Object.entries(config.terrainCosts)) {
+            if (terrainData.movementCost < 0) {
+                console.error(
+                    `Invalid movement cost for terrain ${terrainType}: ${terrainData.movementCost}`
+                );
+                return false;
+            }
+        }
+
+        // Validate debug colors (should be valid hex colors)
+        for (const [colorName, colorValue] of Object.entries(config.debugColors)) {
+            if (typeof colorValue !== 'number' || colorValue < 0 || colorValue > 0xffffff) {
+                console.error(`Invalid debug color ${colorName}: ${colorValue}`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate battle system configuration
+     * @returns True if valid, false otherwise
+     */
+    private validateBattleSystemConfig(): boolean {
+        const config = this.battleSystemConfig;
+
+        // Validate animation configuration
+        if (config.animationConfig.attackAnimationDuration < 0) {
+            console.error('Invalid attack animation duration');
+            return false;
+        }
+
+        if (config.animationConfig.damageEffectDuration < 0) {
+            console.error('Invalid damage effect duration');
+            return false;
+        }
+
+        if (config.animationConfig.hpBarAnimationDuration < 0) {
+            console.error('Invalid HP bar animation duration');
+            return false;
+        }
+
+        if (config.animationConfig.defeatAnimationDuration < 0) {
+            console.error('Invalid defeat animation duration');
+            return false;
+        }
+
+        if (config.animationConfig.animationSpeed <= 0) {
+            console.error('Invalid animation speed multiplier');
+            return false;
+        }
+
+        // Validate damage modifiers
+        if (config.damageModifiers.globalDamageMultiplier <= 0) {
+            console.error('Invalid global damage multiplier');
+            return false;
+        }
+
+        if (config.damageModifiers.criticalDamageMultiplier <= 0) {
+            console.error('Invalid critical damage multiplier');
+            return false;
+        }
+
+        if (config.damageModifiers.minimumDamage < 0) {
+            console.error('Invalid minimum damage');
+            return false;
+        }
+
+        if (config.damageModifiers.maximumDamage <= config.damageModifiers.minimumDamage) {
+            console.error('Maximum damage must be greater than minimum damage');
+            return false;
+        }
+
+        // Validate balance settings
+        if (config.balanceSettings.baseCriticalChance < 0 || config.balanceSettings.baseCriticalChance > 100) {
+            console.error('Invalid base critical chance (must be 0-100)');
+            return false;
+        }
+
+        if (config.balanceSettings.baseEvasionChance < 0 || config.balanceSettings.baseEvasionChance > 100) {
+            console.error('Invalid base evasion chance (must be 0-100)');
+            return false;
+        }
+
+        if (config.balanceSettings.experienceMultiplier <= 0) {
+            console.error('Invalid experience multiplier');
+            return false;
+        }
+
+        if (config.balanceSettings.durabilityLossRate < 0) {
+            console.error('Invalid durability loss rate');
+            return false;
+        }
+
+        // Validate debug colors (should be valid hex colors)
+        for (const [colorName, colorValue] of Object.entries(config.debugColors)) {
+            if (typeof colorValue !== 'number' || colorValue < 0 || colorValue > 0xffffff) {
+                console.error(`Invalid debug color ${colorName}: ${colorValue}`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 設定値をコンソールに出力する（デバッグ用）
+     */
+    public logConfig(): void {
+        console.log('Game Configuration:');
+        console.log(`- Screen Size: ${GameConfig.GAME_WIDTH}x${GameConfig.GAME_HEIGHT}`);
+        console.log(`- Background Color: ${GameConfig.BACKGROUND_COLOR}`);
+        console.log(`- Target FPS: ${GameConfig.TARGET_FPS}`);
+        console.log(`- Physics Debug: ${GameConfig.PHYSICS_DEBUG}`);
+        console.log('- Movement System:');
+        console.log(`  - Visual Feedback: ${this.movementSystemConfig.enableVisualFeedback}`);
+        console.log(`  - Path Preview: ${this.movementSystemConfig.enablePathPreview}`);
+        console.log(`  - Movement Animation: ${this.movementSystemConfig.enableMovementAnimation}`);
+        console.log(`  - Movement Debug: ${this.movementSystemConfig.enableMovementDebug}`);
+        console.log(`  - Animation Speed: ${this.movementSystemConfig.animationConfig.moveSpeed}px/s`);
+        console.log(`  - Turn Speed: ${this.movementSystemConfig.animationConfig.turnSpeed}rad/s`);
+        console.log(`  - Step Delay: ${this.movementSystemConfig.animationConfig.stepDelay}ms`);
+        console.log(
+            `  - Terrain Types: ${Object.keys(this.movementSystemConfig.terrainCosts).join(', ')}`
         );
-        return false;
-      }
+        console.log('- Battle System:');
+        console.log(`  - Battle Animations: ${this.battleSystemConfig.enableBattleAnimations}`);
+        console.log(`  - Battle Sounds: ${this.battleSystemConfig.enableBattleSounds}`);
+        console.log(`  - Battle Debug: ${this.battleSystemConfig.enableBattleDebug}`);
+        console.log(`  - Global Damage Multiplier: ${this.battleSystemConfig.damageModifiers.globalDamageMultiplier}`);
+        console.log(`  - Critical Damage Multiplier: ${this.battleSystemConfig.damageModifiers.criticalDamageMultiplier}`);
+        console.log(`  - Base Critical Chance: ${this.battleSystemConfig.balanceSettings.baseCriticalChance}%`);
+        console.log(`  - Base Evasion Chance: ${this.battleSystemConfig.balanceSettings.baseEvasionChance}%`);
+        console.log(`  - Experience Multiplier: ${this.battleSystemConfig.balanceSettings.experienceMultiplier}`);
+        console.log(`  - Attack Animation Duration: ${this.battleSystemConfig.animationConfig.attackAnimationDuration}ms`);
+        console.log(`  - Animation Speed: ${this.battleSystemConfig.animationConfig.animationSpeed}x`);
     }
-
-    // Validate debug colors (should be valid hex colors)
-    for (const [colorName, colorValue] of Object.entries(config.debugColors)) {
-      if (typeof colorValue !== 'number' || colorValue < 0 || colorValue > 0xffffff) {
-        console.error(`Invalid debug color ${colorName}: ${colorValue}`);
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * 設定値をコンソールに出力する（デバッグ用）
-   */
-  public logConfig(): void {
-    console.log('Game Configuration:');
-    console.log(`- Screen Size: ${GameConfig.GAME_WIDTH}x${GameConfig.GAME_HEIGHT}`);
-    console.log(`- Background Color: ${GameConfig.BACKGROUND_COLOR}`);
-    console.log(`- Target FPS: ${GameConfig.TARGET_FPS}`);
-    console.log(`- Physics Debug: ${GameConfig.PHYSICS_DEBUG}`);
-    console.log('- Movement System:');
-    console.log(`  - Visual Feedback: ${this.movementSystemConfig.enableVisualFeedback}`);
-    console.log(`  - Path Preview: ${this.movementSystemConfig.enablePathPreview}`);
-    console.log(`  - Movement Animation: ${this.movementSystemConfig.enableMovementAnimation}`);
-    console.log(`  - Movement Debug: ${this.movementSystemConfig.enableMovementDebug}`);
-    console.log(`  - Animation Speed: ${this.movementSystemConfig.animationConfig.moveSpeed}px/s`);
-    console.log(`  - Turn Speed: ${this.movementSystemConfig.animationConfig.turnSpeed}rad/s`);
-    console.log(`  - Step Delay: ${this.movementSystemConfig.animationConfig.stepDelay}ms`);
-    console.log(
-      `  - Terrain Types: ${Object.keys(this.movementSystemConfig.terrainCosts).join(', ')}`
-    );
-  }
 }

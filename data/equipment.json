@@ -1,0 +1,96 @@
+{
+    "armor": [
+        {
+            "id": "armor-001",
+            "name": "Leather Armor",
+            "type": "light",
+            "defenseBonus": 5,
+            "element": "none",
+            "specialEffects": [],
+            "durability": 40,
+            "maxDurability": 40,
+            "description": "Basic leather armor providing light protection."
+        },
+        {
+            "id": "armor-002",
+            "name": "Chain Mail",
+            "type": "medium",
+            "defenseBonus": 10,
+            "element": "none",
+            "specialEffects": [],
+            "durability": 60,
+            "maxDurability": 60,
+            "description": "Interlocked metal rings providing balanced protection."
+        },
+        {
+            "id": "armor-003",
+            "name": "Plate Armor",
+            "type": "heavy",
+            "defenseBonus": 18,
+            "element": "none",
+            "specialEffects": [],
+            "durability": 80,
+            "maxDurability": 80,
+            "description": "Heavy metal plates offering maximum protection."
+        },
+        {
+            "id": "armor-004",
+            "name": "Fire Resistant Cloak",
+            "type": "light",
+            "defenseBonus": 3,
+            "element": "fire",
+            "specialEffects": [
+                {
+                    "type": "buff",
+                    "chance": 100,
+                    "duration": -1,
+                    "power": 50,
+                    "description": "Reduces fire damage by 50%"
+                }
+            ],
+            "durability": 35,
+            "maxDurability": 35,
+            "description": "A cloak woven with fire-resistant materials."
+        }
+    ],
+    "accessories": [
+        {
+            "id": "accessory-001",
+            "name": "Power Ring",
+            "type": "ring",
+            "attackBonus": 3,
+            "defenseBonus": 0,
+            "element": "none",
+            "specialEffects": [],
+            "durability": 100,
+            "maxDurability": 100,
+            "description": "A ring that enhances the wearer's attack power."
+        },
+        {
+            "id": "accessory-002",
+            "name": "Shield Amulet",
+            "type": "amulet",
+            "attackBonus": 0,
+            "defenseBonus": 5,
+            "element": "none",
+            "specialEffects": [],
+            "durability": 100,
+            "maxDurability": 100,
+            "description": "An amulet that provides additional defense."
+        },
+        {
+            "id": "accessory-003",
+            "name": "Speed Boots",
+            "type": "boots",
+            "attackBonus": 0,
+            "defenseBonus": 0,
+            "speedBonus": 2,
+            "movementBonus": 1,
+            "element": "none",
+            "specialEffects": [],
+            "durability": 50,
+            "maxDurability": 50,
+            "description": "Boots that increase movement speed and range."
+        }
+    ]
+}
