@@ -35,6 +35,8 @@ import { BattleResourceManager } from './BattleResourceManager';
 import { BattleEffectPool } from './BattleEffectPool';
 import { BattleDebugManager } from '../debug/BattleDebugManager';
 import { BattleConsoleCommands } from '../debug/BattleConsoleCommands';
+import { RecruitmentSystem } from './recruitment/RecruitmentSystem';
+import { RecruitmentResult, RecruitmentAction, RecruitmentError } from '../types/recruitment';
 
 /**
  * Battle system configuration
@@ -117,6 +119,9 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     private debugManager: BattleDebugManager;
     private consoleCommands: BattleConsoleCommands;
 
+    // Recruitment system integration
+    private recruitmentSystem: RecruitmentSystem | null = null;
+
     // Battle data
     private allUnits: Unit[] = [];
     private mapData: MapData | null = null;
@@ -180,6 +185,60 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
         this.performanceMonitor.startMonitoring();
 
         this.setupEventListeners();
+    }
+
+    /**
+     * Set recruitment system for integration
+     * @param recruitmentSystem - Recruitment system instance
+     */
+    public setRecruitmentSystem(recruitmentSystem: RecruitmentSystem): void {
+        this.recruitmentSystem = recruitmentSystem;
+        this.log('Recruitment system integrated with battle system');
+    }
+
+    /**
+     * Check if recruitment system is integrated
+     * @returns True if recruitment system is available
+     */
+    public hasRecruitmentSystem(): boolean {
+        return this.recruitmentSystem !== null;
+    }
+
+    /**
+     * Get recruitment conditions for a target unit
+     * @param target - Target unit to check
+     * @returns Array of recruitment conditions or empty array
+     */
+    public getRecruitmentConditions(target: Unit): any[] {
+        if (!this.recruitmentSystem) {
+            return [];
+        }
+        try {
+            return this.recruitmentSystem.getRecruitmentConditions(target);
+        } catch (error) {
+            this.log('Error getting recruitment conditions', { error: error.message });
+            return [];
+        }
+    }
+
+    /**
+     * Check if a unit can be recruited
+     * @param attacker - Attacking unit
+     * @param target - Target unit
+     * @returns True if target can potentially be recruited
+     */
+    public canRecruit(attacker: Unit, target: Unit): boolean {
+        if (!this.recruitmentSystem || target.faction !== 'enemy') {
+            return false;
+        }
+
+        try {
+            const conditions = this.recruitmentSystem.getRecruitmentConditions(target);
+            return conditions.length > 0;
+        } catch (error) {
+            this.log('Error checking recruitment eligibility', { error: error.message });
+            return false;
+        }
     }
 
     /**
@@ -628,6 +687,26 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
                 this.performanceMonitor.startOperation('stateUpdate', battleId);
 
                 const oldHP = target.currentHP;
+
+                // Check recruitment eligibility before applying damage
+                let recruitmentResult: RecruitmentResult | null = null;
+                if (this.recruitmentSystem && target.faction === 'enemy') {
+                    try {
+                        recruitmentResult = this.recruitmentSystem.checkRecruitmentEligibility(
+                            attacker,
+                            target,
+                            {
+                                damage: damageContext.finalDamage,
+                                turn: 1, // This would come from game state in full implementation
+                                battleResult: battleResult
+                            }
+                        );
+                    } catch (error) {
+                        this.log('Error checking recruitment eligibility', { error: error.message });
+                        recruitmentResult = null;
+                    }
+                }
+
                 const damageResult = this.battleStateManager.applyDamage(target, damageContext.finalDamage);
 
                 if (!damageResult.success) {
@@ -636,6 +715,52 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
 
                 // Check if target was defeated
                 battleResult.targetDefeated = target.currentHP <= 0;
+
+                // Process recruitment if target was defeated and conditions are met
+                if (battleResult.targetDefeated && recruitmentResult?.success &&
+                    recruitmentResult.nextAction === RecruitmentAction.CONVERT_TO_NPC) {
+
+                    try {
+                        const recruitmentAttemptResult = this.recruitmentSystem!.processRecruitmentAttempt(
+                            attacker,
+                            target,
+                            damageContext.finalDamage,
+                            battleResult,
+                            1 // Current turn - would come from game state
+                        );
+
+                        if (recruitmentAttemptResult.success &&
+                            recruitmentAttemptResult.nextAction === RecruitmentAction.CONVERT_TO_NPC) {
+
+                            // Target was converted to NPC - restore HP to 1 and change faction
+                            target.currentHP = 1;
+                            target.faction = 'npc' as any; // NPC faction
+                            battleResult.targetDefeated = false; // Target is now NPC, not defeated
+
+                            this.log('Target converted to NPC during battle', {
+                                attacker: attacker.name,
+                                target: target.name,
+                                recruitmentId: recruitmentAttemptResult.npcState?.recruitmentId
+                            });
+
+                            // Emit recruitment conversion event
+                            this.emit('recruitment-conversion', {
+                                attacker,
+                                target,
+                                weapon,
+                                recruitmentResult: recruitmentAttemptResult,
+                                battleResult
+                            });
+                        }
+                    } catch (recruitmentError) {
+                        this.log('Error processing recruitment attempt', {
+                            error: recruitmentError.message,
+                            attacker: attacker.name,
+                            target: target.name
+                        });
+                        // Continue with normal battle flow if recruitment fails
+                    }
+                }
 
                 this.performanceMonitor.endOperation('stateUpdate', battleId);
 
@@ -879,6 +1004,23 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
                 phase: context.phase || this.state.phase as any,
                 errorDetails: error.message
             };
+
+            // Handle recruitment system errors if they occur during battle
+            if (this.recruitmentSystem && error.message.includes('recruitment')) {
+                this.log('Recruitment system error during battle', {
+                    error: error.message,
+                    attacker: battleContext.attacker?.name,
+                    target: battleContext.target?.name,
+                    phase: battleContext.phase
+                });
+
+                // Emit recruitment error event
+                this.emit('recruitment-error', {
+                    error: error.message,
+                    context: battleContext,
+                    timestamp: Date.now()
+                });
+            }
 
             // Use error handler for comprehensive error processing
             const recoveryResult = await this.errorHandler.handleError(

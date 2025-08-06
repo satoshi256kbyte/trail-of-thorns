@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { TerrainCost, MovementAnimationConfig } from '../types/movement';
 import { BattleAnimationConfig } from '../types/battle';
+import { RecruitmentAnimationConfig } from '../types/recruitment';
 
 /**
  * Movement system configuration options
@@ -31,6 +32,65 @@ export interface MovementSystemConfig {
         movementCost: number;
         blockedTiles: number;
         alternativePaths: number;
+    };
+}
+
+/**
+ * Recruitment system configuration options
+ */
+export interface RecruitmentSystemConfig {
+    /** Enable recruitment system */
+    enableRecruitmentSystem: boolean;
+    /** Enable recruitment condition display */
+    enableConditionDisplay: boolean;
+    /** Enable recruitment progress indicators */
+    enableProgressIndicators: boolean;
+    /** Enable NPC state visual indicators */
+    enableNPCIndicators: boolean;
+    /** Enable recruitment animations */
+    enableRecruitmentAnimations: boolean;
+    /** Enable recruitment debug visualization */
+    enableRecruitmentDebug: boolean;
+    /** Show recruitment condition checks in debug mode */
+    showConditionCheckDebug: boolean;
+    /** Show NPC state management debug info */
+    showNPCStateDebug: boolean;
+    /** Show recruitment statistics */
+    showRecruitmentStatistics: boolean;
+    /** Enable detailed recruitment logging */
+    enableDetailedLogging: boolean;
+    /** Recruitment animation configuration */
+    animationConfig: RecruitmentAnimationConfig;
+    /** Recruitment balance settings */
+    balanceSettings: {
+        /** Default NPC survival bonus (affects AI targeting) */
+        npcSurvivalBonus: number;
+        /** Recruitment condition display duration (ms) */
+        conditionDisplayDuration: number;
+        /** NPC indicator fade duration (ms) */
+        npcIndicatorFadeDuration: number;
+        /** Recruitment success celebration duration (ms) */
+        successCelebrationDuration: number;
+    };
+    /** Debug visualization colors */
+    debugColors: {
+        recruitableTarget: number;
+        conditionMet: number;
+        conditionNotMet: number;
+        npcState: number;
+        recruitmentSuccess: number;
+        recruitmentFailure: number;
+    };
+    /** Console command settings */
+    consoleCommands: {
+        /** Enable recruitment console commands */
+        enableCommands: boolean;
+        /** Command prefix for recruitment commands */
+        commandPrefix: string;
+        /** Enable recruitment simulation commands */
+        enableSimulation: boolean;
+        /** Enable balance testing commands */
+        enableBalanceTesting: boolean;
     };
 }
 
@@ -98,6 +158,7 @@ export interface IGameConfigValidation {
     readonly PHYSICS_DEBUG: boolean;
     readonly MOVEMENT_SYSTEM: MovementSystemConfig;
     readonly BATTLE_SYSTEM: BattleSystemConfig;
+    readonly RECRUITMENT_SYSTEM: RecruitmentSystemConfig;
 }
 
 /**
@@ -110,6 +171,8 @@ export interface IGameConfig extends IGameConfigValidation {
     updateMovementSystemConfig(config: Partial<MovementSystemConfig>): void;
     getBattleSystemConfig(): BattleSystemConfig;
     updateBattleSystemConfig(config: Partial<BattleSystemConfig>): void;
+    getRecruitmentSystemConfig(): RecruitmentSystemConfig;
+    updateRecruitmentSystemConfig(config: Partial<RecruitmentSystemConfig>): void;
 }
 
 /**
@@ -154,6 +217,50 @@ export class GameConfig implements IGameConfig {
             movementCost: 0x0000ff,
             blockedTiles: 0xff00ff,
             alternativePaths: 0xffff00,
+        },
+    };
+
+    // Recruitment system configuration
+    public static readonly RECRUITMENT_SYSTEM: RecruitmentSystemConfig = {
+        enableRecruitmentSystem: true,
+        enableConditionDisplay: true,
+        enableProgressIndicators: true,
+        enableNPCIndicators: true,
+        enableRecruitmentAnimations: true,
+        enableRecruitmentDebug: process.env.NODE_ENV === 'development',
+        showConditionCheckDebug: false,
+        showNPCStateDebug: false,
+        showRecruitmentStatistics: false,
+        enableDetailedLogging: process.env.NODE_ENV === 'development',
+        animationConfig: {
+            conditionDisplayDuration: 2000,
+            npcConversionDuration: 1500,
+            recruitmentSuccessDuration: 3000,
+            recruitmentFailureDuration: 2000,
+            progressUpdateDuration: 500,
+            enableParticleEffects: true,
+            enableScreenEffects: true,
+            animationSpeed: 1.0,
+        },
+        balanceSettings: {
+            npcSurvivalBonus: 100,
+            conditionDisplayDuration: 3000,
+            npcIndicatorFadeDuration: 1000,
+            successCelebrationDuration: 4000,
+        },
+        debugColors: {
+            recruitableTarget: 0x00ff88,
+            conditionMet: 0x44ff44,
+            conditionNotMet: 0xff4444,
+            npcState: 0x8844ff,
+            recruitmentSuccess: 0x44ff88,
+            recruitmentFailure: 0xff8844,
+        },
+        consoleCommands: {
+            enableCommands: process.env.NODE_ENV === 'development',
+            commandPrefix: 'recruitment',
+            enableSimulation: true,
+            enableBalanceTesting: true,
         },
     };
 
@@ -206,11 +313,14 @@ export class GameConfig implements IGameConfig {
     public readonly PHYSICS_DEBUG = GameConfig.PHYSICS_DEBUG;
     public readonly MOVEMENT_SYSTEM = GameConfig.MOVEMENT_SYSTEM;
     public readonly BATTLE_SYSTEM = GameConfig.BATTLE_SYSTEM;
+    public readonly RECRUITMENT_SYSTEM = GameConfig.RECRUITMENT_SYSTEM;
 
     // Mutable movement system configuration for runtime updates
     private movementSystemConfig: MovementSystemConfig;
     // Mutable battle system configuration for runtime updates
     private battleSystemConfig: BattleSystemConfig;
+    // Mutable recruitment system configuration for runtime updates
+    private recruitmentSystemConfig: RecruitmentSystemConfig;
 
     /**
      * Constructor - Initialize mutable configuration
@@ -219,6 +329,7 @@ export class GameConfig implements IGameConfig {
         // Deep clone the static configuration for runtime modifications
         this.movementSystemConfig = JSON.parse(JSON.stringify(GameConfig.MOVEMENT_SYSTEM));
         this.battleSystemConfig = JSON.parse(JSON.stringify(GameConfig.BATTLE_SYSTEM));
+        this.recruitmentSystemConfig = JSON.parse(JSON.stringify(GameConfig.RECRUITMENT_SYSTEM));
     }
 
     /**
@@ -253,6 +364,23 @@ export class GameConfig implements IGameConfig {
     public updateBattleSystemConfig(config: Partial<BattleSystemConfig>): void {
         this.battleSystemConfig = { ...this.battleSystemConfig, ...config };
         console.log('GameConfig: Battle system configuration updated:', config);
+    }
+
+    /**
+     * Get current recruitment system configuration
+     * @returns Recruitment system configuration
+     */
+    public getRecruitmentSystemConfig(): RecruitmentSystemConfig {
+        return { ...this.recruitmentSystemConfig };
+    }
+
+    /**
+     * Update recruitment system configuration
+     * @param config - Partial configuration to update
+     */
+    public updateRecruitmentSystemConfig(config: Partial<RecruitmentSystemConfig>): void {
+        this.recruitmentSystemConfig = { ...this.recruitmentSystemConfig, ...config };
+        console.log('GameConfig: Recruitment system configuration updated:', config);
     }
 
     /**
@@ -327,6 +455,11 @@ export class GameConfig implements IGameConfig {
 
             // Battle system configuration validation
             if (!this.validateBattleSystemConfig()) {
+                return false;
+            }
+
+            // Recruitment system configuration validation
+            if (!this.validateRecruitmentSystemConfig()) {
                 return false;
             }
 
@@ -468,6 +601,82 @@ export class GameConfig implements IGameConfig {
     }
 
     /**
+     * Validate recruitment system configuration
+     * @returns True if valid, false otherwise
+     */
+    private validateRecruitmentSystemConfig(): boolean {
+        const config = this.recruitmentSystemConfig;
+
+        // Validate animation configuration
+        if (config.animationConfig.conditionDisplayDuration < 0) {
+            console.error('Invalid condition display duration');
+            return false;
+        }
+
+        if (config.animationConfig.npcConversionDuration < 0) {
+            console.error('Invalid NPC conversion duration');
+            return false;
+        }
+
+        if (config.animationConfig.recruitmentSuccessDuration < 0) {
+            console.error('Invalid recruitment success duration');
+            return false;
+        }
+
+        if (config.animationConfig.recruitmentFailureDuration < 0) {
+            console.error('Invalid recruitment failure duration');
+            return false;
+        }
+
+        if (config.animationConfig.progressUpdateDuration < 0) {
+            console.error('Invalid progress update duration');
+            return false;
+        }
+
+        if (config.animationConfig.animationSpeed <= 0) {
+            console.error('Invalid recruitment animation speed multiplier');
+            return false;
+        }
+
+        // Validate balance settings
+        if (config.balanceSettings.npcSurvivalBonus < 0) {
+            console.error('Invalid NPC survival bonus');
+            return false;
+        }
+
+        if (config.balanceSettings.conditionDisplayDuration < 0) {
+            console.error('Invalid condition display duration');
+            return false;
+        }
+
+        if (config.balanceSettings.npcIndicatorFadeDuration < 0) {
+            console.error('Invalid NPC indicator fade duration');
+            return false;
+        }
+
+        if (config.balanceSettings.successCelebrationDuration < 0) {
+            console.error('Invalid success celebration duration');
+            return false;
+        }
+
+        // Validate debug colors (should be valid hex colors)
+        for (const [colorName, colorValue] of Object.entries(config.debugColors)) {
+            if (typeof colorValue !== 'number' || colorValue < 0 || colorValue > 0xffffff) {
+                console.error(`Invalid recruitment debug color ${colorName}: ${colorValue}`);
+                return false;
+            }
+        }
+
+        // Validate console command settings
+        if (typeof config.consoleCommands.commandPrefix !== 'string' || config.consoleCommands.commandPrefix.length === 0) {
+            console.error('Invalid console command prefix');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * 設定値をコンソールに出力する（デバッグ用）
      */
     public logConfig(): void {
@@ -498,5 +707,18 @@ export class GameConfig implements IGameConfig {
         console.log(`  - Experience Multiplier: ${this.battleSystemConfig.balanceSettings.experienceMultiplier}`);
         console.log(`  - Attack Animation Duration: ${this.battleSystemConfig.animationConfig.attackAnimationDuration}ms`);
         console.log(`  - Animation Speed: ${this.battleSystemConfig.animationConfig.animationSpeed}x`);
+        console.log('- Recruitment System:');
+        console.log(`  - Recruitment System Enabled: ${this.recruitmentSystemConfig.enableRecruitmentSystem}`);
+        console.log(`  - Condition Display: ${this.recruitmentSystemConfig.enableConditionDisplay}`);
+        console.log(`  - Progress Indicators: ${this.recruitmentSystemConfig.enableProgressIndicators}`);
+        console.log(`  - NPC Indicators: ${this.recruitmentSystemConfig.enableNPCIndicators}`);
+        console.log(`  - Recruitment Animations: ${this.recruitmentSystemConfig.enableRecruitmentAnimations}`);
+        console.log(`  - Recruitment Debug: ${this.recruitmentSystemConfig.enableRecruitmentDebug}`);
+        console.log(`  - Detailed Logging: ${this.recruitmentSystemConfig.enableDetailedLogging}`);
+        console.log(`  - NPC Survival Bonus: ${this.recruitmentSystemConfig.balanceSettings.npcSurvivalBonus}`);
+        console.log(`  - Condition Display Duration: ${this.recruitmentSystemConfig.balanceSettings.conditionDisplayDuration}ms`);
+        console.log(`  - Console Commands: ${this.recruitmentSystemConfig.consoleCommands.enableCommands}`);
+        console.log(`  - Command Prefix: ${this.recruitmentSystemConfig.consoleCommands.commandPrefix}`);
+        console.log(`  - Animation Speed: ${this.recruitmentSystemConfig.animationConfig.animationSpeed}x`);
     }
 }

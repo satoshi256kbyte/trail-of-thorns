@@ -22,6 +22,8 @@ import { DebugManager } from '../debug/DebugManager';
 import { MovementSystem } from '../systems/MovementSystem';
 import { MovementDevelopmentTools } from '../debug/MovementDevelopmentTools';
 import { BattleSystem } from '../systems/BattleSystem';
+import { RecruitmentSystem } from '../systems/recruitment/RecruitmentSystem';
+import { RecruitmentUI } from '../systems/recruitment/RecruitmentUI';
 import {
     StageData,
     MapData,
@@ -33,6 +35,7 @@ import {
 import { SceneTransition, TransitionType, SceneData } from '../utils/SceneTransition';
 import { Position } from '../types/movement';
 import { BattleResult, BattleError } from '../types/battle';
+import { RecruitmentResult, RecruitmentProgress, RecruitmentCondition } from '../types/recruitment';
 
 /**
  * GameplayScene configuration interface
@@ -64,6 +67,8 @@ export class GameplayScene extends Phaser.Scene {
     private movementSystem!: MovementSystem;
     private movementDevTools!: MovementDevelopmentTools;
     private battleSystem!: BattleSystem;
+    private recruitmentSystem!: RecruitmentSystem;
+    private recruitmentUI!: RecruitmentUI;
 
     // Scene data and state
     private stageData?: StageData;
@@ -386,6 +391,31 @@ export class GameplayScene extends Phaser.Scene {
                 faction: 'enemy',
                 hasActed: false,
                 hasMoved: false,
+                metadata: {
+                    recruitment: {
+                        conditions: [
+                            {
+                                id: 'specific_attacker',
+                                type: 'specific_attacker',
+                                description: '主人公で攻撃して撃破する',
+                                parameters: {
+                                    attackerId: 'player-1'
+                                }
+                            },
+                            {
+                                id: 'hp_threshold',
+                                type: 'hp_threshold',
+                                description: 'HPが30%以下の状態で撃破する',
+                                parameters: {
+                                    threshold: 0.3
+                                }
+                            }
+                        ],
+                        priority: 80,
+                        description: 'オークの戦士を仲間にする',
+                        rewards: []
+                    }
+                }
             },
             {
                 id: 'enemy-2',
@@ -404,6 +434,23 @@ export class GameplayScene extends Phaser.Scene {
                 faction: 'enemy',
                 hasActed: false,
                 hasMoved: false,
+                metadata: {
+                    recruitment: {
+                        conditions: [
+                            {
+                                id: 'damage_type',
+                                type: 'damage_type',
+                                description: '魔法攻撃で撃破する',
+                                parameters: {
+                                    damageType: 'magic'
+                                }
+                            }
+                        ],
+                        priority: 60,
+                        description: 'ゴブリンの弓兵を仲間にする',
+                        rewards: []
+                    }
+                }
             },
         ];
     }
@@ -491,6 +538,27 @@ export class GameplayScene extends Phaser.Scene {
             enableResultCaching: false
         });
 
+        // Initialize RecruitmentSystem
+        this.recruitmentSystem = new RecruitmentSystem(this, {
+            enableRecruitment: true,
+            enableConditionValidation: true,
+            enableProgressTracking: true,
+            enableNPCProtection: true,
+            debugMode: this.config.debugMode
+        }, this.events);
+
+        // Initialize RecruitmentUI
+        this.recruitmentUI = new RecruitmentUI(this, {
+            showConditions: true,
+            showProgress: true,
+            enableAnimations: true,
+            enableSoundEffects: false,
+            conditionDisplayDuration: 5000,
+            successAnimationDuration: 3000,
+            failureAnimationDuration: 2000,
+            npcIndicatorScale: 1.0
+        }, this.events);
+
         console.log('GameplayScene: Manager systems initialized');
     }
 
@@ -562,6 +630,14 @@ export class GameplayScene extends Phaser.Scene {
         // Update battle system with all units
         this.battleSystem.initialize(allCharacters, this.stageData.mapData);
 
+        // Initialize recruitment system with stage data
+        const recruitmentResult = this.recruitmentSystem.initialize(this.stageData);
+        if (!recruitmentResult.success) {
+            console.warn('Failed to initialize recruitment system:', recruitmentResult.message);
+        } else {
+            console.log('Recruitment system initialized:', recruitmentResult.message);
+        }
+
         console.log('GameplayScene: Characters setup completed');
     }
 
@@ -599,9 +675,9 @@ export class GameplayScene extends Phaser.Scene {
         // Set game state for input validation
         this.inputHandler.setGameState(this.gameStateManager.getGameState());
 
-        // Set character selection callback (battle-aware)
+        // Set character selection callback (battle and recruitment aware)
         this.inputHandler.setCharacterSelectionCallback((unit, clickInfo) => {
-            this.handleCharacterSelectionWithBattle(unit, clickInfo);
+            this.handleCharacterSelectionWithRecruitment(unit, clickInfo);
         });
 
         // Set tile selection callback for movement (battle-aware)
@@ -722,6 +798,9 @@ export class GameplayScene extends Phaser.Scene {
         // Battle system event listeners
         this.setupBattleEventListeners();
 
+        // Recruitment system event listeners
+        this.setupRecruitmentEventListeners();
+
         console.log('GameplayScene: Event listeners setup completed');
     }
 
@@ -774,6 +853,69 @@ export class GameplayScene extends Phaser.Scene {
         });
 
         console.log('GameplayScene: Battle event listeners setup completed');
+    }
+
+    /**
+     * Setup recruitment system event listeners
+     */
+    private setupRecruitmentEventListeners(): void {
+        console.log('GameplayScene: Setting up recruitment event listeners');
+
+        // Recruitment system events
+        this.events.on('recruitment-initialized', (data: any) => {
+            console.log(`Recruitment system initialized with ${data.recruitableCount} recruitable characters`);
+        });
+
+        this.events.on('recruitment-eligibility-checked', (data: any) => {
+            console.log(`Recruitment eligibility checked for ${data.unitId}: ${data.eligible ? 'eligible' : 'not eligible'}`);
+        });
+
+        this.events.on('recruitment-attempt-processed', (data: any) => {
+            console.log(`Recruitment attempt processed for ${data.unitId}:`, data.result.success ? 'success' : 'failed');
+        });
+
+        this.events.on('character-converted-to-npc', (data: any) => {
+            console.log(`Character ${data.unitId} converted to NPC state`);
+
+            // Find the unit and show NPC indicator
+            const unit = this.findUnitById(data.unitId);
+            if (unit) {
+                this.recruitmentUI.showNPCIndicator(unit);
+
+                // Update character visual state
+                this.characterManager.updateCharacterVisualState(unit.id, 'npc');
+            }
+        });
+
+        this.events.on('recruitment-completed', (data: any) => {
+            console.log(`Recruitment completed for ${data.unitId}: ${data.success ? 'success' : 'failed'}`);
+
+            if (data.success) {
+                const unit = this.findUnitById(data.unitId);
+                if (unit) {
+                    this.recruitmentUI.showRecruitmentSuccess(unit);
+                }
+            }
+        });
+
+        this.events.on('recruitment-failed', (data: any) => {
+            console.log(`Recruitment failed for ${data.unitId}: ${data.reason}`);
+
+            const unit = this.findUnitById(data.unitId);
+            if (unit) {
+                this.recruitmentUI.showRecruitmentFailure(unit, this.getRecruitmentErrorMessage(data.reason));
+                this.recruitmentUI.hideNPCIndicator(unit);
+            }
+        });
+
+        this.events.on('stage-recruitment-completed', (data: any) => {
+            console.log(`Stage recruitment completed: ${data.recruitedUnits.length} recruited, ${data.failedUnits.length} failed`);
+
+            // Handle stage completion with recruited units
+            this.handleStageRecruitmentCompletion(data.recruitedUnits, data.failedUnits);
+        });
+
+        console.log('GameplayScene: Recruitment event listeners setup completed');
     }
 
     /**
@@ -896,6 +1038,9 @@ export class GameplayScene extends Phaser.Scene {
      */
     private handleCharacterSelection(unit: Unit | null, clickInfo: any): void {
         if (unit) {
+            // Show recruitment conditions if unit is recruitable
+            this.showRecruitmentConditionsIfApplicable(unit);
+
             // Try to select character for movement
             const movementResult = this.movementSystem.selectCharacterForMovement(unit, true);
 
@@ -1833,6 +1978,17 @@ export class GameplayScene extends Phaser.Scene {
             defeated: result.targetDefeated
         });
 
+        // Check for recruitment if target would be defeated
+        let recruitmentResult: RecruitmentResult | null = null;
+        if (result.targetDefeated && result.finalDamage > 0) {
+            recruitmentResult = this.processRecruitmentAttempt(
+                result.attacker,
+                result.target,
+                result.finalDamage,
+                result
+            );
+        }
+
         // Show damage numbers
         const targetScreenPos = this.getUnitScreenPosition(result.target);
         if (targetScreenPos) {
@@ -1867,7 +2023,7 @@ export class GameplayScene extends Phaser.Scene {
             }
         }
 
-        // Show battle result panel
+        // Show battle result panel (with recruitment info if applicable)
         this.uiManager.showBattleResult({
             damage: result.finalDamage,
             isCritical: result.isCritical,
@@ -1875,7 +2031,8 @@ export class GameplayScene extends Phaser.Scene {
             experienceGained: result.experienceGained,
             targetDefeated: result.targetDefeated,
             attacker: result.attacker.name,
-            target: result.target.name
+            target: result.target.name,
+            recruitmentResult: recruitmentResult
         });
 
         // Update character manager with new unit states
@@ -2002,16 +2159,18 @@ export class GameplayScene extends Phaser.Scene {
         if (!this.stageData) return;
 
         const playerUnits = this.stageData.playerUnits.filter(unit => unit.currentHP > 0);
-        const enemyUnits = this.stageData.enemyUnits.filter(unit => unit.currentHP > 0);
+        const enemyUnits = this.stageData.enemyUnits.filter(unit =>
+            unit.currentHP > 0 && !this.recruitmentSystem.isNPC(unit)
+        );
 
         if (playerUnits.length === 0) {
             // Defeat - all player units defeated
             this.gameStateManager.setGameResult('defeat');
             console.log('Game Over - All player units defeated');
         } else if (enemyUnits.length === 0) {
-            // Victory - all enemy units defeated
-            this.gameStateManager.setGameResult('victory');
-            console.log('Victory - All enemy units defeated');
+            // Victory - all enemy units defeated or converted to NPCs
+            this.checkStageCompletionWithRecruitment();
+            console.log('Victory - All enemy units defeated or converted');
         }
     }
 
@@ -2160,6 +2319,15 @@ export class GameplayScene extends Phaser.Scene {
             this.battleSystem.destroy();
         }
 
+        if (this.recruitmentSystem) {
+            // Recruitment system doesn't have a destroy method, but we can clean up references
+            console.log('Cleaning up recruitment system');
+        }
+
+        if (this.recruitmentUI) {
+            this.recruitmentUI.destroy();
+        }
+
         // Cleanup UI elements
         if (this.fpsText) {
             this.fpsText.destroy();
@@ -2184,5 +2352,236 @@ export class GameplayScene extends Phaser.Scene {
         this.stageData = undefined;
 
         console.log('GameplayScene: Cleanup completed');
+    }
+
+    // ===== RECRUITMENT SYSTEM INTEGRATION METHODS =====
+
+    /**
+     * Show recruitment conditions if unit is recruitable
+     * @param unit - Unit to check for recruitment conditions
+     */
+    private showRecruitmentConditionsIfApplicable(unit: Unit): void {
+        try {
+            // Only show conditions for enemy units
+            if (unit.faction !== 'enemy') {
+                return;
+            }
+
+            // Get recruitment conditions
+            const conditions = this.recruitmentSystem.getRecruitmentConditions(unit);
+            if (conditions.length > 0) {
+                this.recruitmentUI.showRecruitmentConditions(unit, conditions);
+
+                // Also show current progress if we have a selected attacker
+                const selectedUnit = this.gameStateManager.getSelectedUnit();
+                if (selectedUnit && selectedUnit.faction === 'player') {
+                    const progress = this.recruitmentSystem.getRecruitmentProgress(unit, {
+                        attacker: selectedUnit,
+                        turn: this.gameStateManager.getCurrentTurn()
+                    });
+
+                    if (progress) {
+                        this.recruitmentUI.updateRecruitmentProgress(unit, progress);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error showing recruitment conditions:', error);
+        }
+    }
+
+    /**
+     * Process recruitment attempt during battle
+     * @param attacker - Attacking unit
+     * @param target - Target unit
+     * @param damage - Damage dealt
+     * @param battleResult - Complete battle result
+     * @returns Recruitment result or null if not applicable
+     */
+    private processRecruitmentAttempt(
+        attacker: Unit,
+        target: Unit,
+        damage: number,
+        battleResult: BattleResult
+    ): RecruitmentResult | null {
+        try {
+            // Only process recruitment for enemy targets
+            if (target.faction !== 'enemy') {
+                return null;
+            }
+
+            // Check if target is recruitable
+            const conditions = this.recruitmentSystem.getRecruitmentConditions(target);
+            if (conditions.length === 0) {
+                return null;
+            }
+
+            // Process recruitment attempt
+            const recruitmentResult = this.recruitmentSystem.processRecruitmentAttempt(
+                attacker,
+                target,
+                damage,
+                battleResult,
+                this.gameStateManager.getCurrentTurn()
+            );
+
+            console.log('Recruitment attempt result:', recruitmentResult);
+            return recruitmentResult;
+
+        } catch (error) {
+            console.error('Error processing recruitment attempt:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Handle stage completion with recruitment
+     */
+    private handleStageRecruitmentCompletion(recruitedUnits: Unit[], failedUnits: string[]): void {
+        try {
+            console.log(`Stage recruitment completion: ${recruitedUnits.length} recruited, ${failedUnits.length} failed`);
+
+            // Add recruited units to player units for next stage
+            if (recruitedUnits.length > 0 && this.stageData) {
+                this.stageData.playerUnits.push(...recruitedUnits);
+
+                // Update character manager with new player units
+                recruitedUnits.forEach(unit => {
+                    this.characterManager.updateCharacterFaction(unit.id, 'player');
+                    this.recruitmentUI.hideNPCIndicator(unit);
+                });
+
+                // Show recruitment completion notification
+                this.uiManager.showNotification({
+                    message: `${recruitedUnits.length} character(s) recruited!`,
+                    type: 'success',
+                    duration: 3000
+                });
+            }
+
+            // Clean up failed recruitment indicators
+            failedUnits.forEach(unitId => {
+                const unit = this.findUnitById(unitId);
+                if (unit) {
+                    this.recruitmentUI.hideNPCIndicator(unit);
+                }
+            });
+
+        } catch (error) {
+            console.error('Error handling stage recruitment completion:', error);
+        }
+    }
+
+    /**
+     * Handle NPC input processing restrictions
+     * @param unit - Unit to check for NPC status
+     * @returns True if unit can be controlled, false if NPC
+     */
+    private canControlUnit(unit: Unit): boolean {
+        try {
+            // Check if unit is in NPC state
+            if (this.recruitmentSystem.isNPC(unit)) {
+                console.log(`Unit ${unit.name} is in NPC state and cannot be controlled`);
+
+                // Show notification to player
+                this.uiManager.showNotification({
+                    message: `${unit.name} is in NPC state and cannot act`,
+                    type: 'info',
+                    duration: 2000
+                });
+
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error checking unit control status:', error);
+            return true; // Default to allowing control if error occurs
+        }
+    }
+
+    /**
+     * Override character selection to handle NPC restrictions
+     * @param unit - Unit to select
+     * @param clickInfo - Click information
+     */
+    private handleCharacterSelectionWithRecruitment(unit: Unit | null, clickInfo: any): void {
+        if (unit) {
+            // Check if unit can be controlled (not NPC)
+            if (!this.canControlUnit(unit)) {
+                return; // Don't select NPC units
+            }
+
+            // Show recruitment conditions for enemy units
+            this.showRecruitmentConditionsIfApplicable(unit);
+        }
+
+        // Continue with normal character selection
+        this.handleCharacterSelectionWithBattle(unit, clickInfo);
+    }
+
+    /**
+     * Check for stage clear and complete recruitment
+     */
+    private checkStageCompletionWithRecruitment(): void {
+        try {
+            if (!this.stageData) {
+                return;
+            }
+
+            // Check if stage is complete (all enemies defeated or objectives met)
+            const enemyUnits = this.stageData.enemyUnits.filter(unit =>
+                unit.currentHP > 0 && !this.recruitmentSystem.isNPC(unit)
+            );
+
+            if (enemyUnits.length === 0) {
+                console.log('Stage completed - processing recruitment');
+
+                // Complete recruitment for all surviving NPCs
+                const allUnits = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+                const recruitedUnits = this.recruitmentSystem.completeRecruitment(allUnits);
+
+                console.log(`Recruitment completed: ${recruitedUnits.length} units recruited`);
+
+                // Set game result to victory
+                this.gameStateManager.setGameResult('victory');
+            }
+        } catch (error) {
+            console.error('Error checking stage completion with recruitment:', error);
+        }
+    }
+
+    /**
+     * Find unit by ID across all units
+     * @param unitId - Unit ID to find
+     * @returns Unit or null if not found
+     */
+    private findUnitById(unitId: string): Unit | null {
+        if (!this.stageData) {
+            return null;
+        }
+
+        const allUnits = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+        return allUnits.find(unit => unit.id === unitId) || null;
+    }
+
+    /**
+     * Get user-friendly error message for recruitment errors
+     * @param error - Recruitment error
+     * @returns User-friendly error message
+     */
+    private getRecruitmentErrorMessage(error: string): string {
+        switch (error) {
+            case 'INVALID_TARGET':
+                return 'このキャラクターは仲間にできません';
+            case 'CONDITIONS_NOT_MET':
+                return '仲間化条件を満たしていません';
+            case 'NPC_ALREADY_DEFEATED':
+                return 'NPCが撃破されました';
+            case 'SYSTEM_ERROR':
+                return 'システムエラーが発生しました';
+            default:
+                return '仲間化に失敗しました';
+        }
     }
 }
