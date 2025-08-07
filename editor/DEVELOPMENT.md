@@ -45,7 +45,7 @@ const ComponentName: React.FC<ComponentNameProps> = ({
   // Hooks
   // Event handlers
   // Render logic
-  
+
   return (
     // JSX
   );
@@ -118,7 +118,7 @@ const useDataFetching = <T>(url: string) => {
 const useFormValidation = <T>(initialValues: T, validationSchema: Schema) => {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const validate = useCallback(() => {
     // Validation logic
   }, [values, validationSchema]);
@@ -138,7 +138,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 // Provider component
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(dataReducer, initialState);
-  
+
   return (
     <DataContext.Provider value={{ state, dispatch }}>
       {children}
@@ -165,7 +165,7 @@ interface State {
   error: string | null;
 }
 
-type Action = 
+type Action =
   | { type: 'FETCH_START' }
   | { type: 'FETCH_SUCCESS'; payload: DataType[] }
   | { type: 'FETCH_ERROR'; payload: string };
@@ -212,9 +212,9 @@ src/
 describe('CharacterEditor', () => {
   it('validates required fields', async () => {
     render(<CharacterEditor character={mockCharacter} onSave={mockSave} />);
-    
+
     fireEvent.click(screen.getByText('Save'));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Name is required/)).toBeInTheDocument();
     });
@@ -232,17 +232,17 @@ describe('CharacterEditor', () => {
 describe('Data Workflow', () => {
   it('completes character creation workflow', async () => {
     render(<App />);
-    
+
     // Navigate and create character
     fireEvent.click(screen.getByText('Characters'));
     fireEvent.click(screen.getByText('Add Character'));
-    
+
     // Fill form and save
     fireEvent.change(screen.getByLabelText(/Name/), {
       target: { value: 'New Character' }
     });
     fireEvent.click(screen.getByText('Save'));
-    
+
     // Verify result
     await waitFor(() => {
       expect(screen.getByText('New Character')).toBeInTheDocument();
@@ -262,9 +262,9 @@ describe('Performance', () => {
   it('renders large character list efficiently', () => {
     const startTime = performance.now();
     const largeDataset = generateLargeDataset(1000);
-    
+
     render(<CharacterList characters={largeDataset} />);
-    
+
     const endTime = performance.now();
     expect(endTime - startTime).toBeLessThan(1000);
   });
@@ -276,7 +276,9 @@ describe('Performance', () => {
 #### Mock Data Factories
 
 ```typescript
-export const createMockCharacter = (overrides: Partial<Character> = {}): Character => ({
+export const createMockCharacter = (
+  overrides: Partial<Character> = {}
+): Character => ({
   id: 'mock-char-1',
   name: 'Mock Character',
   stats: { hp: 100, mp: 50, attack: 20, defense: 15, speed: 10, movement: 3 },
@@ -306,12 +308,15 @@ const renderWithProviders = (ui: React.ReactElement) => {
 #### React.memo
 
 ```typescript
-const ExpensiveComponent = React.memo<Props>(({ data }) => {
-  // Component logic
-}, (prevProps, nextProps) => {
-  // Custom comparison function
-  return prevProps.data.id === nextProps.data.id;
-});
+const ExpensiveComponent = React.memo<Props>(
+  ({ data }) => {
+    // Component logic
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function
+    return prevProps.data.id === nextProps.data.id;
+  }
+);
 ```
 
 #### useMemo and useCallback
@@ -443,19 +448,22 @@ const useErrorHandler = () => {
 const useKeyboardNavigation = (items: Item[]) => {
   const [focusedIndex, setFocusedIndex] = useState(0);
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    switch (event.key) {
-      case 'ArrowDown':
-        setFocusedIndex(prev => Math.min(prev + 1, items.length - 1));
-        break;
-      case 'ArrowUp':
-        setFocusedIndex(prev => Math.max(prev - 1, 0));
-        break;
-      case 'Enter':
-        // Handle selection
-        break;
-    }
-  }, [items.length]);
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowDown':
+          setFocusedIndex(prev => Math.min(prev + 1, items.length - 1));
+          break;
+        case 'ArrowUp':
+          setFocusedIndex(prev => Math.max(prev - 1, 0));
+          break;
+        case 'Enter':
+          // Handle selection
+          break;
+      }
+    },
+    [items.length]
+  );
 
   return { focusedIndex, handleKeyDown };
 };
@@ -472,7 +480,7 @@ const Modal = ({ isOpen, onClose }) => {
       const firstFocusable = modalRef.current.querySelector(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       ) as HTMLElement;
-      
+
       firstFocusable?.focus();
     }
   }, [isOpen]);
@@ -577,7 +585,7 @@ const Component = () => {
 ```typescript
 const logError = (error: Error, context: string) => {
   console.error(`Error in ${context}:`, error);
-  
+
   // Send to error reporting service
   if (process.env.NODE_ENV === 'production') {
     errorReportingService.captureException(error, { context });

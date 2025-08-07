@@ -178,27 +178,33 @@ fix(editor): キャラクターデータの保存エラーを修正
 
 ```markdown
 ## 概要
+
 このプルリクエストの目的と変更内容を簡潔に説明
 
 ## 変更内容
+
 - [ ] 新機能の追加
 - [ ] バグ修正
 - [ ] リファクタリング
 - [ ] テストの追加
 
 ## テスト
+
 - [ ] 既存テストが通ることを確認
 - [ ] 新しいテストを追加
 - [ ] 手動テストを実施
 
 ## 関連Issue
+
 Closes #123
 Refs #456
 
 ## スクリーンショット（必要に応じて）
+
 変更の視覚的な確認ができる場合は添付
 
 ## チェックリスト
+
 - [ ] コードレビューを受けた
 - [ ] テストが通る
 - [ ] ドキュメントを更新した
@@ -245,13 +251,8 @@ npm run release -- --release-as 1.1.0
     }
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.md": [
-      "markdownlint --fix"
-    ]
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.md": ["markdownlint --fix"]
   }
 }
 ```
@@ -279,12 +280,12 @@ module.exports = {
         'editor',
         'data',
         'server',
-        'infra'
-      ]
+        'infra',
+      ],
     ],
     'subject-max-length': [2, 'always', 72],
-    'body-max-line-length': [2, 'always', 100]
-  }
+    'body-max-line-length': [2, 'always', 100],
+  },
 };
 ```
 

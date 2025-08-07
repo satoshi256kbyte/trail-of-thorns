@@ -15,8 +15,8 @@
 
 ```typescript
 // ❌ 悪い例：機密情報をコードに直接記述
-const API_KEY = "sk-1234567890abcdef";
-const DATABASE_PASSWORD = "mypassword123";
+const API_KEY = 'sk-1234567890abcdef';
+const DATABASE_PASSWORD = 'mypassword123';
 
 // ✅ 良い例：環境変数から取得
 const API_KEY = process.env.API_KEY;
@@ -41,27 +41,27 @@ AWS_REGION=ap-northeast-1
 
 ```typescript
 // AWS Secrets Managerから機密情報を取得
-import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 
 async function getSecret(secretName: string): Promise<string> {
-  const client = new SecretsManagerClient({ region: "ap-northeast-1" });
-  
+  const client = new SecretsManagerClient({ region: 'ap-northeast-1' });
+
   try {
     const response = await client.send(
       new GetSecretValueCommand({
         SecretId: secretName,
       })
     );
-    
-    return response.SecretString || "";
+
+    return response.SecretString || '';
   } catch (error) {
-    console.error("Error retrieving secret:", error);
+    console.error('Error retrieving secret:', error);
     throw error;
   }
 }
 
 // 使用例
-const dbPassword = await getSecret("prod/database/password");
+const dbPassword = await getSecret('prod/database/password');
 ```
 
 ## リポジトリ管理
@@ -128,12 +128,12 @@ class SecureStorage {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipher(this.algorithm, this.secretKey);
     cipher.setAAD(Buffer.from('additional-data'));
-    
+
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     const authTag = cipher.getAuthTag();
-    
+
     return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
   }
 
@@ -142,14 +142,14 @@ class SecureStorage {
     const iv = Buffer.from(parts[0], 'hex');
     const authTag = Buffer.from(parts[1], 'hex');
     const encrypted = parts[2];
-    
+
     const decipher = crypto.createDecipher(this.algorithm, this.secretKey);
     decipher.setAAD(Buffer.from('additional-data'));
     decipher.setAuthTag(authTag);
-    
+
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   }
 }
@@ -185,20 +185,13 @@ app.use((req, res, next) => {
 // CDKでのIAMロール定義
 const lambdaRole = new iam.Role(this, 'LambdaExecutionRole', {
   assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-  managedPolicies: [
-    iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-  ],
+  managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')],
   inlinePolicies: {
     DynamoDBAccess: new iam.PolicyDocument({
       statements: [
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
-          actions: [
-            'dynamodb:GetItem',
-            'dynamodb:PutItem',
-            'dynamodb:UpdateItem',
-            'dynamodb:DeleteItem',
-          ],
+          actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:DeleteItem'],
           resources: [playerDataTable.tableArn],
         }),
       ],
@@ -249,7 +242,11 @@ app.get('/api/player-data', authenticateToken, (req: AuthenticatedRequest, res) 
 import { z } from 'zod';
 
 const PlayerDataSchema = z.object({
-  name: z.string().min(1).max(50).regex(/^[a-zA-Z0-9_-]+$/),
+  name: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-zA-Z0-9_-]+$/),
   level: z.number().int().min(1).max(100),
   stats: z.object({
     hp: z.number().int().min(1).max(9999),
@@ -275,19 +272,19 @@ app.post('/api/player-data', (req, res) => {
 
 ```typescript
 // パラメータ化クエリの使用
-import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 
 const getPlayerData = async (userId: string, saveSlot: number) => {
-  const client = new DynamoDBClient({ region: "ap-northeast-1" });
-  
+  const client = new DynamoDBClient({ region: 'ap-northeast-1' });
+
   const command = new GetItemCommand({
-    TableName: "PlayerSaveData",
+    TableName: 'PlayerSaveData',
     Key: {
       userId: { S: userId },
       saveSlot: { N: saveSlot.toString() },
     },
   });
-  
+
   return await client.send(command);
 };
 ```
@@ -308,9 +305,9 @@ class SecurityLogger {
       ip,
       userAgent: req.headers['user-agent'],
     };
-    
+
     console.log(JSON.stringify(logEntry));
-    
+
     // CloudWatch Logsに送信
     // 失敗時はアラート送信
     if (!success) {
@@ -326,7 +323,7 @@ class SecurityLogger {
       resource,
       action,
     };
-    
+
     console.log(JSON.stringify(logEntry));
   }
 
@@ -349,9 +346,7 @@ const trail = new cloudtrail.Trail(this, 'SecurityAuditTrail', {
 });
 
 // 重要なイベントのみを記録
-trail.addEventSelector(cloudtrail.DataResourceType.S3_OBJECT, [
-  `${websiteBucket.bucketArn}/*`,
-]);
+trail.addEventSelector(cloudtrail.DataResourceType.S3_OBJECT, [`${websiteBucket.bucketArn}/*`]);
 ```
 
 ## 脆弱性対策
@@ -374,21 +369,23 @@ npm outdated
 // Express.jsでのセキュリティヘッダー設定
 import helmet from 'helmet';
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
     },
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-  },
-}));
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  })
+);
 ```
 
 ## インシデント対応
@@ -428,10 +425,10 @@ const SECURITY_CONTACTS = {
 const notifySecurityIncident = async (incident: SecurityIncident) => {
   // メール通知
   await sendEmail(SECURITY_CONTACTS.primary, incident);
-  
+
   // Slack通知
   await sendSlackNotification(SECURITY_CONTACTS.slack, incident);
-  
+
   // SMS通知（重大インシデントの場合）
   if (incident.severity === 'critical') {
     await sendSMS(SECURITY_CONTACTS.emergency_phone, incident);

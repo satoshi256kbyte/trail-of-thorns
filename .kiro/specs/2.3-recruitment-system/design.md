@@ -16,31 +16,31 @@ graph TB
         RC[RecruitmentCondition]
         RUI[RecruitmentUI]
     end
-    
+
     subgraph "既存システム"
         BS[BattleSystem]
         CM[CharacterManager]
         GM[GameStateManager]
         UM[UIManager]
     end
-    
+
     subgraph "データ層"
         CD[CharacterData]
         SD[StageData]
         PD[PlayerData]
     end
-    
+
     RS --> NSM
     RS --> RC
     RS --> RUI
     RS --> BS
     RS --> CM
     RS --> GM
-    
+
     NSM --> CM
     RC --> CD
     RUI --> UM
-    
+
     BS --> RS
     CM --> RS
     GM --> RS
@@ -62,18 +62,18 @@ graph TB
 interface IRecruitmentSystem {
   // 初期化
   initialize(stageData: StageData): void;
-  
+
   // 仲間化判定
   checkRecruitmentEligibility(attacker: Unit, target: Unit): RecruitmentResult;
   processRecruitmentAttempt(attacker: Unit, target: Unit, damage: number): boolean;
-  
+
   // NPC管理
   convertToNPC(unit: Unit): void;
   getNPCUnits(): Unit[];
-  
+
   // 仲間化完了
   completeRecruitment(): RecruitedUnit[];
-  
+
   // UI連携
   getRecruitmentConditions(unit: Unit): RecruitmentCondition[];
   getRecruitmentProgress(unit: Unit): RecruitmentProgress;
@@ -84,12 +84,8 @@ class RecruitmentSystem implements IRecruitmentSystem {
   private recruitmentConditions: Map<string, RecruitmentCondition[]>;
   private npcUnits: Set<Unit>;
   private recruitmentUI: RecruitmentUI;
-  
-  constructor(
-    battleSystem: BattleSystem,
-    characterManager: CharacterManager,
-    gameStateManager: GameStateManager
-  ) {
+
+  constructor(battleSystem: BattleSystem, characterManager: CharacterManager, gameStateManager: GameStateManager) {
     this.npcStateManager = new NPCStateManager();
     this.recruitmentConditions = new Map();
     this.npcUnits = new Set();
@@ -111,18 +107,18 @@ interface INPCStateManager {
 
 class NPCStateManager implements INPCStateManager {
   private npcUnits: Map<string, NPCState>;
-  
+
   convertToNPC(unit: Unit): void {
     // キャラクターをNPC状態に変更
     // 行動不可状態に設定
     // 視覚的表示を更新
     // 敵AIの攻撃優先度を最高に設定
   }
-  
+
   isNPC(unit: Unit): boolean {
     return this.npcUnits.has(unit.id);
   }
-  
+
   getNPCPriority(unit: Unit): number {
     // NPCの場合は最高優先度を返す
     return this.isNPC(unit) ? Number.MAX_SAFE_INTEGER : 0;
@@ -146,7 +142,7 @@ enum RecruitmentConditionType {
   HP_THRESHOLD = 'hp_threshold',
   DAMAGE_TYPE = 'damage_type',
   TURN_LIMIT = 'turn_limit',
-  ALLY_PRESENT = 'ally_present'
+  ALLY_PRESENT = 'ally_present',
 }
 
 class SpecificAttackerCondition implements RecruitmentCondition {
@@ -154,7 +150,7 @@ class SpecificAttackerCondition implements RecruitmentCondition {
   type = RecruitmentConditionType.SPECIFIC_ATTACKER;
   description: string;
   parameters: { attackerId: string };
-  
+
   checkCondition(context: RecruitmentContext): boolean {
     return context.attacker.id === this.parameters.attackerId;
   }
@@ -165,7 +161,7 @@ class HPThresholdCondition implements RecruitmentCondition {
   type = RecruitmentConditionType.HP_THRESHOLD;
   description: string;
   parameters: { threshold: number };
-  
+
   checkCondition(context: RecruitmentContext): boolean {
     const hpPercentage = context.target.currentHP / context.target.stats.maxHP;
     return hpPercentage <= this.parameters.threshold;
@@ -189,13 +185,13 @@ class RecruitmentUI implements IRecruitmentUI {
   private scene: Phaser.Scene;
   private conditionPanels: Map<string, Phaser.GameObjects.Container>;
   private npcIndicators: Map<string, Phaser.GameObjects.Sprite>;
-  
+
   showRecruitmentConditions(unit: Unit, conditions: RecruitmentCondition[]): void {
     // 仲間化条件を表示するUIパネルを作成
     // 条件の達成状況を色分けで表示
     // プレイヤーが理解しやすい形で情報を提示
   }
-  
+
   showNPCIndicator(unit: Unit): void {
     // NPC状態を示す視覚的インジケーターを表示
     // キャラクターの上に特別なアイコンを配置
@@ -243,14 +239,14 @@ enum RecruitmentStatus {
   CONDITIONS_MET = 'conditions_met',
   NPC_STATE = 'npc_state',
   RECRUITED = 'recruited',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 enum RecruitmentAction {
   CONTINUE_BATTLE = 'continue_battle',
   CONVERT_TO_NPC = 'convert_to_npc',
   RECRUITMENT_SUCCESS = 'recruitment_success',
-  RECRUITMENT_FAILED = 'recruitment_failed'
+  RECRUITMENT_FAILED = 'recruitment_failed',
 }
 ```
 
@@ -272,7 +268,7 @@ enum RecruitmentAction {
         },
         {
           "id": "hp_threshold",
-          "type": "hp_threshold", 
+          "type": "hp_threshold",
           "description": "HPが30%以下の状態で撃破する",
           "parameters": {
             "threshold": 0.3
@@ -293,20 +289,20 @@ enum RecruitmentError {
   INVALID_TARGET = 'invalid_target',
   CONDITIONS_NOT_MET = 'conditions_not_met',
   NPC_ALREADY_DEFEATED = 'npc_already_defeated',
-  SYSTEM_ERROR = 'system_error'
+  SYSTEM_ERROR = 'system_error',
 }
 
 class RecruitmentErrorHandler {
   handleError(error: RecruitmentError, context: RecruitmentContext): void {
     switch (error) {
       case RecruitmentError.INVALID_TARGET:
-        this.showMessage("このキャラクターは仲間にできません");
+        this.showMessage('このキャラクターは仲間にできません');
         break;
       case RecruitmentError.CONDITIONS_NOT_MET:
-        this.showMessage("仲間化条件を満たしていません");
+        this.showMessage('仲間化条件を満たしていません');
         break;
       case RecruitmentError.NPC_ALREADY_DEFEATED:
-        this.showMessage("仲間化に失敗しました");
+        this.showMessage('仲間化に失敗しました');
         break;
     }
   }

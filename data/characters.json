@@ -1,205 +1,205 @@
 {
-    "characters": [
-        {
-            "id": "protagonist",
-            "name": "主人公",
-            "description": "薔薇の脅威を取り除く使命を帯びた冒険者",
-            "faction": "player",
-            "baseStats": {
-                "maxHP": 120,
-                "maxMP": 60,
-                "attack": 25,
-                "defense": 20,
-                "speed": 15,
-                "movement": 3
-            },
-            "jobClass": "warrior",
-            "level": 1,
-            "isRecruitable": false,
-            "recruitmentData": null
-        },
-        {
-            "id": "ally_mage",
-            "name": "魔法使いエリア",
-            "description": "古代魔法に精通した賢者",
-            "faction": "player",
-            "baseStats": {
-                "maxHP": 80,
-                "maxMP": 100,
-                "attack": 30,
-                "defense": 12,
-                "speed": 12,
-                "movement": 2
-            },
-            "jobClass": "mage",
-            "level": 1,
-            "isRecruitable": false,
-            "recruitmentData": null
-        },
-        {
-            "id": "enemy_knight_01",
-            "name": "堕落した騎士",
-            "description": "薔薇の力に侵された元騎士",
-            "faction": "enemy",
-            "baseStats": {
-                "maxHP": 100,
-                "maxMP": 40,
-                "attack": 22,
-                "defense": 25,
-                "speed": 10,
-                "movement": 3
-            },
-            "jobClass": "knight",
-            "level": 2,
-            "isRecruitable": true,
-            "recruitmentData": {
-                "priority": 80,
-                "description": "主人公で攻撃し、HPが30%以下の状態で撃破する",
-                "conditions": [
-                    {
-                        "id": "specific_attacker_protagonist",
-                        "type": "specific_attacker",
-                        "description": "主人公で攻撃して撃破する",
-                        "parameters": {
-                            "attackerId": "protagonist"
-                        }
-                    },
-                    {
-                        "id": "hp_threshold_30",
-                        "type": "hp_threshold",
-                        "description": "HPが30%以下の状態で撃破する",
-                        "parameters": {
-                            "threshold": 0.3
-                        }
-                    }
-                ],
-                "rewards": [
-                    {
-                        "type": "experience",
-                        "amount": 100,
-                        "target": "recruiter",
-                        "description": "仲間化成功時に経験値100を獲得"
-                    }
-                ]
+  "characters": [
+    {
+      "id": "protagonist",
+      "name": "主人公",
+      "description": "薔薇の脅威を取り除く使命を帯びた冒険者",
+      "faction": "player",
+      "baseStats": {
+        "maxHP": 120,
+        "maxMP": 60,
+        "attack": 25,
+        "defense": 20,
+        "speed": 15,
+        "movement": 3
+      },
+      "jobClass": "warrior",
+      "level": 1,
+      "isRecruitable": false,
+      "recruitmentData": null
+    },
+    {
+      "id": "ally_mage",
+      "name": "魔法使いエリア",
+      "description": "古代魔法に精通した賢者",
+      "faction": "player",
+      "baseStats": {
+        "maxHP": 80,
+        "maxMP": 100,
+        "attack": 30,
+        "defense": 12,
+        "speed": 12,
+        "movement": 2
+      },
+      "jobClass": "mage",
+      "level": 1,
+      "isRecruitable": false,
+      "recruitmentData": null
+    },
+    {
+      "id": "enemy_knight_01",
+      "name": "堕落した騎士",
+      "description": "薔薇の力に侵された元騎士",
+      "faction": "enemy",
+      "baseStats": {
+        "maxHP": 100,
+        "maxMP": 40,
+        "attack": 22,
+        "defense": 25,
+        "speed": 10,
+        "movement": 3
+      },
+      "jobClass": "knight",
+      "level": 2,
+      "isRecruitable": true,
+      "recruitmentData": {
+        "priority": 80,
+        "description": "主人公で攻撃し、HPが30%以下の状態で撃破する",
+        "conditions": [
+          {
+            "id": "specific_attacker_protagonist",
+            "type": "specific_attacker",
+            "description": "主人公で攻撃して撃破する",
+            "parameters": {
+              "attackerId": "protagonist"
             }
-        },
-        {
-            "id": "enemy_archer_01",
-            "name": "森の狩人",
-            "description": "薔薇の影響で狂気に陥った弓使い",
-            "faction": "enemy",
-            "baseStats": {
-                "maxHP": 85,
-                "maxMP": 50,
-                "attack": 28,
-                "defense": 15,
-                "speed": 18,
-                "movement": 4
-            },
-            "jobClass": "archer",
-            "level": 2,
-            "isRecruitable": true,
-            "recruitmentData": {
-                "priority": 70,
-                "description": "魔法使いエリアで攻撃し、5ターン以内に撃破する",
-                "conditions": [
-                    {
-                        "id": "specific_attacker_mage",
-                        "type": "specific_attacker",
-                        "description": "魔法使いエリアで攻撃して撃破する",
-                        "parameters": {
-                            "attackerId": "ally_mage"
-                        }
-                    },
-                    {
-                        "id": "turn_limit_5",
-                        "type": "turn_limit",
-                        "description": "5ターン以内に撃破する",
-                        "parameters": {
-                            "maxTurn": 5
-                        }
-                    }
-                ],
-                "rewards": [
-                    {
-                        "type": "experience",
-                        "amount": 80,
-                        "target": "party",
-                        "description": "パーティ全体に経験値80を配分"
-                    }
-                ]
+          },
+          {
+            "id": "hp_threshold_30",
+            "type": "hp_threshold",
+            "description": "HPが30%以下の状態で撃破する",
+            "parameters": {
+              "threshold": 0.3
             }
-        },
-        {
-            "id": "enemy_mage_01",
-            "name": "闇の術師",
-            "description": "薔薇の力を研究していた魔法使い",
-            "faction": "enemy",
-            "baseStats": {
-                "maxHP": 70,
-                "maxMP": 120,
-                "attack": 35,
-                "defense": 10,
-                "speed": 14,
-                "movement": 2
-            },
-            "jobClass": "dark_mage",
-            "level": 3,
-            "isRecruitable": true,
-            "recruitmentData": {
-                "priority": 90,
-                "description": "光属性武器で攻撃し、クリティカルヒットを出さずに撃破する",
-                "conditions": [
-                    {
-                        "id": "element_match_light",
-                        "type": "element_match",
-                        "description": "光属性武器で攻撃して撃破する",
-                        "parameters": {
-                            "requiredElement": "light"
-                        }
-                    },
-                    {
-                        "id": "no_critical_hit",
-                        "type": "no_critical",
-                        "description": "クリティカルヒットを出さずに撃破する",
-                        "parameters": {}
-                    }
-                ],
-                "rewards": [
-                    {
-                        "type": "experience",
-                        "amount": 150,
-                        "target": "recruiter",
-                        "description": "仲間化成功時に経験値150を獲得"
-                    },
-                    {
-                        "type": "skill_point",
-                        "amount": 1,
-                        "target": "recruited",
-                        "description": "仲間化されたキャラクターがスキルポイント1を獲得"
-                    }
-                ]
+          }
+        ],
+        "rewards": [
+          {
+            "type": "experience",
+            "amount": 100,
+            "target": "recruiter",
+            "description": "仲間化成功時に経験値100を獲得"
+          }
+        ]
+      }
+    },
+    {
+      "id": "enemy_archer_01",
+      "name": "森の狩人",
+      "description": "薔薇の影響で狂気に陥った弓使い",
+      "faction": "enemy",
+      "baseStats": {
+        "maxHP": 85,
+        "maxMP": 50,
+        "attack": 28,
+        "defense": 15,
+        "speed": 18,
+        "movement": 4
+      },
+      "jobClass": "archer",
+      "level": 2,
+      "isRecruitable": true,
+      "recruitmentData": {
+        "priority": 70,
+        "description": "魔法使いエリアで攻撃し、5ターン以内に撃破する",
+        "conditions": [
+          {
+            "id": "specific_attacker_mage",
+            "type": "specific_attacker",
+            "description": "魔法使いエリアで攻撃して撃破する",
+            "parameters": {
+              "attackerId": "ally_mage"
             }
-        },
-        {
-            "id": "boss_corrupted_paladin",
-            "name": "堕落した聖騎士",
-            "description": "薔薇の力に完全に支配された元聖騎士",
-            "faction": "enemy",
-            "baseStats": {
-                "maxHP": 200,
-                "maxMP": 80,
-                "attack": 40,
-                "defense": 35,
-                "speed": 8,
-                "movement": 2
-            },
-            "jobClass": "corrupted_paladin",
-            "level": 5,
-            "isRecruitable": false,
-            "recruitmentData": null,
-            "isBoss": true,
-            "roseEssenceReward": 3
-        }
-    ]
+          },
+          {
+            "id": "turn_limit_5",
+            "type": "turn_limit",
+            "description": "5ターン以内に撃破する",
+            "parameters": {
+              "maxTurn": 5
+            }
+          }
+        ],
+        "rewards": [
+          {
+            "type": "experience",
+            "amount": 80,
+            "target": "party",
+            "description": "パーティ全体に経験値80を配分"
+          }
+        ]
+      }
+    },
+    {
+      "id": "enemy_mage_01",
+      "name": "闇の術師",
+      "description": "薔薇の力を研究していた魔法使い",
+      "faction": "enemy",
+      "baseStats": {
+        "maxHP": 70,
+        "maxMP": 120,
+        "attack": 35,
+        "defense": 10,
+        "speed": 14,
+        "movement": 2
+      },
+      "jobClass": "dark_mage",
+      "level": 3,
+      "isRecruitable": true,
+      "recruitmentData": {
+        "priority": 90,
+        "description": "光属性武器で攻撃し、クリティカルヒットを出さずに撃破する",
+        "conditions": [
+          {
+            "id": "element_match_light",
+            "type": "element_match",
+            "description": "光属性武器で攻撃して撃破する",
+            "parameters": {
+              "requiredElement": "light"
+            }
+          },
+          {
+            "id": "no_critical_hit",
+            "type": "no_critical",
+            "description": "クリティカルヒットを出さずに撃破する",
+            "parameters": {}
+          }
+        ],
+        "rewards": [
+          {
+            "type": "experience",
+            "amount": 150,
+            "target": "recruiter",
+            "description": "仲間化成功時に経験値150を獲得"
+          },
+          {
+            "type": "skill_point",
+            "amount": 1,
+            "target": "recruited",
+            "description": "仲間化されたキャラクターがスキルポイント1を獲得"
+          }
+        ]
+      }
+    },
+    {
+      "id": "boss_corrupted_paladin",
+      "name": "堕落した聖騎士",
+      "description": "薔薇の力に完全に支配された元聖騎士",
+      "faction": "enemy",
+      "baseStats": {
+        "maxHP": 200,
+        "maxMP": 80,
+        "attack": 40,
+        "defense": 35,
+        "speed": 8,
+        "movement": 2
+      },
+      "jobClass": "corrupted_paladin",
+      "level": 5,
+      "isRecruitable": false,
+      "recruitmentData": null,
+      "isBoss": true,
+      "roseEssenceReward": 3
+    }
+  ]
 }

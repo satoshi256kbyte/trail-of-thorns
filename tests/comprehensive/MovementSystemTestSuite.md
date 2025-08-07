@@ -130,9 +130,9 @@ This document provides a comprehensive overview of the testing suite implemented
 
 ```typescript
 class PerformanceMetrics {
-    recordMetric(name: string, duration: number, metadata?: any): void
-    benchmark(name: string, fn: () => void, iterations: number): BenchmarkResult
-    generateReport(): PerformanceReport
+  recordMetric(name: string, duration: number, metadata?: any): void;
+  benchmark(name: string, fn: () => void, iterations: number): BenchmarkResult;
+  generateReport(): PerformanceReport;
 }
 ```
 
@@ -140,9 +140,9 @@ class PerformanceMetrics {
 
 ```typescript
 class VisualTestRecorder {
-    recordSnapshot(id: string, renderer: MovementRenderer, metadata: any): VisualSnapshot
-    compareSnapshots(current: VisualSnapshot, baseline: VisualSnapshot): VisualDifference
-    setBaseline(id: string, snapshot: VisualSnapshot): void
+  recordSnapshot(id: string, renderer: MovementRenderer, metadata: any): VisualSnapshot;
+  compareSnapshots(current: VisualSnapshot, baseline: VisualSnapshot): VisualDifference;
+  setBaseline(id: string, snapshot: VisualSnapshot): void;
 }
 ```
 
@@ -150,11 +150,11 @@ class VisualTestRecorder {
 
 ```typescript
 class AccessibilityTester {
-    testKeyboardNavigation(movementSystem: MovementSystem, units: Unit[]): AccessibilityTestResult
-    testScreenReaderSupport(movementSystem: MovementSystem, units: Unit[]): AccessibilityTestResult
-    testVisualAccessibility(movementSystem: MovementSystem, units: Unit[]): AccessibilityTestResult
-    testMotorAccessibility(movementSystem: MovementSystem, units: Unit[]): AccessibilityTestResult
-    generateAccessibilityReport(): AccessibilityReport
+  testKeyboardNavigation(movementSystem: MovementSystem, units: Unit[]): AccessibilityTestResult;
+  testScreenReaderSupport(movementSystem: MovementSystem, units: Unit[]): AccessibilityTestResult;
+  testVisualAccessibility(movementSystem: MovementSystem, units: Unit[]): AccessibilityTestResult;
+  testMotorAccessibility(movementSystem: MovementSystem, units: Unit[]): AccessibilityTestResult;
+  generateAccessibilityReport(): AccessibilityReport;
 }
 ```
 
@@ -162,11 +162,11 @@ class AccessibilityTester {
 
 ```typescript
 class EnhancedUserSimulator {
-    executeScenario(scenario: UserScenario): Promise<ScenarioResult>
-    simulateClick(step: UserStep): Promise<ClickResult>
-    simulateKeyPress(step: UserStep): Promise<KeyResult>
-    simulateHover(step: UserStep): Promise<HoverResult>
-    simulateDrag(step: UserStep): Promise<DragResult>
+  executeScenario(scenario: UserScenario): Promise<ScenarioResult>;
+  simulateClick(step: UserStep): Promise<ClickResult>;
+  simulateKeyPress(step: UserStep): Promise<KeyResult>;
+  simulateHover(step: UserStep): Promise<HoverResult>;
+  simulateDrag(step: UserStep): Promise<DragResult>;
 }
 ```
 

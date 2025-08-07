@@ -15,14 +15,14 @@ graph TB
     A --> D[DamageCalculator]
     A --> E[BattleAnimator]
     A --> F[BattleStateManager]
-    
+
     B --> G[WeaponData]
     C --> H[TargetValidation]
     D --> I[AttributeSystem]
     D --> J[CriticalCalculator]
     E --> K[EffectRenderer]
     F --> L[CharacterState]
-    
+
     A --> M[GameStateManager]
     A --> N[MovementSystem]
     A --> O[UIManager]
@@ -51,16 +51,16 @@ class BattleSystem {
 
   // 攻撃フローの開始
   initiateAttack(attacker: Unit): Promise<void>;
-  
+
   // 攻撃範囲の表示
   showAttackRange(attacker: Unit): void;
-  
+
   // 攻撃対象の選択
   selectTarget(target: Unit): Promise<BattleResult>;
-  
+
   // 攻撃のキャンセル
   cancelAttack(): void;
-  
+
   // 戦闘可能性の判定
   canAttack(attacker: Unit): boolean;
 }
@@ -72,13 +72,13 @@ class BattleSystem {
 class AttackRangeCalculator {
   // 攻撃可能範囲の計算
   calculateAttackRange(attacker: Unit, weapon: Weapon): Position[];
-  
+
   // 武器種別による範囲パターン
   getWeaponRangePattern(weaponType: WeaponType): RangePattern;
-  
+
   // 障害物による攻撃阻害の判定
   isAttackBlocked(from: Position, to: Position): boolean;
-  
+
   // 範囲攻撃の影響範囲計算
   calculateAreaOfEffect(center: Position, weapon: Weapon): Position[];
 }
@@ -90,13 +90,13 @@ class AttackRangeCalculator {
 class TargetSelector {
   // 攻撃可能対象の特定
   getValidTargets(attacker: Unit, range: Position[]): Unit[];
-  
+
   // 対象選択の処理
   selectTarget(target: Unit): boolean;
-  
+
   // 範囲攻撃対象の取得
   getAreaTargets(center: Position, weapon: Weapon): Unit[];
-  
+
   // 対象選択のキャンセル
   clearSelection(): void;
 }
@@ -108,16 +108,16 @@ class TargetSelector {
 class DamageCalculator {
   // 基本ダメージ計算
   calculateBaseDamage(attacker: Unit, target: Unit, weapon: Weapon): number;
-  
+
   // 属性相性の適用
   applyElementalModifier(damage: number, attackElement: Element, targetElement: Element): number;
-  
+
   // クリティカルヒット判定
   calculateCritical(attacker: Unit, target: Unit): CriticalResult;
-  
+
   // 回避判定
   calculateEvasion(attacker: Unit, target: Unit): boolean;
-  
+
   // 最終ダメージの決定
   calculateFinalDamage(baseDamage: number, modifiers: DamageModifier[]): number;
 }
@@ -129,16 +129,16 @@ class DamageCalculator {
 class BattleAnimator {
   // 攻撃アニメーションの再生
   playAttackAnimation(attacker: Unit, target: Unit, weapon: Weapon): Promise<void>;
-  
+
   // ダメージエフェクトの表示
   showDamageEffect(target: Unit, damage: number, type: DamageType): Promise<void>;
-  
+
   // HPバー更新アニメーション
   animateHPChange(unit: Unit, oldHP: number, newHP: number): Promise<void>;
-  
+
   // 戦闘不能演出
   playDefeatedAnimation(unit: Unit): Promise<void>;
-  
+
   // エフェクトのクリーンアップ
   clearBattleEffects(): void;
 }
@@ -150,16 +150,16 @@ class BattleAnimator {
 class BattleStateManager {
   // ダメージの適用
   applyDamage(target: Unit, damage: number): void;
-  
+
   // 戦闘不能状態の処理
   handleUnitDefeated(unit: Unit): void;
-  
+
   // 経験値の付与
   grantExperience(unit: Unit, amount: number): void;
-  
+
   // 戦闘結果の記録
   recordBattleResult(result: BattleResult): void;
-  
+
   // 戦闘後の状態更新
   updatePostBattle(): void;
 }
@@ -202,7 +202,7 @@ enum DamageType {
   PHYSICAL = 'physical',
   MAGICAL = 'magical',
   CRITICAL = 'critical',
-  HEALING = 'healing'
+  HEALING = 'healing',
 }
 
 enum Element {
@@ -212,7 +212,7 @@ enum Element {
   EARTH = 'earth',
   AIR = 'air',
   LIGHT = 'light',
-  DARK = 'dark'
+  DARK = 'dark',
 }
 ```
 
@@ -245,7 +245,7 @@ enum WeaponType {
   STAFF = 'staff',
   SPEAR = 'spear',
   AXE = 'axe',
-  DAGGER = 'dagger'
+  DAGGER = 'dagger',
 }
 ```
 
@@ -261,7 +261,7 @@ enum BattleError {
   ALREADY_ACTED = 'already_acted',
   INSUFFICIENT_MP = 'insufficient_mp',
   WEAPON_BROKEN = 'weapon_broken',
-  TARGET_UNREACHABLE = 'target_unreachable'
+  TARGET_UNREACHABLE = 'target_unreachable',
 }
 
 class BattleErrorHandler {

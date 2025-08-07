@@ -91,7 +91,9 @@ describe('CharacterEditor', () => {
     fireEvent.click(screen.getByText('Save'));
 
     await waitFor(() => {
-      expect(screen.getByText(/HP must be between 1 and 999/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/HP must be between 1 and 999/)
+      ).toBeInTheDocument();
     });
 
     expect(mockOnSave).not.toHaveBeenCalled();

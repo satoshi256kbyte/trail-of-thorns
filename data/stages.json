@@ -1,345 +1,345 @@
 {
-    "stages": [
+  "stages": [
+    {
+      "id": "stage-001",
+      "name": "Forest Path",
+      "description": "A peaceful introduction to the world",
+      "isUnlocked": true,
+      "thumbnail": "assets/thumbnails/forest-path.png",
+      "difficulty": 1,
+      "order": 1,
+      "mapData": {
+        "width": 12,
+        "height": 8,
+        "tileset": "forest"
+      },
+      "playerUnits": [
         {
-            "id": "stage-001",
-            "name": "Forest Path",
-            "description": "A peaceful introduction to the world",
-            "isUnlocked": true,
-            "thumbnail": "assets/thumbnails/forest-path.png",
-            "difficulty": 1,
-            "order": 1,
-            "mapData": {
-                "width": 12,
-                "height": 8,
-                "tileset": "forest"
-            },
-            "playerUnits": [
-                {
-                    "characterId": "protagonist",
-                    "startPosition": {
-                        "x": 1,
-                        "y": 4
-                    }
-                },
-                {
-                    "characterId": "ally_mage",
-                    "startPosition": {
-                        "x": 0,
-                        "y": 3
-                    }
-                }
-            ],
-            "enemyUnits": [
-                {
-                    "characterId": "enemy_knight_01",
-                    "startPosition": {
-                        "x": 10,
-                        "y": 4
-                    }
-                }
-            ],
-            "recruitableCharacters": [
-                {
-                    "characterId": "enemy_knight_01",
-                    "isActive": true,
-                    "stageSpecificConditions": []
-                }
-            ],
-            "victoryConditions": [
-                {
-                    "type": "defeat_all_enemies",
-                    "description": "全ての敵を撃破する"
-                }
-            ],
-            "defeatConditions": [
-                {
-                    "type": "all_allies_defeated",
-                    "description": "味方が全滅する"
-                }
-            ]
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 1,
+            "y": 4
+          }
         },
         {
-            "id": "stage-002",
-            "name": "Mountain Pass",
-            "description": "Treacherous terrain awaits",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/mountain-pass.png",
-            "difficulty": 2,
-            "order": 2,
-            "mapData": {
-                "width": 14,
-                "height": 10,
-                "tileset": "mountain"
-            },
-            "playerUnits": [
-                {
-                    "characterId": "protagonist",
-                    "startPosition": {
-                        "x": 2,
-                        "y": 8
-                    }
-                },
-                {
-                    "characterId": "ally_mage",
-                    "startPosition": {
-                        "x": 1,
-                        "y": 7
-                    }
-                }
-            ],
-            "enemyUnits": [
-                {
-                    "characterId": "enemy_archer_01",
-                    "startPosition": {
-                        "x": 12,
-                        "y": 2
-                    }
-                }
-            ],
-            "recruitableCharacters": [
-                {
-                    "characterId": "enemy_archer_01",
-                    "isActive": true,
-                    "stageSpecificConditions": []
-                }
-            ],
-            "victoryConditions": [
-                {
-                    "type": "defeat_all_enemies",
-                    "description": "全ての敵を撃破する"
-                }
-            ],
-            "defeatConditions": [
-                {
-                    "type": "all_allies_defeated",
-                    "description": "味方が全滅する"
-                }
-            ]
-        },
-        {
-            "id": "stage-003",
-            "name": "Dark Cave",
-            "description": "Mysterious depths hide ancient secrets",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/dark-cave.png",
-            "difficulty": 3,
-            "order": 3,
-            "mapData": {
-                "width": 16,
-                "height": 12,
-                "tileset": "cave"
-            },
-            "playerUnits": [
-                {
-                    "characterId": "protagonist",
-                    "startPosition": {
-                        "x": 1,
-                        "y": 6
-                    }
-                },
-                {
-                    "characterId": "ally_mage",
-                    "startPosition": {
-                        "x": 0,
-                        "y": 5
-                    }
-                }
-            ],
-            "enemyUnits": [
-                {
-                    "characterId": "enemy_mage_01",
-                    "startPosition": {
-                        "x": 14,
-                        "y": 6
-                    }
-                },
-                {
-                    "characterId": "boss_corrupted_paladin",
-                    "startPosition": {
-                        "x": 15,
-                        "y": 6
-                    }
-                }
-            ],
-            "recruitableCharacters": [
-                {
-                    "characterId": "enemy_mage_01",
-                    "isActive": true,
-                    "stageSpecificConditions": [
-                        {
-                            "id": "ally_present_protagonist",
-                            "type": "ally_present",
-                            "description": "主人公が生存している状態で撃破する",
-                            "parameters": {
-                                "requiredAllyId": "protagonist"
-                            }
-                        }
-                    ]
-                }
-            ],
-            "victoryConditions": [
-                {
-                    "type": "defeat_boss",
-                    "description": "ボスを撃破する",
-                    "parameters": {
-                        "bossId": "boss_corrupted_paladin"
-                    }
-                }
-            ],
-            "defeatConditions": [
-                {
-                    "type": "all_allies_defeated",
-                    "description": "味方が全滅する"
-                },
-                {
-                    "type": "turn_limit_exceeded",
-                    "description": "20ターン以内にクリアできない",
-                    "parameters": {
-                        "maxTurns": 20
-                    }
-                }
-            ]
-        },
-        {
-            "id": "stage-004",
-            "name": "Crystal Lake",
-            "description": "Serene waters with hidden dangers",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/crystal-lake.png",
-            "difficulty": 2,
-            "order": 4,
-            "mapData": {
-                "width": 18,
-                "height": 14,
-                "tileset": "lake"
-            },
-            "playerUnits": [
-                {
-                    "characterId": "protagonist",
-                    "startPosition": {
-                        "x": 2,
-                        "y": 7
-                    }
-                },
-                {
-                    "characterId": "ally_mage",
-                    "startPosition": {
-                        "x": 1,
-                        "y": 6
-                    }
-                }
-            ],
-            "enemyUnits": [],
-            "recruitableCharacters": [],
-            "victoryConditions": [
-                {
-                    "type": "reach_destination",
-                    "description": "指定地点に到達する",
-                    "parameters": {
-                        "targetPosition": {
-                            "x": 16,
-                            "y": 7
-                        }
-                    }
-                }
-            ],
-            "defeatConditions": [
-                {
-                    "type": "all_allies_defeated",
-                    "description": "味方が全滅する"
-                }
-            ]
-        },
-        {
-            "id": "stage-005",
-            "name": "Ancient Ruins",
-            "description": "Forgotten civilization's last remnants",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/ancient-ruins.png",
-            "difficulty": 4,
-            "order": 5,
-            "mapData": {
-                "width": 20,
-                "height": 16,
-                "tileset": "ruins"
-            },
-            "playerUnits": [
-                {
-                    "characterId": "protagonist",
-                    "startPosition": {
-                        "x": 3,
-                        "y": 8
-                    }
-                },
-                {
-                    "characterId": "ally_mage",
-                    "startPosition": {
-                        "x": 2,
-                        "y": 7
-                    }
-                }
-            ],
-            "enemyUnits": [],
-            "recruitableCharacters": [],
-            "victoryConditions": [
-                {
-                    "type": "survive_turns",
-                    "description": "15ターン生存する",
-                    "parameters": {
-                        "requiredTurns": 15
-                    }
-                }
-            ],
-            "defeatConditions": [
-                {
-                    "type": "all_allies_defeated",
-                    "description": "味方が全滅する"
-                }
-            ]
-        },
-        {
-            "id": "stage-006",
-            "name": "Dragon's Lair",
-            "description": "The ultimate challenge awaits brave heroes",
-            "isUnlocked": false,
-            "thumbnail": "assets/thumbnails/dragons-lair.png",
-            "difficulty": 5,
-            "order": 6,
-            "mapData": {
-                "width": 24,
-                "height": 18,
-                "tileset": "lair"
-            },
-            "playerUnits": [
-                {
-                    "characterId": "protagonist",
-                    "startPosition": {
-                        "x": 2,
-                        "y": 9
-                    }
-                },
-                {
-                    "characterId": "ally_mage",
-                    "startPosition": {
-                        "x": 1,
-                        "y": 8
-                    }
-                }
-            ],
-            "enemyUnits": [],
-            "recruitableCharacters": [],
-            "victoryConditions": [
-                {
-                    "type": "defeat_all_enemies",
-                    "description": "全ての敵を撃破する"
-                }
-            ],
-            "defeatConditions": [
-                {
-                    "type": "all_allies_defeated",
-                    "description": "味方が全滅する"
-                }
-            ]
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 0,
+            "y": 3
+          }
         }
-    ]
+      ],
+      "enemyUnits": [
+        {
+          "characterId": "enemy_knight_01",
+          "startPosition": {
+            "x": 10,
+            "y": 4
+          }
+        }
+      ],
+      "recruitableCharacters": [
+        {
+          "characterId": "enemy_knight_01",
+          "isActive": true,
+          "stageSpecificConditions": []
+        }
+      ],
+      "victoryConditions": [
+        {
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ]
+    },
+    {
+      "id": "stage-002",
+      "name": "Mountain Pass",
+      "description": "Treacherous terrain awaits",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/mountain-pass.png",
+      "difficulty": 2,
+      "order": 2,
+      "mapData": {
+        "width": 14,
+        "height": 10,
+        "tileset": "mountain"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 8
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 7
+          }
+        }
+      ],
+      "enemyUnits": [
+        {
+          "characterId": "enemy_archer_01",
+          "startPosition": {
+            "x": 12,
+            "y": 2
+          }
+        }
+      ],
+      "recruitableCharacters": [
+        {
+          "characterId": "enemy_archer_01",
+          "isActive": true,
+          "stageSpecificConditions": []
+        }
+      ],
+      "victoryConditions": [
+        {
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ]
+    },
+    {
+      "id": "stage-003",
+      "name": "Dark Cave",
+      "description": "Mysterious depths hide ancient secrets",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/dark-cave.png",
+      "difficulty": 3,
+      "order": 3,
+      "mapData": {
+        "width": 16,
+        "height": 12,
+        "tileset": "cave"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 1,
+            "y": 6
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 0,
+            "y": 5
+          }
+        }
+      ],
+      "enemyUnits": [
+        {
+          "characterId": "enemy_mage_01",
+          "startPosition": {
+            "x": 14,
+            "y": 6
+          }
+        },
+        {
+          "characterId": "boss_corrupted_paladin",
+          "startPosition": {
+            "x": 15,
+            "y": 6
+          }
+        }
+      ],
+      "recruitableCharacters": [
+        {
+          "characterId": "enemy_mage_01",
+          "isActive": true,
+          "stageSpecificConditions": [
+            {
+              "id": "ally_present_protagonist",
+              "type": "ally_present",
+              "description": "主人公が生存している状態で撃破する",
+              "parameters": {
+                "requiredAllyId": "protagonist"
+              }
+            }
+          ]
+        }
+      ],
+      "victoryConditions": [
+        {
+          "type": "defeat_boss",
+          "description": "ボスを撃破する",
+          "parameters": {
+            "bossId": "boss_corrupted_paladin"
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        },
+        {
+          "type": "turn_limit_exceeded",
+          "description": "20ターン以内にクリアできない",
+          "parameters": {
+            "maxTurns": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "stage-004",
+      "name": "Crystal Lake",
+      "description": "Serene waters with hidden dangers",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/crystal-lake.png",
+      "difficulty": 2,
+      "order": 4,
+      "mapData": {
+        "width": 18,
+        "height": 14,
+        "tileset": "lake"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 7
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 6
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "reach_destination",
+          "description": "指定地点に到達する",
+          "parameters": {
+            "targetPosition": {
+              "x": 16,
+              "y": 7
+            }
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ]
+    },
+    {
+      "id": "stage-005",
+      "name": "Ancient Ruins",
+      "description": "Forgotten civilization's last remnants",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/ancient-ruins.png",
+      "difficulty": 4,
+      "order": 5,
+      "mapData": {
+        "width": 20,
+        "height": 16,
+        "tileset": "ruins"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 3,
+            "y": 8
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 2,
+            "y": 7
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "survive_turns",
+          "description": "15ターン生存する",
+          "parameters": {
+            "requiredTurns": 15
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ]
+    },
+    {
+      "id": "stage-006",
+      "name": "Dragon's Lair",
+      "description": "The ultimate challenge awaits brave heroes",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/dragons-lair.png",
+      "difficulty": 5,
+      "order": 6,
+      "mapData": {
+        "width": 24,
+        "height": 18,
+        "tileset": "lair"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 9
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 8
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ]
+    }
+  ]
 }

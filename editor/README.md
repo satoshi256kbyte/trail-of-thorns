@@ -122,18 +122,18 @@ The built files will be in the `dist` directory.
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+S | Save current data |
-| Ctrl+I | Import data |
-| Ctrl+E | Export data |
-| Ctrl+V | Validate data |
-| Ctrl+N | Create new item |
-| Ctrl+F | Focus search field |
-| Ctrl+Z | Undo last action |
-| Ctrl+Y | Redo last action |
-| Delete | Delete selected item |
-| F1 | Show help |
+| Shortcut | Action               |
+| -------- | -------------------- |
+| Ctrl+S   | Save current data    |
+| Ctrl+I   | Import data          |
+| Ctrl+E   | Export data          |
+| Ctrl+V   | Validate data        |
+| Ctrl+N   | Create new item      |
+| Ctrl+F   | Focus search field   |
+| Ctrl+Z   | Undo last action     |
+| Ctrl+Y   | Redo last action     |
+| Delete   | Delete selected item |
+| F1       | Show help            |
 
 ## Data Structure
 

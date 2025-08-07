@@ -42,20 +42,26 @@ const VirtualizedList = <T,>({
     return items.filter(item => filterFunction(item, searchTerm));
   }, [items, searchTerm, searchable, filterFunction]);
 
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  }, []);
+  const handleSearchChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(event.target.value);
+    },
+    []
+  );
 
-  const Row = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
-    const item = filteredItems[index];
-    if (!item) return null;
+  const Row = useCallback(
+    ({ index, style }: { index: number; style: React.CSSProperties }) => {
+      const item = filteredItems[index];
+      if (!item) return null;
 
-    return (
-      <div style={style} key={getItemKey(item, index)}>
-        {renderItem(item, index)}
-      </div>
-    );
-  }, [filteredItems, renderItem, getItemKey]);
+      return (
+        <div style={style} key={getItemKey(item, index)}>
+          {renderItem(item, index)}
+        </div>
+      );
+    },
+    [filteredItems, renderItem, getItemKey]
+  );
 
   return (
     <Box>
@@ -75,7 +81,7 @@ const VirtualizedList = <T,>({
           sx={{ mb: 2 }}
         />
       )}
-      
+
       <WindowedList
         height={height}
         itemCount={filteredItems.length}

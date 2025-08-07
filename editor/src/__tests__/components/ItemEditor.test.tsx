@@ -45,11 +45,7 @@ describe('ItemEditor', () => {
 
   it('renders item editor form', () => {
     renderWithTheme(
-      <ItemEditor
-        item={mockItem}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
+      <ItemEditor item={mockItem} onSave={mockOnSave} onCancel={mockOnCancel} />
     );
 
     expect(screen.getByDisplayValue('Test Sword')).toBeInTheDocument();
@@ -77,11 +73,7 @@ describe('ItemEditor', () => {
 
   it('validates stat values', async () => {
     renderWithTheme(
-      <ItemEditor
-        item={mockItem}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
+      <ItemEditor item={mockItem} onSave={mockOnSave} onCancel={mockOnCancel} />
     );
 
     // Set attack to invalid value
@@ -91,7 +83,9 @@ describe('ItemEditor', () => {
     fireEvent.click(screen.getByText('Save'));
 
     await waitFor(() => {
-      expect(screen.getByText(/Attack must be between -50 and 100/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Attack must be between -50 and 100/)
+      ).toBeInTheDocument();
     });
 
     expect(mockOnSave).not.toHaveBeenCalled();
@@ -99,11 +93,7 @@ describe('ItemEditor', () => {
 
   it('calls onSave with updated item data', async () => {
     renderWithTheme(
-      <ItemEditor
-        item={mockItem}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
+      <ItemEditor item={mockItem} onSave={mockOnSave} onCancel={mockOnCancel} />
     );
 
     const nameInput = screen.getByDisplayValue('Test Sword');
@@ -121,11 +111,7 @@ describe('ItemEditor', () => {
 
   it('calls onCancel when cancel button is clicked', () => {
     renderWithTheme(
-      <ItemEditor
-        item={mockItem}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
+      <ItemEditor item={mockItem} onSave={mockOnSave} onCancel={mockOnCancel} />
     );
 
     fireEvent.click(screen.getByText('Cancel'));
@@ -159,11 +145,7 @@ describe('ItemEditor', () => {
 
   it('manages item effects', () => {
     renderWithTheme(
-      <ItemEditor
-        item={mockItem}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
+      <ItemEditor item={mockItem} onSave={mockOnSave} onCancel={mockOnCancel} />
     );
 
     expect(screen.getByText(/Effects/)).toBeInTheDocument();

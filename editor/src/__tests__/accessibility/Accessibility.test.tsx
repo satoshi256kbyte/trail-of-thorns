@@ -61,7 +61,7 @@ describe('Accessibility Tests', () => {
 
   it('supports keyboard navigation', async () => {
     const user = userEvent.setup();
-    
+
     renderWithTheme(<App />);
 
     // Test tab navigation
@@ -97,7 +97,7 @@ describe('Accessibility Tests', () => {
 
   it('supports screen reader announcements', async () => {
     const user = userEvent.setup();
-    
+
     renderWithTheme(
       <CharacterEditor
         character={mockCharacter}
@@ -117,7 +117,7 @@ describe('Accessibility Tests', () => {
 
   it('maintains focus management in modals', async () => {
     const user = userEvent.setup();
-    
+
     renderWithTheme(<App />);
 
     // Open a modal/dialog
@@ -142,7 +142,7 @@ describe('Accessibility Tests', () => {
       const styles = window.getComputedStyle(element);
       const color = styles.color;
       const backgroundColor = styles.backgroundColor;
-      
+
       // Basic check that colors are defined
       expect(color).toBeTruthy();
       expect(backgroundColor).toBeTruthy();

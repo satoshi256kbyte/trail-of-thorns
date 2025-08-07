@@ -61,7 +61,7 @@ describe('MovementCalculator', () => {
   describe('calculateMovementRange', () => {
     test('should return correct movement range for unit', () => {
       const range = calculator.calculateMovementRange(mockUnit, mockMap);
-      
+
       expect(range).toHaveLength(37); // 3x3 movement range
       expect(range).toContainEqual({ x: 5, y: 5 }); // starting position
       expect(range).toContainEqual({ x: 8, y: 5 }); // 3 tiles right
@@ -71,18 +71,18 @@ describe('MovementCalculator', () => {
     test('should respect terrain movement costs', () => {
       // Add difficult terrain
       mockMap.tiles[6][5] = { type: 'mountain', movementCost: 2 };
-      
+
       const range = calculator.calculateMovementRange(mockUnit, mockMap);
-      
+
       // Should not reach position that requires 4 movement points
       expect(range).not.toContainEqual({ x: 7, y: 5 });
     });
 
     test('should handle map boundaries correctly', () => {
       mockUnit.position = { x: 0, y: 0 }; // corner position
-      
+
       const range = calculator.calculateMovementRange(mockUnit, mockMap);
-      
+
       expect(range).not.toContainEqual({ x: -1, y: 0 }); // out of bounds
       expect(range).toContainEqual({ x: 3, y: 0 }); // valid position
     });
@@ -90,24 +90,16 @@ describe('MovementCalculator', () => {
 
   describe('getMovementCost', () => {
     test('should return 1 for normal terrain', () => {
-      const cost = calculator.getMovementCost(
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        mockMap
-      );
-      
+      const cost = calculator.getMovementCost({ x: 0, y: 0 }, { x: 1, y: 0 }, mockMap);
+
       expect(cost).toBe(1);
     });
 
     test('should return higher cost for difficult terrain', () => {
       mockMap.tiles[1][0] = { type: 'mountain', movementCost: 2 };
-      
-      const cost = calculator.getMovementCost(
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        mockMap
-      );
-      
+
+      const cost = calculator.getMovementCost({ x: 0, y: 0 }, { x: 1, y: 0 }, mockMap);
+
       expect(cost).toBe(2);
     });
   });
@@ -144,9 +136,9 @@ describe('GameStateManager', () => {
   test('should initialize turn order based on speed', () => {
     const fastUnit = createMockUnit({ id: 'fast', stats: { speed: 20 } });
     const slowUnit = createMockUnit({ id: 'slow', stats: { speed: 5 } });
-    
+
     gameState.initializeTurnOrder([slowUnit, fastUnit]);
-    
+
     expect(gameState.getCurrentUnit().id).toBe('fast');
   });
 });
@@ -185,7 +177,7 @@ describe('GameplayScene Integration', () => {
 
   test('should load stage data and initialize systems', () => {
     scene.loadStage(mockStageData);
-    
+
     expect(scene.gameStateManager.getCurrentPlayer()).toBe('player');
     expect(scene.characterManager.getPlayerUnits()).toHaveLength(1);
     expect(scene.characterManager.getEnemyUnits()).toHaveLength(1);
@@ -193,20 +185,20 @@ describe('GameplayScene Integration', () => {
 
   test('should handle character selection and movement', () => {
     scene.loadStage(mockStageData);
-    
+
     const playerUnit = scene.characterManager.getPlayerUnits()[0];
     scene.selectCharacter(playerUnit.id);
-    
+
     expect(scene.movementSystem.getSelectedCharacter()).toBe(playerUnit);
     expect(scene.uiManager.isCharacterInfoVisible()).toBe(true);
   });
 
   test('should advance turn when all characters have acted', () => {
     scene.loadStage(mockStageData);
-    
+
     const playerUnit = scene.characterManager.getPlayerUnits()[0];
     scene.executeCharacterAction(playerUnit.id, 'wait');
-    
+
     expect(scene.gameStateManager.getCurrentPlayer()).toBe('enemy');
   });
 });
@@ -262,20 +254,17 @@ describe('Gameplay E2E Tests', () => {
     await page.waitForSelector('[data-testid="movement-animation"]', { hidden: true });
 
     // ターン終了確認
-    const turnDisplay = await page.$eval(
-      '[data-testid="turn-display"]',
-      el => el.textContent
-    );
+    const turnDisplay = await page.$eval('[data-testid="turn-display"]', el => el.textContent);
     expect(turnDisplay).toContain('Enemy Turn');
   });
 
   test('should handle error scenarios gracefully', async () => {
     // 無効なステージデータでのエラーハンドリング
     await page.goto('http://localhost:3000/invalid-stage');
-    
+
     const errorMessage = await page.waitForSelector('[data-testid="error-message"]');
     expect(errorMessage).toBeTruthy();
-    
+
     // エラー後の復旧
     await page.click('[data-testid="back-to-menu"]');
     await page.waitForSelector('[data-testid="title-screen"]');
@@ -293,38 +282,38 @@ describe('Performance Tests', () => {
   test('should maintain 60fps during gameplay', async () => {
     const scene = new GameplayScene();
     const frameRateMonitor = new FrameRateMonitor();
-    
+
     // 重い処理をシミュレート
     scene.loadStage(createLargeStageData());
-    
+
     frameRateMonitor.start();
-    
+
     // 10秒間のゲームプレイをシミュレート
     for (let i = 0; i < 600; i++) {
       scene.update(16.67); // 60fps = 16.67ms per frame
       await new Promise(resolve => setTimeout(resolve, 16));
     }
-    
+
     const averageFPS = frameRateMonitor.getAverageFPS();
     expect(averageFPS).toBeGreaterThan(55); // 60fpsの90%以上
   });
 
   test('should not exceed memory limits', () => {
     const initialMemory = process.memoryUsage().heapUsed;
-    
+
     // メモリを消費する処理
     const scene = new GameplayScene();
     for (let i = 0; i < 100; i++) {
       scene.loadStage(createMockStageData());
       scene.destroy();
     }
-    
+
     // ガベージコレクション実行
     global.gc?.();
-    
+
     const finalMemory = process.memoryUsage().heapUsed;
     const memoryIncrease = finalMemory - initialMemory;
-    
+
     // メモリ増加が100MB以下であることを確認
     expect(memoryIncrease).toBeLessThan(100 * 1024 * 1024);
   });
@@ -413,9 +402,9 @@ export class TestDataFactory {
       mapData: {
         width: 10,
         height: 10,
-        tiles: Array(10).fill(null).map(() => 
-          Array(10).fill({ type: 'grass', movementCost: 1 })
-        ),
+        tiles: Array(10)
+          .fill(null)
+          .map(() => Array(10).fill({ type: 'grass', movementCost: 1 })),
       },
       playerUnits: [this.createUnit()],
       enemyUnits: [this.createUnit({ faction: 'enemy' })],
@@ -458,7 +447,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -467,13 +456,13 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      
+
       - name: Run unit tests
         run: npm run test:coverage
-        
+
       - name: Run E2E tests
         run: npm run test:e2e
-        
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:

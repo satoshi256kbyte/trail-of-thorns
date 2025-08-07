@@ -80,7 +80,14 @@ describe('Data Workflow Integration', () => {
           id: 'imported-char',
           name: 'Imported Character',
           description: 'An imported character',
-          stats: { hp: 100, mp: 50, attack: 20, defense: 15, speed: 10, movement: 3 },
+          stats: {
+            hp: 100,
+            mp: 50,
+            attack: 20,
+            defense: 15,
+            speed: 10,
+            movement: 3,
+          },
           abilities: [],
           sprite: { idle: 'idle.png', move: 'move.png', attack: 'attack.png' },
           faction: 'player',
@@ -108,7 +115,9 @@ describe('Data Workflow Integration', () => {
 
     // Wait for import to complete
     await waitFor(() => {
-      expect(screen.getByText('Data imported successfully')).toBeInTheDocument();
+      expect(
+        screen.getByText('Data imported successfully')
+      ).toBeInTheDocument();
     });
 
     // Verify imported character appears
@@ -175,7 +184,9 @@ describe('Data Workflow Integration', () => {
     fireEvent.click(screen.getByText('Export'));
 
     await waitFor(() => {
-      expect(screen.getByText(/Please fix validation errors/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Please fix validation errors/)
+      ).toBeInTheDocument();
     });
   });
 
@@ -199,7 +210,9 @@ describe('Data Workflow Integration', () => {
 
     // Should show reference validation error
     await waitFor(() => {
-      expect(screen.getByText(/Referenced job does not exist/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Referenced job does not exist/)
+      ).toBeInTheDocument();
     });
   });
 

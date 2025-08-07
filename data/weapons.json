@@ -1,437 +1,437 @@
 {
-    "weapons": [
+  "weapons": [
+    {
+      "id": "sword-001",
+      "name": "Iron Sword",
+      "type": "sword",
+      "attackPower": 15,
+      "range": 1,
+      "rangePattern": {
+        "type": "single",
+        "range": 1,
+        "pattern": [
+          {
+            "x": 0,
+            "y": -1
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": -1,
+            "y": 0
+          }
+        ]
+      },
+      "element": "none",
+      "criticalRate": 10,
+      "accuracy": 85,
+      "specialEffects": [],
+      "durability": 50,
+      "maxDurability": 50,
+      "description": "A basic iron sword. Reliable and well-balanced."
+    },
+    {
+      "id": "sword-002",
+      "name": "Flame Blade",
+      "type": "sword",
+      "attackPower": 20,
+      "range": 1,
+      "rangePattern": {
+        "type": "single",
+        "range": 1,
+        "pattern": [
+          {
+            "x": 0,
+            "y": -1
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": -1,
+            "y": 0
+          }
+        ]
+      },
+      "element": "fire",
+      "criticalRate": 15,
+      "accuracy": 80,
+      "specialEffects": [
         {
-            "id": "sword-001",
-            "name": "Iron Sword",
-            "type": "sword",
-            "attackPower": 15,
-            "range": 1,
-            "rangePattern": {
-                "type": "single",
-                "range": 1,
-                "pattern": [
-                    {
-                        "x": 0,
-                        "y": -1
-                    },
-                    {
-                        "x": 1,
-                        "y": 0
-                    },
-                    {
-                        "x": 0,
-                        "y": 1
-                    },
-                    {
-                        "x": -1,
-                        "y": 0
-                    }
-                ]
-            },
-            "element": "none",
-            "criticalRate": 10,
-            "accuracy": 85,
-            "specialEffects": [],
-            "durability": 50,
-            "maxDurability": 50,
-            "description": "A basic iron sword. Reliable and well-balanced."
-        },
-        {
-            "id": "sword-002",
-            "name": "Flame Blade",
-            "type": "sword",
-            "attackPower": 20,
-            "range": 1,
-            "rangePattern": {
-                "type": "single",
-                "range": 1,
-                "pattern": [
-                    {
-                        "x": 0,
-                        "y": -1
-                    },
-                    {
-                        "x": 1,
-                        "y": 0
-                    },
-                    {
-                        "x": 0,
-                        "y": 1
-                    },
-                    {
-                        "x": -1,
-                        "y": 0
-                    }
-                ]
-            },
-            "element": "fire",
-            "criticalRate": 15,
-            "accuracy": 80,
-            "specialEffects": [
-                {
-                    "type": "burn",
-                    "chance": 25,
-                    "duration": 3,
-                    "power": 5,
-                    "description": "Burns the target for 3 turns"
-                }
-            ],
-            "durability": 40,
-            "maxDurability": 40,
-            "description": "A sword imbued with fire magic. Burns enemies on contact."
-        },
-        {
-            "id": "bow-001",
-            "name": "Hunter's Bow",
-            "type": "bow",
-            "attackPower": 12,
-            "range": 3,
-            "rangePattern": {
-                "type": "line",
-                "range": 3,
-                "pattern": [
-                    {
-                        "x": 0,
-                        "y": -1
-                    },
-                    {
-                        "x": 0,
-                        "y": -2
-                    },
-                    {
-                        "x": 0,
-                        "y": -3
-                    },
-                    {
-                        "x": 1,
-                        "y": 0
-                    },
-                    {
-                        "x": 2,
-                        "y": 0
-                    },
-                    {
-                        "x": 3,
-                        "y": 0
-                    },
-                    {
-                        "x": 0,
-                        "y": 1
-                    },
-                    {
-                        "x": 0,
-                        "y": 2
-                    },
-                    {
-                        "x": 0,
-                        "y": 3
-                    },
-                    {
-                        "x": -1,
-                        "y": 0
-                    },
-                    {
-                        "x": -2,
-                        "y": 0
-                    },
-                    {
-                        "x": -3,
-                        "y": 0
-                    }
-                ]
-            },
-            "element": "none",
-            "criticalRate": 20,
-            "accuracy": 90,
-            "specialEffects": [],
-            "durability": 60,
-            "maxDurability": 60,
-            "description": "A well-crafted bow with excellent range and accuracy."
-        },
-        {
-            "id": "staff-001",
-            "name": "Healing Staff",
-            "type": "staff",
-            "attackPower": 8,
-            "range": 2,
-            "rangePattern": {
-                "type": "single",
-                "range": 2,
-                "pattern": [
-                    {
-                        "x": 0,
-                        "y": -1
-                    },
-                    {
-                        "x": 0,
-                        "y": -2
-                    },
-                    {
-                        "x": 1,
-                        "y": 0
-                    },
-                    {
-                        "x": 2,
-                        "y": 0
-                    },
-                    {
-                        "x": 0,
-                        "y": 1
-                    },
-                    {
-                        "x": 0,
-                        "y": 2
-                    },
-                    {
-                        "x": -1,
-                        "y": 0
-                    },
-                    {
-                        "x": -2,
-                        "y": 0
-                    }
-                ]
-            },
-            "element": "light",
-            "criticalRate": 5,
-            "accuracy": 95,
-            "specialEffects": [
-                {
-                    "type": "heal",
-                    "chance": 100,
-                    "duration": 1,
-                    "power": 15,
-                    "description": "Heals the target instead of damaging"
-                }
-            ],
-            "durability": 30,
-            "maxDurability": 30,
-            "description": "A staff blessed with healing magic. Restores HP to allies."
-        },
-        {
-            "id": "spear-001",
-            "name": "Steel Spear",
-            "type": "spear",
-            "attackPower": 18,
-            "range": 2,
-            "rangePattern": {
-                "type": "line",
-                "range": 2,
-                "pattern": [
-                    {
-                        "x": 0,
-                        "y": -1
-                    },
-                    {
-                        "x": 0,
-                        "y": -2
-                    },
-                    {
-                        "x": 1,
-                        "y": 0
-                    },
-                    {
-                        "x": 2,
-                        "y": 0
-                    },
-                    {
-                        "x": 0,
-                        "y": 1
-                    },
-                    {
-                        "x": 0,
-                        "y": 2
-                    },
-                    {
-                        "x": -1,
-                        "y": 0
-                    },
-                    {
-                        "x": -2,
-                        "y": 0
-                    }
-                ]
-            },
-            "element": "none",
-            "criticalRate": 12,
-            "accuracy": 75,
-            "specialEffects": [],
-            "durability": 45,
-            "maxDurability": 45,
-            "description": "A long steel spear with extended reach."
-        },
-        {
-            "id": "axe-001",
-            "name": "Battle Axe",
-            "type": "axe",
-            "attackPower": 25,
-            "range": 1,
-            "rangePattern": {
-                "type": "area",
-                "range": 1,
-                "pattern": [
-                    {
-                        "x": 0,
-                        "y": -1
-                    },
-                    {
-                        "x": 1,
-                        "y": -1
-                    },
-                    {
-                        "x": 1,
-                        "y": 0
-                    },
-                    {
-                        "x": 1,
-                        "y": 1
-                    },
-                    {
-                        "x": 0,
-                        "y": 1
-                    },
-                    {
-                        "x": -1,
-                        "y": 1
-                    },
-                    {
-                        "x": -1,
-                        "y": 0
-                    },
-                    {
-                        "x": -1,
-                        "y": -1
-                    }
-                ],
-                "areaOfEffect": 1
-            },
-            "element": "none",
-            "criticalRate": 8,
-            "accuracy": 70,
-            "specialEffects": [],
-            "durability": 35,
-            "maxDurability": 35,
-            "description": "A heavy battle axe that can hit multiple enemies."
-        },
-        {
-            "id": "dagger-001",
-            "name": "Poison Dagger",
-            "type": "dagger",
-            "attackPower": 10,
-            "range": 1,
-            "rangePattern": {
-                "type": "single",
-                "range": 1,
-                "pattern": [
-                    {
-                        "x": 0,
-                        "y": -1
-                    },
-                    {
-                        "x": 1,
-                        "y": 0
-                    },
-                    {
-                        "x": 0,
-                        "y": 1
-                    },
-                    {
-                        "x": -1,
-                        "y": 0
-                    }
-                ]
-            },
-            "element": "dark",
-            "criticalRate": 30,
-            "accuracy": 95,
-            "specialEffects": [
-                {
-                    "type": "poison",
-                    "chance": 40,
-                    "duration": 4,
-                    "power": 3,
-                    "description": "Poisons the target for 4 turns"
-                }
-            ],
-            "durability": 25,
-            "maxDurability": 25,
-            "description": "A swift dagger coated with poison. High critical rate."
-        },
-        {
-            "id": "staff-002",
-            "name": "Lightning Rod",
-            "type": "staff",
-            "attackPower": 22,
-            "range": 3,
-            "rangePattern": {
-                "type": "line",
-                "range": 3,
-                "pattern": [
-                    {
-                        "x": 0,
-                        "y": -1
-                    },
-                    {
-                        "x": 0,
-                        "y": -2
-                    },
-                    {
-                        "x": 0,
-                        "y": -3
-                    },
-                    {
-                        "x": 1,
-                        "y": 0
-                    },
-                    {
-                        "x": 2,
-                        "y": 0
-                    },
-                    {
-                        "x": 3,
-                        "y": 0
-                    },
-                    {
-                        "x": 0,
-                        "y": 1
-                    },
-                    {
-                        "x": 0,
-                        "y": 2
-                    },
-                    {
-                        "x": 0,
-                        "y": 3
-                    },
-                    {
-                        "x": -1,
-                        "y": 0
-                    },
-                    {
-                        "x": -2,
-                        "y": 0
-                    },
-                    {
-                        "x": -3,
-                        "y": 0
-                    }
-                ]
-            },
-            "element": "air",
-            "criticalRate": 18,
-            "accuracy": 85,
-            "specialEffects": [
-                {
-                    "type": "stun",
-                    "chance": 20,
-                    "duration": 2,
-                    "power": 1,
-                    "description": "Stuns the target for 2 turns"
-                }
-            ],
-            "durability": 40,
-            "maxDurability": 40,
-            "description": "A staff that channels lightning magic. Can stun enemies."
+          "type": "burn",
+          "chance": 25,
+          "duration": 3,
+          "power": 5,
+          "description": "Burns the target for 3 turns"
         }
-    ]
+      ],
+      "durability": 40,
+      "maxDurability": 40,
+      "description": "A sword imbued with fire magic. Burns enemies on contact."
+    },
+    {
+      "id": "bow-001",
+      "name": "Hunter's Bow",
+      "type": "bow",
+      "attackPower": 12,
+      "range": 3,
+      "rangePattern": {
+        "type": "line",
+        "range": 3,
+        "pattern": [
+          {
+            "x": 0,
+            "y": -1
+          },
+          {
+            "x": 0,
+            "y": -2
+          },
+          {
+            "x": 0,
+            "y": -3
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 3,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": 0,
+            "y": 3
+          },
+          {
+            "x": -1,
+            "y": 0
+          },
+          {
+            "x": -2,
+            "y": 0
+          },
+          {
+            "x": -3,
+            "y": 0
+          }
+        ]
+      },
+      "element": "none",
+      "criticalRate": 20,
+      "accuracy": 90,
+      "specialEffects": [],
+      "durability": 60,
+      "maxDurability": 60,
+      "description": "A well-crafted bow with excellent range and accuracy."
+    },
+    {
+      "id": "staff-001",
+      "name": "Healing Staff",
+      "type": "staff",
+      "attackPower": 8,
+      "range": 2,
+      "rangePattern": {
+        "type": "single",
+        "range": 2,
+        "pattern": [
+          {
+            "x": 0,
+            "y": -1
+          },
+          {
+            "x": 0,
+            "y": -2
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": -1,
+            "y": 0
+          },
+          {
+            "x": -2,
+            "y": 0
+          }
+        ]
+      },
+      "element": "light",
+      "criticalRate": 5,
+      "accuracy": 95,
+      "specialEffects": [
+        {
+          "type": "heal",
+          "chance": 100,
+          "duration": 1,
+          "power": 15,
+          "description": "Heals the target instead of damaging"
+        }
+      ],
+      "durability": 30,
+      "maxDurability": 30,
+      "description": "A staff blessed with healing magic. Restores HP to allies."
+    },
+    {
+      "id": "spear-001",
+      "name": "Steel Spear",
+      "type": "spear",
+      "attackPower": 18,
+      "range": 2,
+      "rangePattern": {
+        "type": "line",
+        "range": 2,
+        "pattern": [
+          {
+            "x": 0,
+            "y": -1
+          },
+          {
+            "x": 0,
+            "y": -2
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": -1,
+            "y": 0
+          },
+          {
+            "x": -2,
+            "y": 0
+          }
+        ]
+      },
+      "element": "none",
+      "criticalRate": 12,
+      "accuracy": 75,
+      "specialEffects": [],
+      "durability": 45,
+      "maxDurability": 45,
+      "description": "A long steel spear with extended reach."
+    },
+    {
+      "id": "axe-001",
+      "name": "Battle Axe",
+      "type": "axe",
+      "attackPower": 25,
+      "range": 1,
+      "rangePattern": {
+        "type": "area",
+        "range": 1,
+        "pattern": [
+          {
+            "x": 0,
+            "y": -1
+          },
+          {
+            "x": 1,
+            "y": -1
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": -1,
+            "y": 1
+          },
+          {
+            "x": -1,
+            "y": 0
+          },
+          {
+            "x": -1,
+            "y": -1
+          }
+        ],
+        "areaOfEffect": 1
+      },
+      "element": "none",
+      "criticalRate": 8,
+      "accuracy": 70,
+      "specialEffects": [],
+      "durability": 35,
+      "maxDurability": 35,
+      "description": "A heavy battle axe that can hit multiple enemies."
+    },
+    {
+      "id": "dagger-001",
+      "name": "Poison Dagger",
+      "type": "dagger",
+      "attackPower": 10,
+      "range": 1,
+      "rangePattern": {
+        "type": "single",
+        "range": 1,
+        "pattern": [
+          {
+            "x": 0,
+            "y": -1
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": -1,
+            "y": 0
+          }
+        ]
+      },
+      "element": "dark",
+      "criticalRate": 30,
+      "accuracy": 95,
+      "specialEffects": [
+        {
+          "type": "poison",
+          "chance": 40,
+          "duration": 4,
+          "power": 3,
+          "description": "Poisons the target for 4 turns"
+        }
+      ],
+      "durability": 25,
+      "maxDurability": 25,
+      "description": "A swift dagger coated with poison. High critical rate."
+    },
+    {
+      "id": "staff-002",
+      "name": "Lightning Rod",
+      "type": "staff",
+      "attackPower": 22,
+      "range": 3,
+      "rangePattern": {
+        "type": "line",
+        "range": 3,
+        "pattern": [
+          {
+            "x": 0,
+            "y": -1
+          },
+          {
+            "x": 0,
+            "y": -2
+          },
+          {
+            "x": 0,
+            "y": -3
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 3,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": 0,
+            "y": 3
+          },
+          {
+            "x": -1,
+            "y": 0
+          },
+          {
+            "x": -2,
+            "y": 0
+          },
+          {
+            "x": -3,
+            "y": 0
+          }
+        ]
+      },
+      "element": "air",
+      "criticalRate": 18,
+      "accuracy": 85,
+      "specialEffects": [
+        {
+          "type": "stun",
+          "chance": 20,
+          "duration": 2,
+          "power": 1,
+          "description": "Stuns the target for 2 turns"
+        }
+      ],
+      "durability": 40,
+      "maxDurability": 40,
+      "description": "A staff that channels lightning magic. Can stun enemies."
+    }
+  ]
 }
