@@ -99,7 +99,7 @@ export class RecruitmentSystem {
      * @param stageData Stage data containing character and recruitment information
      * @returns Success result with initialization details
      */
-    initialize(stageData: StageData): GameplayErrorResult {
+    async initialize(stageData: StageData): Promise<GameplayErrorResult> {
         try {
             // Validate stage data
             if (!stageData || typeof stageData !== 'object') {
@@ -745,6 +745,86 @@ export class RecruitmentSystem {
     }
 
     /**
+     * Get recruitable character data by ID
+     * @param characterId - Character ID to get data for
+     * @returns Recruitable character data or null if not found
+     */
+    getRecruitableCharacter(characterId: string): RecruitableCharacter | null {
+        return this.recruitableCharacters.get(characterId) || null;
+    }
+
+    /**
+     * Get recruitment conditions for a character
+     * @param unit - Unit to get conditions for
+     * @returns Array of recruitment conditions
+     */
+    getRecruitmentConditions(unit: Unit): RecruitmentCondition[] {
+        const recruitableData = this.recruitableCharacters.get(unit.id);
+        return recruitableData ? recruitableData.conditions : [];
+    }
+
+    /**
+     * Check if a unit is in NPC state
+     * @param unitId - Unit ID to check
+     * @returns True if unit is in NPC state
+     */
+    isNPC(unitId: string): boolean {
+        return this.npcStateManager.isNPC(unitId);
+    }
+
+    /**
+     * Save current recruitment progress to persistent storage
+     * @returns Save operation result
+     */
+    async saveRecruitmentProgress(): Promise<GameplayErrorResult> {
+        try {
+            if (!this.isInitialized) {
+                return {
+                    success: false,
+                    error: GameplayError.SYSTEM_ERROR,
+                    message: 'Recruitment system not initialized'
+                };
+            }
+
+            // Get current recruited characters from data manager
+            const currentSaveData = this.dataManager.getCurrentSaveData();
+            if (!currentSaveData) {
+                return {
+                    success: false,
+                    error: GameplayError.INVALID_STAGE_DATA,
+                    message: 'No save data available'
+                };
+            }
+
+            // Update chapter progress with current stage
+            if (this.currentChapterId && this.currentStageId) {
+                const updateResult = await this.dataManager.updateChapterProgress(this.currentChapterId, {
+                    currentStage: this.currentStageId,
+                    lastSaveTime: Date.now()
+                });
+
+                if (!updateResult.success) {
+                    return {
+                        success: false,
+                        error: GameplayError.INVALID_STAGE_DATA,
+                        message: 'Failed to update chapter progress'
+                    };
+                }
+            }
+
+            return { success: true, message: 'Recruitment progress saved successfully' };
+
+        } catch (error) {
+            console.error('Error saving recruitment progress:', error);
+            return {
+                success: false,
+                error: GameplayError.SYSTEM_ERROR,
+                message: 'Failed to save recruitment progress'
+            };
+        }
+    }
+
+    /**
      * Cleanup and destroy the recruitment system
      */
     destroy(): void {
@@ -1226,8 +1306,7 @@ export class RecruitmentSystem {
                 message: 'Failed to validate recruitment data'
             };
         }
-    } tmentStatus: null;
-}
+    }
 
     /**
      * Validate recruitment data integrity
@@ -1236,164 +1315,145 @@ export class RecruitmentSystem {
      * @returns Array of validation error messages
      */
     private validateRecruitmentData(): string[] {
-    const errors: string[] = [];
+        const errors: string[] = [];
 
-    try {
-        for (const [characterId, recruitableData] of this.recruitableCharacters.entries()) {
-            // Validate recruitable character structure
-            if (!RecruitmentTypeValidators.isValidRecruitableCharacter(recruitableData)) {
-                errors.push(`Invalid recruitable character data for ${characterId}`);
-                continue;
-            }
+        try {
+            for (const [characterId, recruitableData] of this.recruitableCharacters.entries()) {
+                // Validate recruitable character structure
+                if (!RecruitmentTypeValidators.isValidRecruitableCharacter(recruitableData)) {
+                    errors.push(`Invalid recruitable character data for ${characterId}`);
+                    continue;
+                }
 
-            // Validate conditions
-            if (!recruitableData.conditions || recruitableData.conditions.length === 0) {
-                errors.push(`No recruitment conditions defined for ${characterId}`);
-            }
+                // Validate conditions
+                if (!recruitableData.conditions || recruitableData.conditions.length === 0) {
+                    errors.push(`No recruitment conditions defined for ${characterId}`);
+                }
 
-            // Validate each condition
-            for (const condition of recruitableData.conditions) {
-                if (!RecruitmentTypeValidators.isValidRecruitmentCondition(condition)) {
-                    errors.push(`Invalid condition ${condition.id} for ${characterId}`);
+                // Validate each condition
+                for (const condition of recruitableData.conditions) {
+                    if (!RecruitmentTypeValidators.isValidRecruitmentCondition(condition)) {
+                        errors.push(`Invalid condition ${condition.id} for ${characterId}`);
+                    }
                 }
             }
+        } catch (error) {
+            errors.push(`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
-    } catch (error) {
-        errors.push(`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+        return errors;
     }
 
-    return errors;
-}
-errors.push(`Invalid recruitment conditions for ${characterId}`);
+    /**
+     * Get recruitment system statistics
+     * 
+     * @returns Statistics about current recruitment state
+     */
+    getRecruitmentStatistics(): {
+        totalRecruitableCharacters: number;
+        availableForRecruitment: number;
+        currentNPCs: number;
+        recruitedCharacters: number;
+        failedRecruitments: number;
+        recruitmentsByStatus: Record<RecruitmentStatus, number>;
+    } {
+        const stats = {
+            totalRecruitableCharacters: this.recruitableCharacters.size,
+            availableForRecruitment: 0,
+            currentNPCs: this.npcStateManager.getNPCCount(),
+            recruitedCharacters: 0,
+            failedRecruitments: 0,
+            recruitmentsByStatus: {
+                [RecruitmentStatus.AVAILABLE]: 0,
+                [RecruitmentStatus.CONDITIONS_MET]: 0,
+                [RecruitmentStatus.NPC_STATE]: 0,
+                [RecruitmentStatus.RECRUITED]: 0,
+                [RecruitmentStatus.FAILED]: 0
             }
+        };
 
-// Check for reasonable priority values
-if (recruitableData.priority < 0 || recruitableData.priority > 100) {
-    errors.push(`Invalid priority value for ${characterId}: ${recruitableData.priority}`);
-}
+        for (const recruitableData of this.recruitableCharacters.values()) {
+            stats.recruitmentsByStatus[recruitableData.recruitmentStatus]++;
+
+            switch (recruitableData.recruitmentStatus) {
+                case RecruitmentStatus.AVAILABLE:
+                case RecruitmentStatus.CONDITIONS_MET:
+                    stats.availableForRecruitment++;
+                    break;
+                case RecruitmentStatus.RECRUITED:
+                    stats.recruitedCharacters++;
+                    break;
+                case RecruitmentStatus.FAILED:
+                    stats.failedRecruitments++;
+                    break;
+            }
         }
 
-// Validate NPC state manager
-const npcValidationErrors = this.npcStateManager.validateNPCStates();
-errors.push(...npcValidationErrors);
+        return stats;
+    }
 
-    } catch (error) {
-    errors.push(`Error during recruitment data validation: ${error}`);
-}
+    /**
+     * Update system configuration
+     * 
+     * @param newConfig New configuration options
+     */
+    updateConfig(newConfig: Partial<RecruitmentSystemConfig>): void {
+        this.config = { ...this.config, ...newConfig };
 
-return errors;
-}
-
-/**
- * Get recruitment system statistics
- * 
- * @returns Statistics about current recruitment state
- */
-getRecruitmentStatistics(): {
-    totalRecruitableCharacters: number;
-    availableForRecruitment: number;
-    currentNPCs: number;
-    recruitedCharacters: number;
-    failedRecruitments: number;
-    recruitmentsByStatus: Record<RecruitmentStatus, number>;
-} {
-    const stats = {
-        totalRecruitableCharacters: this.recruitableCharacters.size,
-        availableForRecruitment: 0,
-        currentNPCs: this.npcStateManager.getNPCCount(),
-        recruitedCharacters: 0,
-        failedRecruitments: 0,
-        recruitmentsByStatus: {
-            [RecruitmentStatus.AVAILABLE]: 0,
-            [RecruitmentStatus.CONDITIONS_MET]: 0,
-            [RecruitmentStatus.NPC_STATE]: 0,
-            [RecruitmentStatus.RECRUITED]: 0,
-            [RecruitmentStatus.FAILED]: 0
-        }
-    };
-
-    for (const recruitableData of this.recruitableCharacters.values()) {
-        stats.recruitmentsByStatus[recruitableData.recruitmentStatus]++;
-
-        switch (recruitableData.recruitmentStatus) {
-            case RecruitmentStatus.AVAILABLE:
-            case RecruitmentStatus.CONDITIONS_MET:
-                stats.availableForRecruitment++;
-                break;
-            case RecruitmentStatus.RECRUITED:
-                stats.recruitedCharacters++;
-                break;
-            case RecruitmentStatus.FAILED:
-                stats.failedRecruitments++;
-                break;
+        // Update NPC state manager config if needed
+        if (newConfig.maxNPCsPerStage !== undefined || newConfig.npcProtectionPriority !== undefined) {
+            this.npcStateManager.updateConfig({
+                maxNPCsPerStage: newConfig.maxNPCsPerStage,
+                defaultNPCPriority: newConfig.npcProtectionPriority
+            });
         }
     }
 
-    return stats;
-}
-
-/**
- * Update system configuration
- * 
- * @param newConfig New configuration options
- */
-updateConfig(newConfig: Partial<RecruitmentSystemConfig>): void {
-    this.config = { ...this.config, ...newConfig };
-
-    // Update NPC state manager config if needed
-    if(newConfig.maxNPCsPerStage !== undefined || newConfig.npcProtectionPriority !== undefined) {
-    this.npcStateManager.updateConfig({
-        maxNPCsPerStage: newConfig.maxNPCsPerStage,
-        defaultNPCPriority: newConfig.npcProtectionPriority
-    });
-}
+    /**
+     * Get current system configuration
+     * 
+     * @returns Current configuration
+     */
+    getConfig(): RecruitmentSystemConfig {
+        return { ...this.config };
     }
 
-/**
- * Get current system configuration
- * 
- * @returns Current configuration
- */
-getConfig(): RecruitmentSystemConfig {
-    return { ...this.config };
-}
+    /**
+     * Reset the recruitment system
+     * Clears all data and prepares for new stage
+     */
+    reset(): void {
+        try {
+            this.recruitableCharacters.clear();
+            this.npcStateManager.clearAllNPCStates();
+            this.currentStageId = null;
+            this.isInitialized = false;
 
-/**
- * Reset the recruitment system
- * Clears all data and prepares for new stage
- */
-reset(): void {
-    try {
-        this.recruitableCharacters.clear();
-        this.npcStateManager.clearAllNPCStates();
-        this.currentStageId = null;
-        this.isInitialized = false;
-
-        console.log('Recruitment system reset');
-    } catch(error) {
-        console.error('Error resetting recruitment system:', error);
+            console.log('Recruitment system reset');
+        } catch (error) {
+            console.error('Error resetting recruitment system:', error);
+        }
     }
-}
 
-/**
- * Check if the recruitment system is properly initialized
- * 
- * @returns True if system is ready for use
- */
-isReady(): boolean {
-    return this.isInitialized && this.config.enableRecruitment;
-}
-
-/**
- * Cleanup and destroy all resources
- */
-destroy(): void {
-    try {
-        this.reset();
-        this.npcStateManager.destroy();
-        this.eventEmitter?.emit('recruitment-system-destroyed');
-    } catch(error) {
-        console.error('Error destroying recruitment system:', error);
+    /**
+     * Check if the recruitment system is properly initialized
+     * 
+     * @returns True if system is ready for use
+     */
+    isReady(): boolean {
+        return this.isInitialized && this.config.enableRecruitment;
     }
-}
+
+    /**
+     * Cleanup and destroy all resources
+     */
+    destroy(): void {
+        try {
+            this.reset();
+            this.npcStateManager.destroy();
+            this.eventEmitter?.emit('recruitment-system-destroyed');
+        } catch (error) {
+            console.error('Error destroying recruitment system:', error);
+        }
+    }
 }

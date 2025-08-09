@@ -18,5 +18,8 @@ export * from './recruitment';
 // Character loss system types
 export * from './characterLoss';
 
+// Skill system types
+export * from './skill';
+
 // Stage data types
 export * from './StageData';

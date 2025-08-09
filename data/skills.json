@@ -1,0 +1,506 @@
+{
+    "skills": [
+        {
+            "id": "basic_attack",
+            "name": "基本攻撃",
+            "description": "武器を使った基本的な攻撃。MP消費なしで使用できる。",
+            "skillType": "attack",
+            "targetType": "single_enemy",
+            "range": 1,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "damage",
+                    "value": 100,
+                    "damageType": "physical",
+                    "successRate": 95
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 0,
+                "cooldown": 0,
+                "usageLimit": 0,
+                "levelRequirement": 1
+            },
+            "learnCondition": {
+                "level": 1
+            },
+            "animation": {
+                "castAnimation": "basic_cast",
+                "effectAnimation": "sword_slash",
+                "duration": 800
+            },
+            "icon": "skill_basic_attack",
+            "aiPriority": 30
+        },
+        {
+            "id": "heal",
+            "name": "ヒール",
+            "description": "味方のHPを回復する基本的な回復魔法。",
+            "skillType": "heal",
+            "targetType": "single_ally",
+            "range": 3,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "heal",
+                    "value": 50,
+                    "healType": "fixed",
+                    "successRate": 100
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 8,
+                "cooldown": 0,
+                "usageLimit": 0,
+                "levelRequirement": 2
+            },
+            "learnCondition": {
+                "level": 2,
+                "jobRequirement": "healer"
+            },
+            "animation": {
+                "castAnimation": "magic_cast",
+                "effectAnimation": "heal_light",
+                "duration": 1200
+            },
+            "icon": "skill_heal",
+            "aiPriority": 80
+        },
+        {
+            "id": "fireball",
+            "name": "ファイアボール",
+            "description": "炎の球を放つ攻撃魔法。魔法ダメージを与える。",
+            "skillType": "attack",
+            "targetType": "single_enemy",
+            "range": 4,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "damage",
+                    "value": 80,
+                    "damageType": "magical",
+                    "successRate": 90
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 12,
+                "cooldown": 1,
+                "usageLimit": 0,
+                "levelRequirement": 3
+            },
+            "learnCondition": {
+                "level": 3,
+                "jobRequirement": "mage"
+            },
+            "animation": {
+                "castAnimation": "fire_cast",
+                "effectAnimation": "fireball_explosion",
+                "duration": 1500
+            },
+            "icon": "skill_fireball",
+            "aiPriority": 60
+        },
+        {
+            "id": "power_strike",
+            "name": "パワーストライク",
+            "description": "力を込めた強力な一撃。通常攻撃より高いダメージを与える。",
+            "skillType": "attack",
+            "targetType": "single_enemy",
+            "range": 1,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "damage",
+                    "value": 150,
+                    "damageType": "physical",
+                    "successRate": 85
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 6,
+                "cooldown": 2,
+                "usageLimit": 0,
+                "levelRequirement": 4,
+                "weaponRequirement": [
+                    "sword",
+                    "axe",
+                    "mace"
+                ]
+            },
+            "learnCondition": {
+                "level": 4,
+                "jobRequirement": "warrior"
+            },
+            "animation": {
+                "castAnimation": "power_charge",
+                "effectAnimation": "heavy_strike",
+                "duration": 1000
+            },
+            "icon": "skill_power_strike",
+            "aiPriority": 50
+        },
+        {
+            "id": "group_heal",
+            "name": "グループヒール",
+            "description": "範囲内の味方全員のHPを回復する。",
+            "skillType": "heal",
+            "targetType": "area_ally",
+            "range": 2,
+            "areaOfEffect": {
+                "shape": "circle",
+                "size": 2
+            },
+            "effects": [
+                {
+                    "type": "heal",
+                    "value": 35,
+                    "healType": "fixed",
+                    "successRate": 100
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 20,
+                "cooldown": 3,
+                "usageLimit": 0,
+                "levelRequirement": 8
+            },
+            "learnCondition": {
+                "level": 8,
+                "jobRequirement": "healer",
+                "prerequisiteSkills": [
+                    "heal"
+                ]
+            },
+            "animation": {
+                "castAnimation": "group_magic_cast",
+                "effectAnimation": "area_heal_light",
+                "duration": 2000
+            },
+            "icon": "skill_group_heal",
+            "aiPriority": 90
+        },
+        {
+            "id": "lightning_bolt",
+            "name": "ライトニングボルト",
+            "description": "雷撃を放つ強力な攻撃魔法。直線上の敵を貫通する。",
+            "skillType": "attack",
+            "targetType": "area_enemy",
+            "range": 5,
+            "areaOfEffect": {
+                "shape": "line",
+                "size": 5
+            },
+            "effects": [
+                {
+                    "type": "damage",
+                    "value": 70,
+                    "damageType": "magical",
+                    "successRate": 88
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 18,
+                "cooldown": 2,
+                "usageLimit": 0,
+                "levelRequirement": 6
+            },
+            "learnCondition": {
+                "level": 6,
+                "jobRequirement": "mage",
+                "prerequisiteSkills": [
+                    "fireball"
+                ]
+            },
+            "animation": {
+                "castAnimation": "lightning_cast",
+                "effectAnimation": "lightning_strike",
+                "duration": 1300
+            },
+            "icon": "skill_lightning_bolt",
+            "aiPriority": 65
+        },
+        {
+            "id": "shield_bash",
+            "name": "シールドバッシュ",
+            "description": "盾で敵を攻撃し、麻痺状態にする可能性がある。",
+            "skillType": "status",
+            "targetType": "single_enemy",
+            "range": 1,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "damage",
+                    "value": 60,
+                    "damageType": "physical",
+                    "successRate": 95
+                },
+                {
+                    "type": "status",
+                    "value": 1,
+                    "statusType": "paralysis",
+                    "duration": 2,
+                    "successRate": 30
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 4,
+                "cooldown": 1,
+                "usageLimit": 0,
+                "levelRequirement": 3,
+                "weaponRequirement": [
+                    "shield"
+                ]
+            },
+            "learnCondition": {
+                "level": 3,
+                "jobRequirement": "guardian"
+            },
+            "animation": {
+                "castAnimation": "shield_ready",
+                "effectAnimation": "shield_impact",
+                "duration": 900
+            },
+            "icon": "skill_shield_bash",
+            "aiPriority": 40
+        },
+        {
+            "id": "blessing",
+            "name": "ブレッシング",
+            "description": "味方の攻撃力と防御力を一時的に上昇させる。",
+            "skillType": "buff",
+            "targetType": "single_ally",
+            "range": 3,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "buff",
+                    "value": 20,
+                    "buffType": "attack_up",
+                    "duration": 5,
+                    "successRate": 100
+                },
+                {
+                    "type": "buff",
+                    "value": 15,
+                    "buffType": "defense_up",
+                    "duration": 5,
+                    "successRate": 100
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 15,
+                "cooldown": 0,
+                "usageLimit": 0,
+                "levelRequirement": 5
+            },
+            "learnCondition": {
+                "level": 5,
+                "jobRequirement": "priest"
+            },
+            "animation": {
+                "castAnimation": "blessing_cast",
+                "effectAnimation": "holy_aura",
+                "duration": 1800
+            },
+            "icon": "skill_blessing",
+            "aiPriority": 70
+        },
+        {
+            "id": "poison_dart",
+            "name": "ポイズンダート",
+            "description": "毒を塗った矢を放つ。ダメージと毒状態を与える。",
+            "skillType": "status",
+            "targetType": "single_enemy",
+            "range": 6,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "damage",
+                    "value": 45,
+                    "damageType": "physical",
+                    "successRate": 92
+                },
+                {
+                    "type": "status",
+                    "value": 8,
+                    "statusType": "poison",
+                    "duration": 4,
+                    "successRate": 75
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 10,
+                "cooldown": 1,
+                "usageLimit": 0,
+                "levelRequirement": 4,
+                "weaponRequirement": [
+                    "bow",
+                    "crossbow"
+                ]
+            },
+            "learnCondition": {
+                "level": 4,
+                "jobRequirement": "archer"
+            },
+            "animation": {
+                "castAnimation": "bow_draw",
+                "effectAnimation": "poison_arrow",
+                "duration": 1100
+            },
+            "icon": "skill_poison_dart",
+            "aiPriority": 55
+        },
+        {
+            "id": "meteor",
+            "name": "メテオ",
+            "description": "隕石を召喚して広範囲に大ダメージを与える究極魔法。",
+            "skillType": "attack",
+            "targetType": "area_enemy",
+            "range": 8,
+            "areaOfEffect": {
+                "shape": "circle",
+                "size": 3
+            },
+            "effects": [
+                {
+                    "type": "damage",
+                    "value": 200,
+                    "damageType": "magical",
+                    "successRate": 80
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 50,
+                "cooldown": 5,
+                "usageLimit": 2,
+                "levelRequirement": 15
+            },
+            "learnCondition": {
+                "level": 15,
+                "jobRequirement": "archmage",
+                "prerequisiteSkills": [
+                    "fireball",
+                    "lightning_bolt"
+                ],
+                "requiredItems": [
+                    "meteor_scroll"
+                ]
+            },
+            "animation": {
+                "castAnimation": "ultimate_cast",
+                "effectAnimation": "meteor_impact",
+                "duration": 3000
+            },
+            "icon": "skill_meteor",
+            "aiPriority": 95
+        },
+        {
+            "id": "weakness",
+            "name": "ウィークネス",
+            "description": "敵の攻撃力と防御力を低下させる呪い。",
+            "skillType": "debuff",
+            "targetType": "single_enemy",
+            "range": 4,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "debuff",
+                    "value": 25,
+                    "buffType": "attack_down",
+                    "duration": 4,
+                    "successRate": 85
+                },
+                {
+                    "type": "debuff",
+                    "value": 20,
+                    "buffType": "defense_down",
+                    "duration": 4,
+                    "successRate": 85
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 12,
+                "cooldown": 1,
+                "usageLimit": 0,
+                "levelRequirement": 6
+            },
+            "learnCondition": {
+                "level": 6,
+                "jobRequirement": "dark_mage"
+            },
+            "animation": {
+                "castAnimation": "curse_cast",
+                "effectAnimation": "dark_aura",
+                "duration": 1400
+            },
+            "icon": "skill_weakness",
+            "aiPriority": 45
+        },
+        {
+            "id": "regeneration",
+            "name": "リジェネレーション",
+            "description": "味方に継続回復効果を付与する。数ターンにわたってHPが回復する。",
+            "skillType": "heal",
+            "targetType": "single_ally",
+            "range": 3,
+            "areaOfEffect": {
+                "shape": "single",
+                "size": 0
+            },
+            "effects": [
+                {
+                    "type": "heal",
+                    "value": 20,
+                    "healType": "fixed",
+                    "duration": 5,
+                    "successRate": 100
+                }
+            ],
+            "usageCondition": {
+                "mpCost": 16,
+                "cooldown": 2,
+                "usageLimit": 0,
+                "levelRequirement": 7
+            },
+            "learnCondition": {
+                "level": 7,
+                "jobRequirement": "druid",
+                "prerequisiteSkills": [
+                    "heal"
+                ]
+            },
+            "animation": {
+                "castAnimation": "nature_cast",
+                "effectAnimation": "regen_sparkles",
+                "duration": 1600
+            },
+            "icon": "skill_regeneration",
+            "aiPriority": 75
+        }
+    ]
+}
