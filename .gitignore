@@ -44,3 +44,4 @@ pids/
 tmp/
 temp/
 .envrc
+.amazonq/agents/default.json
