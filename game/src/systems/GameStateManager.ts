@@ -339,6 +339,7 @@ export class GameStateManager {
                 'move',
                 'action',
                 'enemy',
+                'ai_thinking',
                 'victory',
                 'defeat',
             ];
@@ -767,6 +768,188 @@ export class GameStateManager {
                 success: false,
                 error: GameplayError.INVALID_TURN_STATE,
                 message: 'Failed to force next turn',
+                details: error,
+            };
+        }
+    }
+
+    /**
+     * Start AI thinking phase for enemy turn
+     * @param aiUnit - AI unit that is thinking
+     * @returns GameplayErrorResult indicating success or failure
+     */
+    startAIThinkingPhase(aiUnit: Unit): GameplayErrorResult {
+        try {
+            if (!aiUnit || aiUnit.faction !== 'enemy') {
+                return {
+                    success: false,
+                    error: GameplayError.INVALID_ACTION,
+                    message: 'Invalid AI unit for thinking phase',
+                };
+            }
+
+            // Set AI thinking phase
+            this.gameState.phase = 'ai_thinking';
+
+            // Emit AI thinking started event
+            this.eventEmitter?.emit('ai-thinking-started', {
+                aiUnit,
+                currentTurn: this.gameState.currentTurn,
+                activePlayer: this.gameState.activePlayer,
+            });
+
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: GameplayError.INVALID_TURN_STATE,
+                message: 'Failed to start AI thinking phase',
+                details: error,
+            };
+        }
+    }
+
+    /**
+     * Complete AI thinking phase and return to enemy action phase
+     * @param aiUnit - AI unit that completed thinking
+     * @returns GameplayErrorResult indicating success or failure
+     */
+    completeAIThinkingPhase(aiUnit: Unit): GameplayErrorResult {
+        try {
+            if (this.gameState.phase !== 'ai_thinking') {
+                return {
+                    success: false,
+                    error: GameplayError.INVALID_TURN_STATE,
+                    message: 'Not currently in AI thinking phase',
+                };
+            }
+
+            // Return to enemy phase
+            this.gameState.phase = 'enemy';
+
+            // Emit AI thinking completed event
+            this.eventEmitter?.emit('ai-thinking-completed', {
+                aiUnit,
+                currentTurn: this.gameState.currentTurn,
+                activePlayer: this.gameState.activePlayer,
+            });
+
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: GameplayError.INVALID_TURN_STATE,
+                message: 'Failed to complete AI thinking phase',
+                details: error,
+            };
+        }
+    }
+
+    /**
+     * Update AI unit state at turn start (skill cooldowns, status effects)
+     * @param aiUnit - AI unit to update
+     * @returns GameplayErrorResult indicating success or failure
+     */
+    updateAIUnitAtTurnStart(aiUnit: Unit): GameplayErrorResult {
+        try {
+            if (!aiUnit) {
+                return {
+                    success: false,
+                    error: GameplayError.UNIT_NOT_FOUND,
+                    message: 'AI unit is null or undefined',
+                };
+            }
+
+            // Update skill states for the AI unit
+            const skillUpdateResult = this.updateSkillStates(aiUnit);
+            if (!skillUpdateResult.success) {
+                return skillUpdateResult;
+            }
+
+            // Reset action flags for the new turn
+            aiUnit.hasActed = false;
+            aiUnit.hasMoved = false;
+
+            // Update unit in turn order
+            const updateResult = this.updateUnit(aiUnit);
+            if (!updateResult.success) {
+                return updateResult;
+            }
+
+            // Emit AI unit turn start event
+            this.eventEmitter?.emit('ai-unit-turn-started', {
+                aiUnit,
+                currentTurn: this.gameState.currentTurn,
+                skillStatesUpdated: true,
+            });
+
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: GameplayError.INVALID_TURN_STATE,
+                message: 'Failed to update AI unit at turn start',
+                details: error,
+            };
+        }
+    }
+
+    /**
+     * Mark AI action as completed and update turn state
+     * @param aiUnit - AI unit that completed action
+     * @param actionType - Type of action completed
+     * @returns GameplayErrorResult indicating success or failure
+     */
+    completeAIAction(aiUnit: Unit, actionType: 'move' | 'attack' | 'skill' | 'wait'): GameplayErrorResult {
+        try {
+            if (!aiUnit) {
+                return {
+                    success: false,
+                    error: GameplayError.UNIT_NOT_FOUND,
+                    message: 'AI unit is null or undefined',
+                };
+            }
+
+            // Mark appropriate action flags
+            switch (actionType) {
+                case 'move':
+                    aiUnit.hasMoved = true;
+                    break;
+                case 'attack':
+                case 'skill':
+                case 'wait':
+                    aiUnit.hasActed = true;
+                    break;
+            }
+
+            // Update unit in turn order
+            const updateResult = this.updateUnit(aiUnit);
+            if (!updateResult.success) {
+                return updateResult;
+            }
+
+            // Emit AI action completed event
+            this.eventEmitter?.emit('ai-action-completed', {
+                aiUnit,
+                actionType,
+                turnComplete: aiUnit.hasActed && aiUnit.hasMoved,
+                currentTurn: this.gameState.currentTurn,
+            });
+
+            // Check if AI turn is complete and advance if needed
+            if (aiUnit.hasActed && aiUnit.hasMoved) {
+                // Small delay before advancing turn to allow for visual feedback
+                setTimeout(() => {
+                    this.nextTurn();
+                }, 500);
+            }
+
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: GameplayError.INVALID_TURN_STATE,
+                message: 'Failed to complete AI action',
                 details: error,
             };
         }

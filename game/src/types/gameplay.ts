@@ -145,7 +145,7 @@ export interface GameAction {
 export interface GameState {
     currentTurn: number;
     activePlayer: 'player' | 'enemy';
-    phase: 'select' | 'move' | 'action' | 'enemy' | 'victory' | 'defeat';
+    phase: 'select' | 'move' | 'action' | 'enemy' | 'ai_thinking' | 'victory' | 'defeat';
     selectedUnit?: Unit;
     gameResult?: 'victory' | 'defeat' | null;
     turnOrder: Unit[];

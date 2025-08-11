@@ -37,6 +37,8 @@ import { SceneTransition, TransitionType, SceneData } from '../utils/SceneTransi
 import { Position } from '../types/movement';
 import { BattleResult, BattleError } from '../types/battle';
 import { RecruitmentResult, RecruitmentProgress, RecruitmentCondition } from '../types/recruitment';
+import { AISystemManager } from '../systems/ai/AISystemManager';
+import { AISystemManagerConfig, AIExecutionResult } from '../types/ai';
 
 /**
  * GameplayScene configuration interface
@@ -71,6 +73,7 @@ export class GameplayScene extends Phaser.Scene {
     private recruitmentSystem!: RecruitmentSystem;
     private recruitmentUI!: RecruitmentUI;
     private skillSystem!: SkillSystem;
+    private aiSystemManager!: AISystemManager;
 
     // Scene data and state
     private stageData?: StageData;
@@ -81,6 +84,10 @@ export class GameplayScene extends Phaser.Scene {
     // Battle system state
     private isBattleActive: boolean = false;
     private battleInputLocked: boolean = false;
+
+    // AI system state
+    private isAIExecuting: boolean = false;
+    private aiTurnInProgress: boolean = false;
 
     // Performance monitoring
     private lastUpdateTime: number = 0;
@@ -212,6 +219,9 @@ export class GameplayScene extends Phaser.Scene {
                 this.updatePerformanceMonitoring(time, delta);
             }
 
+            // Update AI system state
+            this.updateAISystem(time, delta);
+
             // Store last update time
             this.lastUpdateTime = time;
         } catch (error) {
@@ -236,6 +246,9 @@ export class GameplayScene extends Phaser.Scene {
 
             // Initialize skill system with battlefield state
             this.initializeSkillSystem();
+
+            // Initialize AI system with all game systems
+            this.initializeAISystem();
 
             // Setup input handling
             this.setupInputHandling();
@@ -616,6 +629,24 @@ export class GameplayScene extends Phaser.Scene {
             autoErrorRecovery: true
         });
 
+        // Initialize AISystemManager
+        const aiConfig: AISystemManagerConfig = {
+            thinkingTimeLimit: 2000, // 2 seconds
+            enableDebugLogging: this.config.debugMode,
+            enableVisualFeedback: true,
+            randomFactor: 0.2,
+            npcPriorityMultiplier: 50,
+            defaultDifficulty: {
+                thinkingDepth: 3,
+                randomnessFactor: 0.2,
+                mistakeProbability: 0.1,
+                reactionTime: 1000,
+                skillUsageFrequency: 0.7,
+            },
+        };
+
+        this.aiSystemManager = new AISystemManager(this, aiConfig, this.events);
+
         console.log('GameplayScene: Manager systems initialized');
     }
 
@@ -798,6 +829,9 @@ export class GameplayScene extends Phaser.Scene {
         this.events.on('turn-changed', (data: any) => {
             this.uiManager.updateTurnDisplay(data.currentTurn, data.activePlayer);
             this.inputHandler.setGameState(this.gameStateManager.getGameState());
+
+            // Handle AI turn start
+            this.handleTurnChanged(data);
         });
 
         this.events.on('unit-selected', (data: any) => {
@@ -860,6 +894,9 @@ export class GameplayScene extends Phaser.Scene {
 
         // Skill system event listeners
         this.setupSkillEventListeners();
+
+        // AI system event listeners
+        this.setupAIEventListeners();
 
         console.log('GameplayScene: Event listeners setup completed');
     }
@@ -1062,6 +1099,233 @@ export class GameplayScene extends Phaser.Scene {
         });
 
         console.log('GameplayScene: Skill event listeners setup completed');
+    }
+
+    /**
+     * Setup AI system event listeners
+     */
+    private setupAIEventListeners(): void {
+        console.log('GameplayScene: Setting up AI event listeners');
+
+        if (!this.aiSystemManager) {
+            console.warn('AI system manager not available for event listener setup');
+            return;
+        }
+
+        // AI turn events
+        this.events.on('ai-turn-started', (data: any) => {
+            console.log('AI turn started for:', data.unit.name);
+            this.isAIExecuting = true;
+            this.aiTurnInProgress = true;
+
+            // Disable player input during AI turn (using flag)
+            // Note: InputHandler doesn't have setInputEnabled, so we use our own flag
+
+            // Show AI thinking indicator
+            this.uiManager.showNotification({
+                message: `${data.unit.name} is thinking...`,
+                type: 'info',
+                duration: 0, // Keep showing until AI turn completes
+            });
+        });
+
+        this.events.on('ai-turn-completed', (data: any) => {
+            console.log('AI turn completed for:', data.unit.name, 'Success:', data.success);
+            this.isAIExecuting = false;
+            this.aiTurnInProgress = false;
+
+            // Re-enable player input (flag is reset above)
+
+            // Hide AI thinking notification
+            this.uiManager.hideNotification();
+
+            // Show action result
+            if (data.success && data.action) {
+                this.uiManager.showNotification({
+                    message: `${data.unit.name}: ${data.action.reasoning}`,
+                    type: 'info',
+                    duration: 2000,
+                });
+            }
+
+            // Advance to next turn after a short delay
+            this.time.delayedCall(1000, () => {
+                this.advanceToNextTurn();
+            });
+        });
+
+        console.log('GameplayScene: AI event listeners setup completed');
+    }
+
+    /**
+     * Handle turn changed event
+     */
+    private handleTurnChanged(data: any): void {
+        console.log('GameplayScene: Handling turn change to', data.activePlayer);
+
+        // If it's an enemy turn, start AI execution
+        if (data.activePlayer === 'enemy' && data.activeUnit && !this.isAIExecuting) {
+            this.startAITurn(data.activeUnit);
+        }
+    }
+
+    /**
+     * Start AI turn for the given unit
+     */
+    private async startAITurn(activeUnit: Unit): Promise<void> {
+        if (!this.aiSystemManager || !this.stageData) {
+            console.warn('Cannot start AI turn: missing AI system or stage data');
+            return;
+        }
+
+        try {
+            console.log('GameplayScene: Starting AI turn for', activeUnit.name);
+
+            // Set AI execution flag
+            this.isAIExecuting = true;
+            this.aiTurnInProgress = true;
+
+            // Update AI unit state at turn start (skill cooldowns, etc.)
+            const updateResult = this.gameStateManager.updateAIUnitAtTurnStart(activeUnit);
+            if (!updateResult.success) {
+                console.warn('Failed to update AI unit at turn start:', updateResult.message);
+            }
+
+            // Start AI thinking phase
+            const thinkingResult = this.gameStateManager.startAIThinkingPhase(activeUnit);
+            if (!thinkingResult.success) {
+                console.warn('Failed to start AI thinking phase:', thinkingResult.message);
+            }
+
+            // Execute AI turn
+            const result = await this.aiSystemManager.executeAITurn(
+                activeUnit,
+                this.gameStateManager.getGameState(),
+                this.stageData.mapData
+            );
+
+            console.log('GameplayScene: AI turn result:', result);
+
+            // Complete AI thinking phase
+            const completeThinkingResult = this.gameStateManager.completeAIThinkingPhase(activeUnit);
+            if (!completeThinkingResult.success) {
+                console.warn('Failed to complete AI thinking phase:', completeThinkingResult.message);
+            }
+
+            if (result.success && result.action) {
+                // Execute the AI action through appropriate systems
+                await this.executeAIAction(activeUnit, result.action);
+            } else {
+                console.warn('AI turn failed:', result.message);
+                // Mark as acted to prevent infinite loop
+                this.gameStateManager.completeAIAction(activeUnit, 'wait');
+            }
+
+        } catch (error) {
+            console.error('GameplayScene: Error during AI turn:', error);
+            // Mark as acted to prevent infinite loop
+            this.gameStateManager.completeAIAction(activeUnit, 'wait');
+        } finally {
+            // Clear AI execution flags
+            this.isAIExecuting = false;
+            this.aiTurnInProgress = false;
+        }
+    }
+
+    /**
+     * Execute AI action through appropriate game systems
+     * @param aiUnit - AI unit performing the action
+     * @param action - AI action to execute
+     */
+    private async executeAIAction(aiUnit: Unit, action: any): Promise<void> {
+        try {
+            console.log('GameplayScene: Executing AI action', {
+                unit: aiUnit.name,
+                action: action.type,
+                target: action.target?.name || 'none'
+            });
+
+            let actionResult: any = null;
+
+            switch (action.type) {
+                case 'move':
+                    if (action.position && this.movementSystem) {
+                        // Execute movement
+                        const moveResult = await this.movementSystem.executeMovement(
+                            aiUnit,
+                            action.position
+                        );
+
+                        if (moveResult.success) {
+                            this.gameStateManager.completeAIAction(aiUnit, 'move');
+                            actionResult = moveResult;
+                        }
+                    }
+                    break;
+
+                case 'attack':
+                    if (action.target && this.battleSystem) {
+                        // Execute attack through battle system
+                        const battleResult = await this.battleSystem.executeAIAction(action);
+
+                        if (battleResult) {
+                            this.gameStateManager.completeAIAction(aiUnit, 'attack');
+                            actionResult = battleResult;
+                        }
+                    }
+                    break;
+
+                case 'skill':
+                    if (action.skillId && this.battleSystem) {
+                        // Execute skill through battle system
+                        const skillResult = await this.battleSystem.executeAIAction(action);
+
+                        if (skillResult) {
+                            this.gameStateManager.completeAIAction(aiUnit, 'skill');
+                            actionResult = skillResult;
+                        }
+                    }
+                    break;
+
+                case 'wait':
+                default:
+                    // Wait action - just mark as acted
+                    this.gameStateManager.completeAIAction(aiUnit, 'wait');
+                    actionResult = { success: true, action: 'wait' };
+                    break;
+            }
+
+            // Notify battle system of AI action completion
+            if (this.battleSystem && actionResult) {
+                this.battleSystem.notifyAIActionComplete(action, actionResult);
+            }
+
+            console.log('GameplayScene: AI action completed', {
+                unit: aiUnit.name,
+                action: action.type,
+                success: actionResult?.success !== false
+            });
+
+        } catch (error) {
+            console.error('GameplayScene: Error executing AI action:', error);
+            // Mark as acted to prevent infinite loop
+            this.gameStateManager.completeAIAction(aiUnit, 'wait');
+        }
+    }
+
+    /**
+     * Advance to the next turn
+     */
+    private advanceToNextTurn(): void {
+        if (this.isAIExecuting) {
+            console.log('GameplayScene: Skipping turn advance - AI still executing');
+            return;
+        }
+
+        const turnResult = this.gameStateManager.nextTurn();
+        if (!turnResult.success) {
+            console.error('GameplayScene: Failed to advance turn:', turnResult.message);
+        }
     }
 
     /**
@@ -1657,6 +1921,47 @@ export class GameplayScene extends Phaser.Scene {
         if (loadingSpinner) {
             loadingSpinner.destroy();
             this.data.remove('loadingSpinner');
+        }
+    }
+
+    /**
+     * Update AI system state
+     * @param time - Current time
+     * @param delta - Delta time
+     */
+    private updateAISystem(time: number, delta: number): void {
+        if (!this.aiSystemManager) {
+            return;
+        }
+
+        // Check if AI is taking too long (timeout handling)
+        if (this.isAIExecuting) {
+            const thinkingState = this.aiSystemManager.getThinkingState();
+
+            // If AI has been thinking for more than 5 seconds, show warning
+            if (thinkingState.thinkingTime > 5000) {
+                console.warn('AI thinking time exceeded 5 seconds');
+
+                // Show timeout warning to user
+                this.uiManager.showNotification({
+                    message: 'AI is taking longer than expected...',
+                    type: 'warning',
+                    duration: 2000,
+                });
+            }
+
+            // If AI has been thinking for more than 10 seconds, force timeout
+            if (thinkingState.thinkingTime > 10000) {
+                console.error('AI thinking timeout - forcing turn advance');
+                this.isAIExecuting = false;
+                this.aiTurnInProgress = false;
+                // Input will be re-enabled when AI execution completes
+                this.uiManager.hideNotification();
+
+                this.time.delayedCall(100, () => {
+                    this.advanceToNextTurn();
+                });
+            }
         }
     }
 
@@ -2540,6 +2845,12 @@ export class GameplayScene extends Phaser.Scene {
      * @param clickInfo - Click information
      */
     private handleTileSelectionWithBattle(position: Position, clickInfo: any): void {
+        // Block input during AI execution
+        if (this.isAIExecuting || this.aiTurnInProgress) {
+            console.log('Input blocked: AI is executing');
+            return;
+        }
+
         // If battle is active, try to select target
         if (this.isBattleActive && this.battleSystem.isActive()) {
             const targetUnit = this.getUnitAtWorldPosition({
@@ -2872,6 +3183,12 @@ export class GameplayScene extends Phaser.Scene {
      * @param clickInfo - Click information
      */
     private handleCharacterSelectionWithRecruitment(unit: Unit | null, clickInfo: any): void {
+        // Block input during AI execution
+        if (this.isAIExecuting || this.aiTurnInProgress) {
+            console.log('Input blocked: AI is executing');
+            return;
+        }
+
         if (unit) {
             // Check if unit can be controlled (not NPC)
             if (!this.canControlUnit(unit)) {
@@ -3260,6 +3577,42 @@ export class GameplayScene extends Phaser.Scene {
             console.log('Basic skills registered successfully');
         } catch (error) {
             console.error('Error registering basic skills:', error);
+        }
+    }
+
+    /**
+     * Initialize AI system with all game systems
+     */
+    private initializeAISystem(): void {
+        try {
+            if (!this.aiSystemManager) {
+                console.warn('AI system manager not available for initialization');
+                return;
+            }
+
+            // Initialize AI system with all required game systems
+            this.aiSystemManager.initialize(
+                this.gameStateManager,
+                this.movementSystem,
+                this.battleSystem,
+                this.skillSystem,
+                this.recruitmentSystem
+            );
+
+            // Set up AI system integration with battle system
+            if (this.battleSystem) {
+                this.battleSystem.setAISystemManager(this.aiSystemManager);
+            }
+
+            // Create AI controllers for enemy units
+            if (this.stageData) {
+                const allUnits = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+                this.aiSystemManager.createAIControllers(allUnits);
+            }
+
+            console.log('AI system initialized successfully');
+        } catch (error) {
+            console.error('Error initializing AI system:', error);
         }
     }
 

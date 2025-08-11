@@ -176,6 +176,9 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     // Skill system integration
     private skillSystem: SkillSystem | null = null;
 
+    // AI system integration
+    private aiSystemManager: any = null;
+
     // Battle data
     private allUnits: Unit[] = [];
     private mapData: MapData | null = null;
@@ -290,6 +293,23 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
      */
     public hasSkillSystem(): boolean {
         return this.skillSystem !== null;
+    }
+
+    /**
+     * Set AI system manager for integration
+     * @param aiSystemManager - AI system manager instance
+     */
+    public setAISystemManager(aiSystemManager: any): void {
+        this.aiSystemManager = aiSystemManager;
+        this.log('AI system manager integrated with battle system');
+    }
+
+    /**
+     * Check if AI system manager is integrated
+     * @returns True if AI system manager is available
+     */
+    public hasAISystemManager(): boolean {
+        return this.aiSystemManager !== null;
     }
 
     /**
@@ -806,6 +826,119 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
 
             return errorResult;
         }
+    }
+
+    /**
+     * Execute AI action through battle system
+     * @param action - AI action to execute
+     * @returns Promise that resolves with battle result
+     */
+    public async executeAIAction(action: any): Promise<BattleResult | null> {
+        try {
+            this.log('Executing AI action', {
+                type: action.type,
+                character: action.character?.name || 'unknown',
+                target: action.target?.name || 'none'
+            });
+
+            switch (action.type) {
+                case 'attack':
+                    if (action.character && action.target) {
+                        // Set up battle state for AI action
+                        this.state.currentAttacker = action.character;
+                        this.state.currentTarget = action.target;
+                        this.state.currentWeapon = this.getUnitWeapon(action.character);
+                        this.state.phase = 'battle_execution';
+                        this.state.isActive = true;
+
+                        // Execute battle directly
+                        const battleResult = await this.executeBattle(
+                            action.character,
+                            action.target,
+                            this.state.currentWeapon!,
+                            { skipAnimations: false }
+                        );
+
+                        // Reset battle state
+                        this.resetBattleState();
+
+                        return battleResult;
+                    }
+                    break;
+
+                case 'skill':
+                    if (action.character && action.skillId) {
+                        const skillAction = {
+                            skillId: action.skillId,
+                            caster: action.character,
+                            targetPosition: action.targetPosition || action.target?.position || action.character.position,
+                            options: { skipAnimations: false }
+                        };
+
+                        const skillResult = await this.executeSkillAction(skillAction);
+
+                        // Return the first battle result if available
+                        return skillResult.battleResults.length > 0 ? skillResult.battleResults[0] : null;
+                    }
+                    break;
+
+                case 'move':
+                    // Movement is handled by the movement system, not battle system
+                    this.log('Move action delegated to movement system');
+                    return null;
+
+                case 'wait':
+                    // Wait action doesn't require battle system processing
+                    this.log('Wait action - no battle system processing needed');
+                    return null;
+
+                default:
+                    this.log('Unknown AI action type', { type: action.type });
+                    return null;
+            }
+
+            return null;
+        } catch (error) {
+            this.log('Error executing AI action', {
+                error: (error as Error).message,
+                action: action.type
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Reset battle state after AI action
+     */
+    private resetBattleState(): void {
+        this.state = {
+            phase: 'idle',
+            currentAttacker: null,
+            currentWeapon: null,
+            currentTarget: null,
+            isActive: false,
+            isAnimating: false,
+            lastBattleResult: this.state.lastBattleResult,
+        };
+    }
+
+    /**
+     * Notify battle system of AI action completion
+     * @param action - Completed AI action
+     * @param result - Action result
+     */
+    public notifyAIActionComplete(action: any, result: any): void {
+        this.emit('ai-action-completed', {
+            action,
+            result,
+            timestamp: Date.now()
+        });
+
+        this.log('AI action completed', {
+            type: action.type,
+            character: action.character?.name || 'unknown',
+            success: result?.success !== false
+        });
     }
 
     /**

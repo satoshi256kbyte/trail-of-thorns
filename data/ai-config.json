@@ -1,0 +1,295 @@
+{
+    "aiSystemConfig": {
+        "difficultyLevels": {
+            "easy": {
+                "thinkingDepth": 2,
+                "randomnessFactor": 0.4,
+                "mistakeProbability": 0.2,
+                "reactionTime": 1500,
+                "skillUsageFrequency": 0.5
+            },
+            "normal": {
+                "thinkingDepth": 3,
+                "randomnessFactor": 0.2,
+                "mistakeProbability": 0.1,
+                "reactionTime": 1000,
+                "skillUsageFrequency": 0.7
+            },
+            "hard": {
+                "thinkingDepth": 4,
+                "randomnessFactor": 0.1,
+                "mistakeProbability": 0.05,
+                "reactionTime": 500,
+                "skillUsageFrequency": 0.8
+            },
+            "expert": {
+                "thinkingDepth": 5,
+                "randomnessFactor": 0.05,
+                "mistakeProbability": 0.02,
+                "reactionTime": 200,
+                "skillUsageFrequency": 0.9
+            }
+        },
+        "behaviorPatterns": {
+            "aggressive": {
+                "name": "攻撃的AI",
+                "description": "最も近い敵を優先的に攻撃する",
+                "weights": {
+                    "attackPriority": 2.0,
+                    "defensePriority": 0.5,
+                    "supportPriority": 0.3,
+                    "tacticalPriority": 0.8
+                },
+                "parameters": {
+                    "attackRangeBonus": 1.2,
+                    "damageBonus": 1.1,
+                    "riskTolerance": 0.8,
+                    "retreatThreshold": 0.2
+                }
+            },
+            "defensive": {
+                "name": "防御的AI",
+                "description": "HP低下時に回避行動を取る",
+                "weights": {
+                    "attackPriority": 0.6,
+                    "defensePriority": 2.0,
+                    "supportPriority": 1.2,
+                    "tacticalPriority": 1.5
+                },
+                "parameters": {
+                    "attackRangeBonus": 0.8,
+                    "damageBonus": 0.9,
+                    "riskTolerance": 0.3,
+                    "retreatThreshold": 0.5
+                }
+            },
+            "support": {
+                "name": "支援AI",
+                "description": "味方の回復・補助を優先する",
+                "weights": {
+                    "attackPriority": 0.4,
+                    "defensePriority": 1.0,
+                    "supportPriority": 2.5,
+                    "tacticalPriority": 1.3
+                },
+                "parameters": {
+                    "attackRangeBonus": 0.9,
+                    "damageBonus": 0.8,
+                    "riskTolerance": 0.4,
+                    "retreatThreshold": 0.4
+                }
+            },
+            "tactical": {
+                "name": "戦術的AI",
+                "description": "地形効果を活用し戦略的に行動する",
+                "weights": {
+                    "attackPriority": 1.2,
+                    "defensePriority": 1.2,
+                    "supportPriority": 1.0,
+                    "tacticalPriority": 2.0
+                },
+                "parameters": {
+                    "attackRangeBonus": 1.0,
+                    "damageBonus": 1.0,
+                    "riskTolerance": 0.6,
+                    "retreatThreshold": 0.35
+                }
+            }
+        },
+        "npcProtectionSettings": {
+            "priorityMultiplier": 3.0,
+            "protectionRadius": 5,
+            "urgencyThreshold": 0.3,
+            "abandonmentThreshold": 0.1,
+            "groupProtectionBonus": 1.5
+        },
+        "skillUsageSettings": {
+            "mpThreshold": 0.3,
+            "cooldownWeight": 0.8,
+            "effectivenessThreshold": 0.6,
+            "emergencyUsageThreshold": 0.2,
+            "skillTypeWeights": {
+                "attack": 1.0,
+                "heal": 1.5,
+                "buff": 0.8,
+                "debuff": 1.2,
+                "special": 0.9
+            },
+            "evaluationWeights": {
+                "effectiveness": 0.35,
+                "timing": 0.25,
+                "resourceCost": 0.15,
+                "situational": 0.15,
+                "personality": 0.1
+            },
+            "skillTypePriority": {
+                "attack": 70,
+                "heal": 60,
+                "buff": 50,
+                "debuff": 55,
+                "status": 45,
+                "special": 65
+            },
+            "targetPriorityModifiers": {
+                "npcBonus": 50,
+                "lowHealthEnemyBonus": 40,
+                "injuredAllyBonus": 35,
+                "strongEnemyBonus": 20
+            },
+            "situationalModifiers": {
+                "numericalAdvantageBonus": 15,
+                "numericalDisadvantageBonus": 15,
+                "emergencyHealingBonus": 25,
+                "finishingBlowBonus": 20,
+                "areaEffectBonus": 15
+            },
+            "resourceManagement": {
+                "lowMpPenalty": 30,
+                "highCostPenalty": 25,
+                "cooldownPenalty": 2,
+                "usageLimitPenalty": 10,
+                "mpReserveRatio": 0.1
+            },
+            "timingFactors": {
+                "earlyGameBuffBonus": 20,
+                "lateGameAttackBonus": 15,
+                "emergencyResponseBonus": 25,
+                "opportunityBonus": 20
+            }
+        },
+        "performanceSettings": {
+            "maxThinkingTime": 2000,
+            "maxMemoryUsage": 50,
+            "cacheSettings": {
+                "enableActionCaching": true,
+                "cacheSize": 1000,
+                "cacheExpirationTime": 30000,
+                "cachePriorityThreshold": 0.7
+            },
+            "parallelProcessing": {
+                "enableParallelProcessing": true,
+                "maxConcurrentProcesses": 4,
+                "processingTimeout": 5000,
+                "loadBalancing": true
+            }
+        },
+        "debugSettings": {
+            "enableDebugMode": false,
+            "logLevel": "info",
+            "visualDebug": {
+                "showThinkingProcess": false,
+                "showActionEvaluation": false,
+                "showBehaviorTree": false,
+                "showPerformanceMetrics": false
+            },
+            "consoleCommands": {
+                "enableCommands": true,
+                "commandPrefix": "ai",
+                "availableCommands": [
+                    "setDifficulty",
+                    "setBehavior",
+                    "showStats",
+                    "resetAI",
+                    "simulate",
+                    "debug"
+                ]
+            }
+        },
+        "balanceSettings": {
+            "globalIntelligenceMultiplier": 1.0,
+            "adaptiveDifficulty": {
+                "enabled": false,
+                "adjustmentRate": 0.1,
+                "performanceWindow": 10,
+                "targetWinRate": 0.6,
+                "minDifficultyLevel": 1,
+                "maxDifficultyLevel": 5
+            },
+            "playerLevelScaling": {
+                "enabled": true,
+                "scalingFactor": 0.1,
+                "maxScaling": 2.0,
+                "minScaling": 0.5
+            }
+        },
+        "difficultyManager": {
+            "defaultDifficulty": "normal",
+            "adaptiveDifficultyEnabled": false,
+            "playerLevelScalingEnabled": true,
+            "realtimeAdjustmentEnabled": true,
+            "difficultyLevels": {
+                "easy": {
+                    "thinkingDepth": 2,
+                    "randomnessFactor": 0.4,
+                    "mistakeProbability": 0.2,
+                    "reactionTime": 1500,
+                    "skillUsageFrequency": 0.5,
+                    "thinkingTimeLimit": 2000
+                },
+                "normal": {
+                    "thinkingDepth": 3,
+                    "randomnessFactor": 0.2,
+                    "mistakeProbability": 0.1,
+                    "reactionTime": 1000,
+                    "skillUsageFrequency": 0.7,
+                    "thinkingTimeLimit": 2000
+                },
+                "hard": {
+                    "thinkingDepth": 4,
+                    "randomnessFactor": 0.1,
+                    "mistakeProbability": 0.05,
+                    "reactionTime": 500,
+                    "skillUsageFrequency": 0.8,
+                    "thinkingTimeLimit": 2000
+                },
+                "expert": {
+                    "thinkingDepth": 5,
+                    "randomnessFactor": 0.05,
+                    "mistakeProbability": 0.02,
+                    "reactionTime": 200,
+                    "skillUsageFrequency": 0.9,
+                    "thinkingTimeLimit": 2000
+                },
+                "master": {
+                    "thinkingDepth": 5,
+                    "randomnessFactor": 0.02,
+                    "mistakeProbability": 0.01,
+                    "reactionTime": 100,
+                    "skillUsageFrequency": 0.95,
+                    "thinkingTimeLimit": 2000
+                }
+            }
+        }
+    },
+    "statisticsConfig": {
+        "enableStatistics": true,
+        "collectionInterval": 1000,
+        "maxHistorySize": 1000,
+        "trackingCategories": {
+            "performance": {
+                "thinkingTime": true,
+                "memoryUsage": true,
+                "actionSuccess": true,
+                "errorRate": true
+            },
+            "behavior": {
+                "actionTypes": true,
+                "targetSelection": true,
+                "skillUsage": true,
+                "movementPatterns": true
+            },
+            "effectiveness": {
+                "damageDealt": true,
+                "damageReceived": true,
+                "healingProvided": true,
+                "objectivesCompleted": true
+            }
+        },
+        "reportGeneration": {
+            "autoGenerate": true,
+            "reportInterval": 300000,
+            "reportFormat": "json",
+            "includeCharts": false
+        }
+    }
+}

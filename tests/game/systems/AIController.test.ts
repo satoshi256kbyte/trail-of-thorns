@@ -1,583 +1,550 @@
 /**
- * AIController Test Suite
- *
- * Tests for the AI system integration with NPCStateManager
- * and NPC attack priority functionality
+ * AIController Unit Tests
  */
 
-import { AIController, AIBehaviorType, AIActionType } from '../../../game/src/systems/AIController';
-import { NPCStateManager } from '../../../game/src/systems/recruitment/NPCStateManager';
-import { RecruitmentSystem } from '../../../game/src/systems/recruitment/RecruitmentSystem';
-import { BattleSystem } from '../../../game/src/systems/BattleSystem';
-import { MovementSystem } from '../../../game/src/systems/MovementSystem';
+import { AIController } from '../../../game/src/systems/AIController';
+import {
+    AIAction,
+    AIActionType,
+    AIContext,
+    AIPersonality,
+    DifficultySettings,
+    AIControllerConfig,
+    AISystemIntegration,
+    AIThinkingTimeoutError,
+} from '../../../game/src/types/ai';
 import { Unit, Position, MapData } from '../../../game/src/types/gameplay';
 
-// Mock Phaser Scene
-const mockScene = {
-  add: {
-    container: jest.fn().mockReturnValue({
-      add: jest.fn(),
-      setDepth: jest.fn(),
-      setScale: jest.fn(),
-      destroy: jest.fn(),
-    }),
-    graphics: jest.fn().mockReturnValue({
-      fillStyle: jest.fn(),
-      fillCircle: jest.fn(),
-      fillRoundedRect: jest.fn(),
-    }),
-  },
-  tweens: {
-    add: jest.fn(),
-  },
-} as any;
+// Mock implementation of AIController for testing
+class MockAIController extends AIController {
+    private mockDecision: AIAction = {
+        type: AIActionType.WAIT,
+        priority: 10,
+        reasoning: 'Mock decision',
+    };
 
-// Mock BattleSystem
-const mockBattleSystem = {
-  canAttack: jest.fn().mockReturnValue(true),
-  setRecruitmentSystem: jest.fn(),
-  hasRecruitmentSystem: jest.fn().mockReturnValue(false),
-} as any;
+    private mockThinkingTime: number = 100;
 
-// Mock MovementSystem
-const mockMovementSystem = {
-  calculateMovementRange: jest.fn().mockReturnValue([
-    { x: 1, y: 1 },
-    { x: 2, y: 1 },
-    { x: 1, y: 2 },
-  ]),
-} as any;
+    protected async makeDecision(context: AIContext): Promise<AIAction> {
+        // Simulate thinking time
+        await new Promise(resolve => setTimeout(resolve, this.mockThinkingTime));
+        return this.mockDecision;
+    }
 
-// Helper function to create mock units
-function createMockUnit(overrides: Partial<Unit> = {}): Unit {
-  return {
-    id: `unit-${Math.random().toString(36).substr(2, 9)}`,
-    name: 'Test Unit',
-    position: { x: 0, y: 0 },
-    stats: {
-      maxHP: 100,
-      maxMP: 50,
-      attack: 20,
-      defense: 15,
-      speed: 10,
-      movement: 3,
-    },
-    currentHP: 100,
-    currentMP: 50,
-    faction: 'player',
-    hasActed: false,
-    hasMoved: false,
-    weapon: {
-      id: 'sword',
-      name: 'Iron Sword',
-      attack: 10,
-      range: 1,
-      durability: 100,
-    },
-    sprite: {
-      x: 0,
-      y: 0,
-      setTint: jest.fn(),
-      clearTint: jest.fn(),
-      setScale: jest.fn(),
-    },
-    ...overrides,
-  } as Unit;
+    public evaluatePosition(position: Position, context: AIContext): number {
+        return 50; // Mock evaluation
+    }
+
+    public getPriority(context: AIContext): number {
+        return this.currentUnit.stats.speed;
+    }
+
+    // Test helpers
+    public setMockDecision(decision: AIAction): void {
+        this.mockDecision = decision;
+    }
+
+    public setMockThinkingTime(time: number): void {
+        this.mockThinkingTime = time;
+    }
+
+    // Expose protected methods for testing
+    public testGetValidActions(context: AIContext): AIAction[] {
+        return this.getValidActions(context);
+    }
+
+    public testEvaluateAttackTarget(target: Unit, context: AIContext): number {
+        return this.evaluateAttackTarget(target, context);
+    }
+
+    public testCalculateDistance(pos1: Position, pos2: Position): number {
+        return this.calculateDistance(pos1, pos2);
+    }
+
+    public testApplyRandomFactor(baseScore: number): number {
+        return this.applyRandomFactor(baseScore);
+    }
+
+    public testShouldMakeMistake(): boolean {
+        return this.shouldMakeMistake();
+    }
 }
 
-// Helper function to create mock map data
-function createMockMapData(): MapData {
-  return {
-    width: 10,
-    height: 10,
-    tiles: Array(10)
-      .fill(null)
-      .map(() => Array(10).fill({ type: 'grass', movementCost: 1 })),
-  };
+// Mock personality implementation
+class MockPersonality implements AIPersonality {
+    constructor(
+        public aggressiveness: number = 0.5,
+        public defensiveness: number = 0.5,
+        public supportiveness: number = 0.5,
+        public tacticalness: number = 0.5,
+        public riskTolerance: number = 0.5
+    ) { }
+
+    getActionModifier(actionType: AIActionType): number {
+        switch (actionType) {
+            case AIActionType.ATTACK:
+                return this.aggressiveness;
+            case AIActionType.MOVE:
+                return this.tacticalness;
+            default:
+                return 1.0;
+        }
+    }
+
+    shouldTakeRisk(riskLevel: number): boolean {
+        return riskLevel <= this.riskTolerance;
+    }
+
+    getPriorityModifier(target: Unit): number {
+        return 1.0;
+    }
+}
+
+// Test data factories
+function createMockUnit(overrides: Partial<Unit> = {}): Unit {
+    return {
+        id: 'test-unit',
+        name: 'Test Unit',
+        position: { x: 5, y: 5 },
+        stats: {
+            maxHP: 100,
+            maxMP: 50,
+            attack: 20,
+            defense: 15,
+            speed: 10,
+            movement: 3,
+        },
+        currentHP: 100,
+        currentMP: 50,
+        faction: 'player',
+        hasActed: false,
+        hasMoved: false,
+        ...overrides,
+    };
+}
+
+function createMockContext(overrides: Partial<AIContext> = {}): AIContext {
+    return {
+        currentUnit: createMockUnit(),
+        allUnits: [],
+        currentTurn: 1,
+        gamePhase: 'player',
+        visibleEnemies: [],
+        visibleAllies: [],
+        npcs: [],
+        availableSkills: [],
+        tempData: new Map(),
+        ...overrides,
+    };
+}
+
+function createMockConfig(): AIControllerConfig {
+    return {
+        thinkingTimeLimit: 2000,
+        enableAILogging: false,
+        npcPriorityMultiplier: 20,
+        maxSearchDepth: 3,
+        enableTacticalAI: true,
+        randomFactor: 0.1,
+    };
+}
+
+function createMockDifficulty(): DifficultySettings {
+    return {
+        thinkingDepth: 3,
+        randomnessFactor: 0.2,
+        mistakeProbability: 0.1,
+        reactionTime: 500,
+        skillUsageFrequency: 0.7,
+    };
+}
+
+function createMockIntegration(): AISystemIntegration {
+    return {
+        battleSystem: {
+            canAttack: jest.fn().mockReturnValue(true),
+            calculateDamage: jest.fn().mockReturnValue(25),
+            executeAttack: jest.fn().mockResolvedValue(undefined),
+        },
+        movementSystem: {
+            calculateMovementRange: jest.fn().mockReturnValue([
+                { x: 4, y: 5 },
+                { x: 6, y: 5 },
+                { x: 5, y: 4 },
+                { x: 5, y: 6 },
+            ]),
+            canMoveTo: jest.fn().mockReturnValue(true),
+            executeMove: jest.fn().mockResolvedValue(undefined),
+        },
+        skillSystem: {
+            getAvailableSkills: jest.fn().mockReturnValue(['heal', 'fireball']),
+            canUseSkill: jest.fn().mockReturnValue(true),
+            executeSkill: jest.fn().mockResolvedValue(undefined),
+        },
+        recruitmentSystem: {
+            isNPC: jest.fn().mockReturnValue(false),
+            getNPCPriority: jest.fn().mockReturnValue(10),
+            getRecruitmentConditions: jest.fn().mockReturnValue([]),
+        },
+    };
 }
 
 describe('AIController', () => {
-  let aiController: AIController;
-  let npcStateManager: NPCStateManager;
-  let recruitmentSystem: RecruitmentSystem;
+    let aiController: MockAIController;
+    let mockUnit: Unit;
+    let mockPersonality: MockPersonality;
+    let mockDifficulty: DifficultySettings;
+    let mockConfig: AIControllerConfig;
+    let mockIntegration: AISystemIntegration;
 
-  beforeEach(() => {
-    // Create AI controller with mocked dependencies
-    aiController = new AIController(mockScene, mockBattleSystem, mockMovementSystem, {
-      enableAILogging: false,
-      thinkingTimeLimit: 1000,
-      npcPriorityMultiplier: 10.0,
+    beforeEach(() => {
+        mockUnit = createMockUnit();
+        mockPersonality = new MockPersonality();
+        mockDifficulty = createMockDifficulty();
+        mockConfig = createMockConfig();
+        mockIntegration = createMockIntegration();
+
+        aiController = new MockAIController(
+            mockUnit,
+            mockPersonality,
+            mockDifficulty,
+            mockConfig,
+            mockIntegration
+        );
     });
 
-    // Create NPC state manager
-    npcStateManager = new NPCStateManager(mockScene, {
-      defaultNPCPriority: 100,
-      maxNPCsPerStage: 3,
+    describe('Constructor', () => {
+        test('should initialize with provided parameters', () => {
+            expect(aiController.currentUnit).toBe(mockUnit);
+            expect(aiController.aiPersonality).toBe(mockPersonality);
+            expect(aiController.isCurrentlyThinking).toBe(false);
+            expect(aiController.lastThinkingTime).toBe(0);
+        });
+
+        test('should initialize performance metrics', () => {
+            const metrics = aiController.metrics;
+            expect(metrics.totalDecisions).toBe(0);
+            expect(metrics.averageThinkingTime).toBe(0);
+            expect(metrics.errorCount).toBe(0);
+        });
     });
 
-    // Create recruitment system (mock)
-    recruitmentSystem = {
-      getRecruitmentConditions: jest.fn().mockReturnValue([]),
-      checkRecruitmentEligibility: jest.fn(),
-      processRecruitmentAttempt: jest.fn(),
-    } as any;
+    describe('decideAction', () => {
+        test('should return a decision within time limit', async () => {
+            const context = createMockContext();
+            aiController.setMockThinkingTime(100);
 
-    // Integrate systems
-    aiController.setNPCStateManager(npcStateManager);
-    aiController.setRecruitmentSystem(recruitmentSystem);
+            const decision = await aiController.decideAction(context);
 
-    // Reset mocks
-    jest.clearAllMocks();
-  });
+            expect(decision).toBeDefined();
+            expect(decision.type).toBe(AIActionType.WAIT);
+            expect(decision.reasoning).toBe('Mock decision');
+        });
 
-  afterEach(() => {
-    aiController.destroy();
-    npcStateManager.destroy();
-  });
+        test('should handle timeout and return fallback action', async () => {
+            const context = createMockContext();
+            aiController.setMockThinkingTime(3000); // Longer than timeout
 
-  describe('NPC Priority Integration', () => {
-    test('should prioritize NPC targets over regular enemies', async () => {
-      // Create test units
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        name: 'AI Enemy',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
+            const decision = await aiController.decideAction(context);
 
-      const regularEnemy = createMockUnit({
-        id: 'regular-enemy',
-        name: 'Regular Enemy',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
+            expect(decision).toBeDefined();
+            expect(decision.type).toBe(AIActionType.WAIT);
+            expect(decision.reasoning).toContain('timeout');
+        });
 
-      const npcUnit = createMockUnit({
-        id: 'npc-unit',
-        name: 'NPC Unit',
-        faction: 'player',
-        position: { x: 4, y: 5 },
-      });
+        test('should update performance metrics after decision', async () => {
+            const context = createMockContext();
 
-      // Convert one unit to NPC
-      const conversionResult = npcStateManager.convertToNPC(npcUnit, 'test-recruitment', 1);
-      expect(conversionResult.success).toBe(true);
+            await aiController.decideAction(context);
 
-      const allUnits = [aiUnit, regularEnemy, npcUnit];
+            const metrics = aiController.metrics;
+            expect(metrics.totalDecisions).toBe(1);
+            expect(metrics.averageThinkingTime).toBeGreaterThan(0);
+        });
 
-      // Make AI decision
-      const decision = await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
+        test('should track thinking state correctly', async () => {
+            const context = createMockContext();
 
-      // Should prioritize attacking the NPC
-      expect(decision.type).toBe(AIActionType.ATTACK);
-      expect(decision.target?.id).toBe(npcUnit.id);
-      expect(decision.reasoning).toContain('NPC');
+            expect(aiController.isCurrentlyThinking).toBe(false);
+
+            const decisionPromise = aiController.decideAction(context);
+
+            // Note: This test is timing-dependent and might be flaky
+            // In a real implementation, you might want to use more sophisticated mocking
+
+            await decisionPromise;
+
+            expect(aiController.isCurrentlyThinking).toBe(false);
+            expect(aiController.lastThinkingTime).toBeGreaterThan(0);
+        });
     });
 
-    test('should switch to NPC hunter behavior when NPCs are present', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
+    describe('getValidActions', () => {
+        test('should always include wait action', () => {
+            const context = createMockContext();
 
-      const npcUnit = createMockUnit({
-        id: 'npc-unit',
-        faction: 'player',
-        position: { x: 4, y: 5 },
-      });
+            const actions = aiController.testGetValidActions(context);
 
-      // Convert unit to NPC
-      npcStateManager.convertToNPC(npcUnit, 'test-recruitment', 1);
+            const waitAction = actions.find(action => action.type === AIActionType.WAIT);
+            expect(waitAction).toBeDefined();
+        });
 
-      const allUnits = [aiUnit, npcUnit];
+        test('should include movement actions when movement system is available', () => {
+            const context = createMockContext({
+                mapData: { width: 10, height: 10, tiles: [] } as MapData,
+            });
 
-      // Listen for AI decision event
-      let behaviorType: AIBehaviorType | undefined;
-      aiController.on('ai-decision-made', data => {
-        behaviorType = data.behaviorType;
-      });
+            const actions = aiController.testGetValidActions(context);
 
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
+            const moveActions = actions.filter(action => action.type === AIActionType.MOVE);
+            expect(moveActions.length).toBeGreaterThan(0);
+        });
 
-      expect(behaviorType).toBe(AIBehaviorType.NPC_HUNTER);
+        test('should include attack actions when enemies are visible', () => {
+            const enemy = createMockUnit({ id: 'enemy', faction: 'enemy' });
+            const context = createMockContext({
+                visibleEnemies: [enemy],
+            });
+
+            const actions = aiController.testGetValidActions(context);
+
+            const attackActions = actions.filter(action => action.type === AIActionType.ATTACK);
+            expect(attackActions.length).toBeGreaterThan(0);
+        });
+
+        test('should include skill actions when skills are available', () => {
+            const enemy = createMockUnit({ id: 'enemy', faction: 'enemy' });
+            const context = createMockContext({
+                visibleEnemies: [enemy],
+                availableSkills: ['fireball'],
+            });
+
+            const actions = aiController.testGetValidActions(context);
+
+            const skillActions = actions.filter(action => action.type === AIActionType.SKILL);
+            expect(skillActions.length).toBeGreaterThan(0);
+        });
     });
 
-    test('should calculate higher priority for NPC targets', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
+    describe('evaluateAttackTarget', () => {
+        test('should give higher priority to NPCs', () => {
+            const normalEnemy = createMockUnit({ id: 'normal', faction: 'enemy' });
+            const npcEnemy = createMockUnit({ id: 'npc', faction: 'enemy' });
+            const context = createMockContext();
 
-      const regularUnit = createMockUnit({
-        id: 'regular-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
+            // Mock NPC detection
+            (mockIntegration.recruitmentSystem!.isNPC as jest.Mock)
+                .mockImplementation((unit: Unit) => unit.id === 'npc');
 
-      const npcUnit = createMockUnit({
-        id: 'npc-unit',
-        faction: 'player',
-        position: { x: 7, y: 5 }, // Further away but should still be prioritized
-      });
+            const normalPriority = aiController.testEvaluateAttackTarget(normalEnemy, context);
+            const npcPriority = aiController.testEvaluateAttackTarget(npcEnemy, context);
 
-      // Convert unit to NPC
-      npcStateManager.convertToNPC(npcUnit, 'test-recruitment', 1);
+            expect(npcPriority).toBeGreaterThan(normalPriority);
+        });
 
-      const allUnits = [aiUnit, regularUnit, npcUnit];
+        test('should give higher priority to low health enemies', () => {
+            const healthyEnemy = createMockUnit({
+                id: 'healthy',
+                faction: 'enemy',
+                currentHP: 100,
+                stats: { ...createMockUnit().stats, maxHP: 100 }
+            });
+            const injuredEnemy = createMockUnit({
+                id: 'injured',
+                faction: 'enemy',
+                currentHP: 20,
+                stats: { ...createMockUnit().stats, maxHP: 100 }
+            });
+            const context = createMockContext();
 
-      // Capture target analysis
-      let targets: any[] = [];
-      aiController.on('ai-decision-made', data => {
-        targets = data.targets;
-      });
+            const healthyPriority = aiController.testEvaluateAttackTarget(healthyEnemy, context);
+            const injuredPriority = aiController.testEvaluateAttackTarget(injuredEnemy, context);
 
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
+            expect(injuredPriority).toBeGreaterThan(healthyPriority);
+        });
 
-      // Find NPC and regular targets
-      const npcTarget = targets.find(t => t.unit.id === npcUnit.id);
-      const regularTarget = targets.find(t => t.unit.id === regularUnit.id);
+        test('should consider distance in priority calculation', () => {
+            const nearEnemy = createMockUnit({
+                id: 'near',
+                faction: 'enemy',
+                position: { x: 6, y: 5 } // Distance 1 from unit at (5,5)
+            });
+            const farEnemy = createMockUnit({
+                id: 'far',
+                faction: 'enemy',
+                position: { x: 10, y: 10 } // Distance 10 from unit at (5,5)
+            });
+            const context = createMockContext();
 
-      expect(npcTarget).toBeDefined();
-      expect(regularTarget).toBeDefined();
-      expect(npcTarget.priority).toBeGreaterThan(regularTarget.priority);
-      expect(npcTarget.isNPC).toBe(true);
-      expect(regularTarget.isNPC).toBe(false);
-    });
-  });
+            const nearPriority = aiController.testEvaluateAttackTarget(nearEnemy, context);
+            const farPriority = aiController.testEvaluateAttackTarget(farEnemy, context);
 
-  describe('AI Behavior Types', () => {
-    test('should use aggressive behavior when no NPCs present', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
-
-      const enemyUnit = createMockUnit({
-        id: 'enemy-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
-
-      const allUnits = [aiUnit, enemyUnit];
-
-      let behaviorType: AIBehaviorType | undefined;
-      aiController.on('ai-decision-made', data => {
-        behaviorType = data.behaviorType;
-      });
-
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
-
-      expect(behaviorType).toBe(AIBehaviorType.AGGRESSIVE);
+            expect(nearPriority).toBeGreaterThan(farPriority);
+        });
     });
 
-    test('should use defensive behavior when unit has low health', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-        currentHP: 20, // Low health (20% of max)
-        stats: { ...createMockUnit().stats, maxHP: 100 },
-      });
+    describe('calculateDistance', () => {
+        test('should calculate Manhattan distance correctly', () => {
+            const pos1 = { x: 0, y: 0 };
+            const pos2 = { x: 3, y: 4 };
 
-      const enemyUnit = createMockUnit({
-        id: 'enemy-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
+            const distance = aiController.testCalculateDistance(pos1, pos2);
 
-      const allUnits = [aiUnit, enemyUnit];
+            expect(distance).toBe(7); // |3-0| + |4-0| = 7
+        });
 
-      let behaviorType: AIBehaviorType | undefined;
-      aiController.on('ai-decision-made', data => {
-        behaviorType = data.behaviorType;
-      });
+        test('should handle same position', () => {
+            const pos = { x: 5, y: 5 };
 
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
+            const distance = aiController.testCalculateDistance(pos, pos);
 
-      expect(behaviorType).toBe(AIBehaviorType.DEFENSIVE);
-    });
-  });
+            expect(distance).toBe(0);
+        });
 
-  describe('Target Analysis', () => {
-    test('should correctly identify NPC status in target analysis', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
+        test('should handle negative coordinates', () => {
+            const pos1 = { x: -2, y: -3 };
+            const pos2 = { x: 1, y: 2 };
 
-      const npcUnit = createMockUnit({
-        id: 'npc-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
+            const distance = aiController.testCalculateDistance(pos1, pos2);
 
-      // Convert unit to NPC
-      npcStateManager.convertToNPC(npcUnit, 'test-recruitment', 1);
-
-      const allUnits = [aiUnit, npcUnit];
-
-      let targets: any[] = [];
-      aiController.on('ai-decision-made', data => {
-        targets = data.targets;
-      });
-
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
-
-      expect(targets).toHaveLength(1);
-      expect(targets[0].isNPC).toBe(true);
-      expect(targets[0].unit.id).toBe(npcUnit.id);
+            expect(distance).toBe(8); // |1-(-2)| + |2-(-3)| = 3 + 5 = 8
+        });
     });
 
-    test('should calculate distance correctly', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 0, y: 0 },
-      });
+    describe('applyRandomFactor', () => {
+        test('should modify score within expected range', () => {
+            const baseScore = 50;
+            const modifiedScore = aiController.testApplyRandomFactor(baseScore);
 
-      const nearUnit = createMockUnit({
-        id: 'near-unit',
-        faction: 'player',
-        position: { x: 1, y: 1 }, // Distance = 2
-      });
+            // The random factor should not change the score too dramatically
+            expect(modifiedScore).toBeGreaterThan(baseScore * 0.8);
+            expect(modifiedScore).toBeLessThan(baseScore * 1.2);
+        });
 
-      const farUnit = createMockUnit({
-        id: 'far-unit',
-        faction: 'player',
-        position: { x: 3, y: 4 }, // Distance = 7
-      });
+        test('should return different values on multiple calls', () => {
+            const baseScore = 50;
+            const scores = [];
 
-      const allUnits = [aiUnit, nearUnit, farUnit];
+            for (let i = 0; i < 10; i++) {
+                scores.push(aiController.testApplyRandomFactor(baseScore));
+            }
 
-      let targets: any[] = [];
-      aiController.on('ai-decision-made', data => {
-        targets = data.targets;
-      });
-
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
-
-      const nearTarget = targets.find(t => t.unit.id === nearUnit.id);
-      const farTarget = targets.find(t => t.unit.id === farUnit.id);
-
-      expect(nearTarget.distance).toBe(2);
-      expect(farTarget.distance).toBe(7);
-    });
-  });
-
-  describe('Action Generation', () => {
-    test('should generate attack actions for valid targets', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
-
-      const targetUnit = createMockUnit({
-        id: 'target-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 }, // Within attack range
-      });
-
-      const allUnits = [aiUnit, targetUnit];
-
-      const decision = await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
-
-      expect(decision.type).toBe(AIActionType.ATTACK);
-      expect(decision.target?.id).toBe(targetUnit.id);
+            // Not all scores should be identical (very low probability)
+            const uniqueScores = new Set(scores);
+            expect(uniqueScores.size).toBeGreaterThan(1);
+        });
     });
 
-    test('should generate wait action when no valid actions available', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-        hasActed: true, // Cannot attack
-      });
+    describe('shouldMakeMistake', () => {
+        test('should respect mistake probability', () => {
+            // Set high mistake probability
+            mockDifficulty.mistakeProbability = 0.9;
 
-      // Mock canAttack to return false
-      mockBattleSystem.canAttack.mockReturnValue(false);
+            let mistakes = 0;
+            const trials = 100;
 
-      const targetUnit = createMockUnit({
-        id: 'target-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
+            for (let i = 0; i < trials; i++) {
+                if (aiController.testShouldMakeMistake()) {
+                    mistakes++;
+                }
+            }
 
-      const allUnits = [aiUnit, targetUnit];
+            // Should make mistakes roughly 90% of the time (with some variance)
+            expect(mistakes).toBeGreaterThan(trials * 0.7);
+            expect(mistakes).toBeLessThan(trials);
+        });
 
-      const decision = await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
+        test('should rarely make mistakes with low probability', () => {
+            // Set low mistake probability
+            mockDifficulty.mistakeProbability = 0.1;
 
-      expect(decision.type).toBe(AIActionType.WAIT);
-    });
-  });
+            let mistakes = 0;
+            const trials = 100;
 
-  describe('Configuration and Statistics', () => {
-    test('should update configuration correctly', () => {
-      const newConfig = {
-        npcPriorityMultiplier: 15.0,
-        enableAILogging: true,
-      };
+            for (let i = 0; i < trials; i++) {
+                if (aiController.testShouldMakeMistake()) {
+                    mistakes++;
+                }
+            }
 
-      aiController.updateConfig(newConfig);
-
-      const currentConfig = aiController.getConfig();
-      expect(currentConfig.npcPriorityMultiplier).toBe(15.0);
-      expect(currentConfig.enableAILogging).toBe(true);
+            // Should make mistakes roughly 10% of the time (with some variance)
+            expect(mistakes).toBeLessThan(trials * 0.3);
+        });
     });
 
-    test('should track decision history', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
+    describe('Error Handling', () => {
+        test('should handle decision errors gracefully', async () => {
+            const context = createMockContext();
 
-      const targetUnit = createMockUnit({
-        id: 'target-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
+            // Create a controller that throws an error
+            const errorController = new (class extends MockAIController {
+                protected async makeDecision(context: AIContext): Promise<AIAction> {
+                    throw new Error('Test error');
+                }
+            })(mockUnit, mockPersonality, mockDifficulty, mockConfig, mockIntegration);
 
-      const allUnits = [aiUnit, targetUnit];
+            const decision = await errorController.decideAction(context);
 
-      // Make multiple decisions
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 2);
+            expect(decision).toBeDefined();
+            expect(decision.type).toBe(AIActionType.WAIT);
+            expect(decision.reasoning).toContain('error');
+        });
 
-      const history = aiController.getDecisionHistory(aiUnit.id);
-      expect(history).toHaveLength(2);
-      expect(history[0].type).toBeDefined();
-      expect(history[1].type).toBeDefined();
+        test('should handle AI-specific errors', async () => {
+            const context = createMockContext();
+
+            // Create a controller that throws an AI error
+            const errorController = new (class extends MockAIController {
+                protected async makeDecision(context: AIContext): Promise<AIAction> {
+                    throw new AIThinkingTimeoutError('Test timeout');
+                }
+            })(mockUnit, mockPersonality, mockDifficulty, mockConfig, mockIntegration);
+
+            const decision = await errorController.decideAction(context);
+
+            expect(decision).toBeDefined();
+            expect(decision.type).toBe(AIActionType.WAIT);
+            expect(decision.reasoning).toContain('timeout');
+        });
     });
 
-    test('should provide AI statistics', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
+    describe('Performance Metrics', () => {
+        test('should track decision count', async () => {
+            const context = createMockContext();
 
-      const npcUnit = createMockUnit({
-        id: 'npc-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
+            await aiController.decideAction(context);
+            await aiController.decideAction(context);
+            await aiController.decideAction(context);
 
-      // Convert unit to NPC
-      npcStateManager.convertToNPC(npcUnit, 'test-recruitment', 1);
+            const metrics = aiController.metrics;
+            expect(metrics.totalDecisions).toBe(3);
+        });
 
-      const allUnits = [aiUnit, npcUnit];
+        test('should track action type distribution', async () => {
+            const context = createMockContext();
 
-      // Make decision targeting NPC
-      const decision = await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
+            aiController.setMockDecision({
+                type: AIActionType.ATTACK,
+                priority: 10,
+                reasoning: 'Attack decision',
+            });
 
-      const stats = aiController.getAIStatistics();
-      expect(stats.totalDecisions).toBe(1);
+            await aiController.decideAction(context);
 
-      // Debug: Check what decision was actually made
-      console.log('Decision made:', decision);
-      console.log('Stats:', stats);
+            const metrics = aiController.metrics;
+            expect(metrics.actionTypeDistribution[AIActionType.ATTACK]).toBe(1);
+        });
 
-      expect(stats.actionTypeDistribution[decision.type]).toBe(1);
+        test('should track thinking times', async () => {
+            const context = createMockContext();
+            aiController.setMockThinkingTime(200);
 
-      // Only check NPC targeting rate if it was an attack
-      if (decision.type === AIActionType.ATTACK) {
-        expect(stats.npcTargetingRate).toBe(1); // 100% NPC targeting rate
-      }
+            await aiController.decideAction(context);
+
+            const metrics = aiController.metrics;
+            expect(metrics.averageThinkingTime).toBeGreaterThan(0);
+            expect(metrics.maxThinkingTime).toBeGreaterThan(0);
+            expect(metrics.minThinkingTime).toBeGreaterThan(0);
+        });
     });
-  });
-
-  describe('Error Handling', () => {
-    test('should handle errors gracefully during decision making', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
-
-      const targetUnit = createMockUnit({
-        id: 'target-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
-
-      // Mock an error in analyzeTargets by making it throw during target processing
-      const originalAnalyzeTargets = (aiController as any).analyzeTargets;
-      (aiController as any).analyzeTargets = jest.fn().mockImplementation(() => {
-        throw new Error('Target analysis error');
-      });
-
-      const decision = await aiController.makeDecision(
-        aiUnit,
-        [targetUnit],
-        createMockMapData(),
-        1
-      );
-
-      // Should return safe fallback action
-      expect(decision.type).toBe(AIActionType.WAIT);
-      expect(decision.reasoning).toContain('Error occurred');
-
-      // Restore original method
-      (aiController as any).analyzeTargets = originalAnalyzeTargets;
-    });
-
-    test('should handle missing NPC state manager gracefully', async () => {
-      // Create AI controller without NPC state manager
-      const aiWithoutNPC = new AIController(mockScene, mockBattleSystem, mockMovementSystem);
-
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
-
-      const targetUnit = createMockUnit({
-        id: 'target-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
-
-      const allUnits = [aiUnit, targetUnit];
-
-      // Should not throw error
-      const decision = await aiWithoutNPC.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
-      expect(decision).toBeDefined();
-      expect(decision.type).toBeDefined();
-
-      aiWithoutNPC.destroy();
-    });
-  });
-
-  describe('Integration with Recruitment System', () => {
-    test('should access recruitment system information during decision making', async () => {
-      const aiUnit = createMockUnit({
-        id: 'ai-unit',
-        faction: 'enemy',
-        position: { x: 5, y: 5 },
-      });
-
-      const recruitableUnit = createMockUnit({
-        id: 'recruitable-unit',
-        faction: 'player',
-        position: { x: 6, y: 5 },
-      });
-
-      // Mock recruitment system to return conditions
-      (recruitmentSystem.getRecruitmentConditions as jest.Mock).mockReturnValue([
-        { id: 'test-condition', type: 'hp_threshold' },
-      ]);
-
-      const allUnits = [aiUnit, recruitableUnit];
-
-      await aiController.makeDecision(aiUnit, allUnits, createMockMapData(), 1);
-
-      // Should have called recruitment system
-      expect(recruitmentSystem.getRecruitmentConditions).toHaveBeenCalled();
-    });
-  });
 });

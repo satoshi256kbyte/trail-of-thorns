@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { TerrainCost, MovementAnimationConfig } from '../types/movement';
 import { BattleAnimationConfig } from '../types/battle';
 import { RecruitmentAnimationConfig } from '../types/recruitment';
-import { SkillType, TargetType } from '../types/skill';
+import { DifficultySettings } from '../types/ai';
 
 /**
  * Movement system configuration options
@@ -92,6 +92,119 @@ export interface RecruitmentSystemConfig {
         enableSimulation: boolean;
         /** Enable balance testing commands */
         enableBalanceTesting: boolean;
+    };
+}
+
+/**
+ * AI system configuration options
+ */
+export interface AISystemConfig {
+    /** Enable AI system */
+    enableAISystem: boolean;
+    /** Enable AI debug visualization */
+    enableAIDebug: boolean;
+    /** Show AI thinking process in debug mode */
+    showThinkingDebug: boolean;
+    /** Show AI action evaluation in debug mode */
+    showActionEvaluationDebug: boolean;
+    /** Show AI behavior tree execution in debug mode */
+    showBehaviorTreeDebug: boolean;
+    /** Show AI performance metrics */
+    showPerformanceMetrics: boolean;
+    /** Enable detailed AI logging */
+    enableDetailedLogging: boolean;
+    /** AI difficulty settings */
+    difficultySettings: DifficultySettings;
+    /** AI performance settings */
+    performanceSettings: {
+        /** Maximum thinking time per AI (ms) */
+        maxThinkingTime: number;
+        /** Maximum memory usage per AI (MB) */
+        maxMemoryUsage: number;
+        /** Enable AI action caching */
+        enableActionCaching: boolean;
+        /** Cache size limit */
+        cacheSize: number;
+        /** Enable parallel AI processing */
+        enableParallelProcessing: boolean;
+        /** Maximum concurrent AI processes */
+        maxConcurrentProcesses: number;
+    };
+    /** AI balance settings */
+    balanceSettings: {
+        /** Global AI intelligence multiplier */
+        globalIntelligenceMultiplier: number;
+        /** AI mistake probability (0-1) */
+        mistakeProbability: number;
+        /** AI reaction delay (ms) */
+        reactionDelay: number;
+        /** NPC protection priority multiplier */
+        npcProtectionPriority: number;
+        /** Skill usage frequency (0-1) */
+        skillUsageFrequency: number;
+        /** Aggressive behavior weight */
+        aggressiveBehaviorWeight: number;
+        /** Defensive behavior weight */
+        defensiveBehaviorWeight: number;
+        /** Support behavior weight */
+        supportBehaviorWeight: number;
+        /** Tactical behavior weight */
+        tacticalBehaviorWeight: number;
+    };
+    /** Debug visualization colors */
+    debugColors: {
+        aiThinking: number;
+        actionEvaluation: number;
+        behaviorTree: number;
+        pathfinding: number;
+        targetSelection: number;
+        skillUsage: number;
+        npcProtection: number;
+        performanceWarning: number;
+        performanceError: number;
+    };
+    /** Console command settings */
+    consoleCommands: {
+        /** Enable AI console commands */
+        enableCommands: boolean;
+        /** Command prefix for AI commands */
+        commandPrefix: string;
+        /** Enable AI testing commands */
+        enableTesting: boolean;
+        /** Enable AI simulation commands */
+        enableSimulation: boolean;
+        /** Enable balance adjustment commands */
+        enableBalanceAdjustment: boolean;
+    };
+    /** AI testing configuration */
+    testingConfig: {
+        /** Enable AI testing mode */
+        enableTestingMode: boolean;
+        /** Auto-execute AI actions in testing mode */
+        autoExecuteActions: boolean;
+        /** Log all AI decisions */
+        logAllDecisions: boolean;
+        /** Generate AI statistics */
+        generateStatistics: boolean;
+        /** Test AI behavior patterns */
+        testBehaviorPatterns: boolean;
+        /** Enable AI vs AI simulation */
+        enableAIvsAISimulation: boolean;
+    };
+    /** AI statistics collection settings */
+    statisticsConfig: {
+        /** Enable statistics collection */
+        enableStatistics: boolean;
+        /** Statistics collection interval (ms) */
+        collectionInterval: number;
+        /** Maximum statistics history size */
+        maxHistorySize: number;
+        /** Enable performance tracking */
+        enablePerformanceTracking: boolean;
+        /** Enable decision tracking */
+        enableDecisionTracking: boolean;
+        /** Enable success rate tracking */
+        enableSuccessRateTracking: boolean;
     };
 }
 
@@ -255,6 +368,7 @@ export interface IGameConfigValidation {
     readonly BATTLE_SYSTEM: BattleSystemConfig;
     readonly RECRUITMENT_SYSTEM: RecruitmentSystemConfig;
     readonly SKILL_SYSTEM: SkillSystemConfig;
+    readonly AI_SYSTEM: AISystemConfig;
 }
 
 /**
@@ -271,6 +385,8 @@ export interface IGameConfig extends IGameConfigValidation {
     updateRecruitmentSystemConfig(config: Partial<RecruitmentSystemConfig>): void;
     getSkillSystemConfig(): SkillSystemConfig;
     updateSkillSystemConfig(config: Partial<SkillSystemConfig>): void;
+    getAISystemConfig(): AISystemConfig;
+    updateAISystemConfig(config: Partial<AISystemConfig>): void;
 }
 
 /**
@@ -403,6 +519,77 @@ export class GameConfig implements IGameConfig {
         },
     };
 
+    // AI system configuration
+    public static readonly AI_SYSTEM: AISystemConfig = {
+        enableAISystem: true,
+        enableAIDebug: process.env.NODE_ENV === 'development',
+        showThinkingDebug: false,
+        showActionEvaluationDebug: false,
+        showBehaviorTreeDebug: false,
+        showPerformanceMetrics: false,
+        enableDetailedLogging: process.env.NODE_ENV === 'development',
+        difficultySettings: {
+            thinkingDepth: 3,
+            randomnessFactor: 0.2,
+            mistakeProbability: 0.1,
+            reactionTime: 1000,
+            skillUsageFrequency: 0.7,
+        },
+        performanceSettings: {
+            maxThinkingTime: 2000,
+            maxMemoryUsage: 50,
+            enableActionCaching: true,
+            cacheSize: 1000,
+            enableParallelProcessing: true,
+            maxConcurrentProcesses: 4,
+        },
+        balanceSettings: {
+            globalIntelligenceMultiplier: 1.0,
+            mistakeProbability: 0.1,
+            reactionDelay: 500,
+            npcProtectionPriority: 2.0,
+            skillUsageFrequency: 0.7,
+            aggressiveBehaviorWeight: 1.0,
+            defensiveBehaviorWeight: 1.0,
+            supportBehaviorWeight: 1.0,
+            tacticalBehaviorWeight: 1.0,
+        },
+        debugColors: {
+            aiThinking: 0xffff00,
+            actionEvaluation: 0x00ffff,
+            behaviorTree: 0xff00ff,
+            pathfinding: 0x00ff00,
+            targetSelection: 0xff0000,
+            skillUsage: 0x0000ff,
+            npcProtection: 0xff8800,
+            performanceWarning: 0xffaa00,
+            performanceError: 0xff0000,
+        },
+        consoleCommands: {
+            enableCommands: process.env.NODE_ENV === 'development',
+            commandPrefix: 'ai',
+            enableTesting: true,
+            enableSimulation: true,
+            enableBalanceAdjustment: true,
+        },
+        testingConfig: {
+            enableTestingMode: process.env.NODE_ENV === 'development',
+            autoExecuteActions: false,
+            logAllDecisions: true,
+            generateStatistics: true,
+            testBehaviorPatterns: false,
+            enableAIvsAISimulation: false,
+        },
+        statisticsConfig: {
+            enableStatistics: true,
+            collectionInterval: 1000,
+            maxHistorySize: 1000,
+            enablePerformanceTracking: true,
+            enableDecisionTracking: true,
+            enableSuccessRateTracking: true,
+        },
+    };
+
     // Skill system configuration
     public static readonly SKILL_SYSTEM: SkillSystemConfig = {
         enableSkillSystem: true,
@@ -468,6 +655,7 @@ export class GameConfig implements IGameConfig {
     public readonly BATTLE_SYSTEM = GameConfig.BATTLE_SYSTEM;
     public readonly RECRUITMENT_SYSTEM = GameConfig.RECRUITMENT_SYSTEM;
     public readonly SKILL_SYSTEM = GameConfig.SKILL_SYSTEM;
+    public readonly AI_SYSTEM = GameConfig.AI_SYSTEM;
 
     // Mutable movement system configuration for runtime updates
     private movementSystemConfig: MovementSystemConfig;
@@ -477,6 +665,8 @@ export class GameConfig implements IGameConfig {
     private recruitmentSystemConfig: RecruitmentSystemConfig;
     // Mutable skill system configuration for runtime updates
     private skillSystemConfig: SkillSystemConfig;
+    // Mutable AI system configuration for runtime updates
+    private aiSystemConfig: AISystemConfig;
 
     /**
      * Constructor - Initialize mutable configuration
@@ -487,6 +677,7 @@ export class GameConfig implements IGameConfig {
         this.battleSystemConfig = JSON.parse(JSON.stringify(GameConfig.BATTLE_SYSTEM));
         this.recruitmentSystemConfig = JSON.parse(JSON.stringify(GameConfig.RECRUITMENT_SYSTEM));
         this.skillSystemConfig = JSON.parse(JSON.stringify(GameConfig.SKILL_SYSTEM));
+        this.aiSystemConfig = JSON.parse(JSON.stringify(GameConfig.AI_SYSTEM));
     }
 
     /**
@@ -555,6 +746,23 @@ export class GameConfig implements IGameConfig {
     public updateSkillSystemConfig(config: Partial<SkillSystemConfig>): void {
         this.skillSystemConfig = { ...this.skillSystemConfig, ...config };
         console.log('GameConfig: Skill system configuration updated:', config);
+    }
+
+    /**
+     * Get current AI system configuration
+     * @returns AI system configuration
+     */
+    public getAISystemConfig(): AISystemConfig {
+        return { ...this.aiSystemConfig };
+    }
+
+    /**
+     * Update AI system configuration
+     * @param config - Partial configuration to update
+     */
+    public updateAISystemConfig(config: Partial<AISystemConfig>): void {
+        this.aiSystemConfig = { ...this.aiSystemConfig, ...config };
+        console.log('GameConfig: AI system configuration updated:', config);
     }
 
     /**
@@ -639,6 +847,11 @@ export class GameConfig implements IGameConfig {
 
             // Skill system configuration validation
             if (!this.validateSkillSystemConfig()) {
+                return false;
+            }
+
+            // AI system configuration validation
+            if (!this.validateAISystemConfig()) {
                 return false;
             }
 
@@ -942,6 +1155,132 @@ export class GameConfig implements IGameConfig {
             config.consoleCommands.commandPrefix.length === 0
         ) {
             console.error('Invalid skill console command prefix');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate AI system configuration
+     * @returns True if valid, false otherwise
+     */
+    private validateAISystemConfig(): boolean {
+        const config = this.aiSystemConfig;
+
+        // Validate difficulty settings
+        if (config.difficultySettings.thinkingDepth < 1 || config.difficultySettings.thinkingDepth > 10) {
+            console.error('Invalid AI thinking depth (must be 1-10)');
+            return false;
+        }
+
+        if (config.difficultySettings.randomnessFactor < 0 || config.difficultySettings.randomnessFactor > 1) {
+            console.error('Invalid AI randomness factor (must be 0-1)');
+            return false;
+        }
+
+        if (config.difficultySettings.mistakeProbability < 0 || config.difficultySettings.mistakeProbability > 1) {
+            console.error('Invalid AI mistake probability (must be 0-1)');
+            return false;
+        }
+
+        if (config.difficultySettings.reactionTime < 0) {
+            console.error('Invalid AI reaction time');
+            return false;
+        }
+
+        if (config.difficultySettings.skillUsageFrequency < 0 || config.difficultySettings.skillUsageFrequency > 1) {
+            console.error('Invalid AI skill usage frequency (must be 0-1)');
+            return false;
+        }
+
+        // Validate performance settings
+        if (config.performanceSettings.maxThinkingTime <= 0) {
+            console.error('Invalid AI max thinking time');
+            return false;
+        }
+
+        if (config.performanceSettings.maxMemoryUsage <= 0) {
+            console.error('Invalid AI max memory usage');
+            return false;
+        }
+
+        if (config.performanceSettings.cacheSize <= 0) {
+            console.error('Invalid AI cache size');
+            return false;
+        }
+
+        if (config.performanceSettings.maxConcurrentProcesses <= 0) {
+            console.error('Invalid AI max concurrent processes');
+            return false;
+        }
+
+        // Validate balance settings
+        if (config.balanceSettings.globalIntelligenceMultiplier <= 0) {
+            console.error('Invalid AI global intelligence multiplier');
+            return false;
+        }
+
+        if (config.balanceSettings.mistakeProbability < 0 || config.balanceSettings.mistakeProbability > 1) {
+            console.error('Invalid AI mistake probability (must be 0-1)');
+            return false;
+        }
+
+        if (config.balanceSettings.reactionDelay < 0) {
+            console.error('Invalid AI reaction delay');
+            return false;
+        }
+
+        if (config.balanceSettings.npcProtectionPriority <= 0) {
+            console.error('Invalid AI NPC protection priority');
+            return false;
+        }
+
+        if (config.balanceSettings.skillUsageFrequency < 0 || config.balanceSettings.skillUsageFrequency > 1) {
+            console.error('Invalid AI skill usage frequency (must be 0-1)');
+            return false;
+        }
+
+        // Validate behavior weights
+        const behaviorWeights = [
+            config.balanceSettings.aggressiveBehaviorWeight,
+            config.balanceSettings.defensiveBehaviorWeight,
+            config.balanceSettings.supportBehaviorWeight,
+            config.balanceSettings.tacticalBehaviorWeight,
+        ];
+
+        for (const weight of behaviorWeights) {
+            if (weight < 0) {
+                console.error('Invalid AI behavior weight (must be non-negative)');
+                return false;
+            }
+        }
+
+        // Validate debug colors (should be valid hex colors)
+        for (const [colorName, colorValue] of Object.entries(config.debugColors)) {
+            if (typeof colorValue !== 'number' || colorValue < 0 || colorValue > 0xffffff) {
+                console.error(`Invalid AI debug color ${colorName}: ${colorValue}`);
+                return false;
+            }
+        }
+
+        // Validate console command settings
+        if (
+            typeof config.consoleCommands.commandPrefix !== 'string' ||
+            config.consoleCommands.commandPrefix.length === 0
+        ) {
+            console.error('Invalid AI console command prefix');
+            return false;
+        }
+
+        // Validate statistics settings
+        if (config.statisticsConfig.collectionInterval <= 0) {
+            console.error('Invalid AI statistics collection interval');
+            return false;
+        }
+
+        if (config.statisticsConfig.maxHistorySize <= 0) {
+            console.error('Invalid AI statistics max history size');
             return false;
         }
 

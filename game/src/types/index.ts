@@ -21,5 +21,8 @@ export * from './characterLoss';
 // Skill system types
 export * from './skill';
 
+// AI system types
+export * from './ai';
+
 // Stage data types
 export * from './StageData';
