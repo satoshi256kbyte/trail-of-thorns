@@ -284,6 +284,40 @@ export interface SkillData {
     icon?: string;
     /** 優先度（AI用） */
     aiPriority?: number;
+    /** 経験値ボーナス設定 */
+    experienceBonus?: SkillExperienceBonus;
+}
+
+/**
+ * スキル経験値ボーナス設定
+ */
+export interface SkillExperienceBonus {
+    /** 基本経験値倍率 */
+    baseMultiplier?: number;
+    /** 固定ボーナス経験値 */
+    fixedBonus?: number;
+    /** 効果値に基づくボーナス倍率 */
+    effectValueMultiplier?: number;
+    /** 対象数に基づくボーナス */
+    targetCountBonus?: number;
+    /** クリティカル時の追加ボーナス */
+    criticalBonus?: number;
+    /** 特殊条件ボーナス */
+    specialConditions?: SkillExperienceBonusCondition[];
+}
+
+/**
+ * スキル経験値ボーナス条件
+ */
+export interface SkillExperienceBonusCondition {
+    /** 条件種別 */
+    type: 'low_hp' | 'high_damage' | 'multiple_targets' | 'status_effect' | 'combo';
+    /** 条件値 */
+    value?: number;
+    /** ボーナス経験値 */
+    bonus: number;
+    /** 条件説明 */
+    description?: string;
 }
 
 /**

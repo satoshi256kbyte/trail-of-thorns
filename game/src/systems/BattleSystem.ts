@@ -43,6 +43,8 @@ import { CharacterLossManager } from './CharacterLossManager';
 import { LossCause, LossCauseType, CharacterLossUtils } from '../types/characterLoss';
 import { SkillSystem } from './skills/SkillSystem';
 import { SkillResult, SkillExecutionContext, SkillUsabilityError } from '../types/skill';
+import { ExperienceSystem } from './experience/ExperienceSystem';
+import { ExperienceAction, ExperienceSource, ExperienceContext, BattleContext as ExpBattleContext } from '../types/experience';
 
 /**
  * Battle system configuration
@@ -179,6 +181,9 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     // AI system integration
     private aiSystemManager: any = null;
 
+    // Experience system integration
+    private experienceSystem: ExperienceSystem | null = null;
+
     // Battle data
     private allUnits: Unit[] = [];
     private mapData: MapData | null = null;
@@ -310,6 +315,23 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
      */
     public hasAISystemManager(): boolean {
         return this.aiSystemManager !== null;
+    }
+
+    /**
+     * Set experience system for integration
+     * @param experienceSystem - Experience system instance
+     */
+    public setExperienceSystem(experienceSystem: ExperienceSystem): void {
+        this.experienceSystem = experienceSystem;
+        this.log('Experience system integrated with battle system');
+    }
+
+    /**
+     * Check if experience system is integrated
+     * @returns True if experience system is available
+     */
+    public hasExperienceSystem(): boolean {
+        return this.experienceSystem !== null;
     }
 
     /**
@@ -1162,11 +1184,27 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
         for (const battleResult of battleResults) {
             this.battleStateManager.recordBattleResult(battleResult);
 
-            // Grant experience to caster
+            // Grant experience to caster through experience system integration
             if (battleResult.experienceGained > 0) {
+                // Process skill experience through experience system
+                const skillExperience = this.processSkillExperience(
+                    action.caster,
+                    action.skillId,
+                    [battleResult.target],
+                    {
+                        totalDamage: battleResult.finalDamage,
+                        totalHealing: battleResult.effectsApplied.length > 0 ? battleResult.finalDamage : 0,
+                        effectsApplied: battleResult.effectsApplied.length
+                    }
+                );
+
+                // Update battle result with actual experience gained
+                battleResult.experienceGained = skillExperience;
+
+                // Also use legacy system for compatibility
                 this.battleStateManager.grantExperience(
                     action.caster,
-                    battleResult.experienceGained,
+                    skillExperience,
                     battleResult
                 );
             }
@@ -1246,6 +1284,14 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
      * @returns Experience points
      */
     private calculateSkillExperience(effect: any): number {
+        // This method now serves as a fallback when experience system is not integrated
+        // The actual experience calculation is handled by processSkillExperience method
+        if (this.experienceSystem) {
+            // Experience system will handle the calculation
+            return 0;
+        }
+
+        // Fallback calculation when experience system is not available
         switch (effect.effectType) {
             case 'damage':
                 return Math.floor(effect.actualValue * 0.1);
@@ -1539,17 +1585,13 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
                 }
             }
 
-            // Grant experience to attacker
-            const baseExperience = battleResult.targetDefeated ? 50 : 10;
-            const experienceResult = this.battleStateManager.grantExperience(
+            // Grant experience to attacker through experience system integration
+            battleResult.experienceGained = this.processExperienceGain(
                 attacker,
-                baseExperience,
-                battleResult
+                target,
+                battleResult,
+                weapon
             );
-
-            if (experienceResult.success) {
-                battleResult.experienceGained = baseExperience;
-            }
 
             // Record battle result
             this.battleStateManager.recordBattleResult(battleResult);
@@ -2560,6 +2602,444 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
      */
     public generateDebugReport(): string {
         return this.debugManager.generateDebugReport();
+    }
+
+    /**
+     * Update battle system configuration
+     * @param newConfig - Partial configuration to update
+     */
+    public updateConfig(newConfig: Partial<BattleSystemConfig>): void {
+        this.config = { ...this.config, ...newConfig };
+
+        // Update subsystem configurations if needed
+        if (newConfig.enableAnimations !== undefined) {
+            this.battleAnimator.setAnimationsEnabled(newConfig.enableAnimations);
+        }
+
+        if (newConfig.battleSpeed !== undefined) {
+            this.battleAnimator.setAnimationSpeed(newConfig.battleSpeed);
+        }
+
+        this.log('Battle system configuration updated', { config: this.config });
+    }
+
+    /**
+     * Destroy battle system and clean up resources
+     */
+    public destroy(): void {
+        try {
+            // Clear visual elements
+            this.clearRangeHighlights();
+            this.clearTargetHighlights();
+
+            // Stop performance monitoring
+            this.performanceMonitor.stopMonitoring();
+
+            // Clean up subsystems
+            this.battleAnimator.destroy();
+            this.resourceManager.cleanup();
+            this.effectPool.destroy();
+
+            // Clear data
+            this.allUnits = [];
+            this.battleHistory = [];
+            this.mapData = null;
+
+            // Reset state
+            this.state = {
+                phase: 'idle',
+                currentAttacker: null,
+                currentWeapon: null,
+                currentTarget: null,
+                isActive: false,
+                isAnimating: false,
+                lastBattleResult: null,
+            };
+
+            // Remove all event listeners
+            this.removeAllListeners();
+
+            this.log('Battle system destroyed');
+
+        } catch (error) {
+            console.error('Error destroying battle system:', error);
+        }
+    }
+
+    /**
+     * Process experience gain for battle actions
+     * Integrates with experience system to award experience for various battle actions
+     * 
+     * @param attacker - Unit performing the action
+     * @param target - Target of the action
+     * @param battleResult - Result of the battle
+     * @param weapon - Weapon used in the action
+     * @returns Total experience gained
+     */
+    private processExperienceGain(
+        attacker: Unit,
+        target: Unit,
+        battleResult: BattleResult,
+        weapon: Weapon
+    ): number {
+        if (!this.experienceSystem) {
+            // Fallback to basic experience calculation if experience system not integrated
+            return battleResult.targetDefeated ? 50 : 10;
+        }
+
+        let totalExperience = 0;
+
+        try {
+            // Create battle context for experience system
+            const battleContext: ExpBattleContext = {
+                battleId: `${attacker.id}_vs_${target.id}_${Date.now()}`,
+                turnNumber: 1, // Would come from game state in full implementation
+                attackerId: attacker.id,
+                defenderId: target.id,
+                damageDealt: battleResult.finalDamage,
+                healingAmount: 0,
+                skillId: undefined
+            };
+
+            // Award experience for attack hit (if not evaded)
+            if (!battleResult.isEvaded) {
+                const hitContext: ExperienceContext = {
+                    source: ExperienceSource.ATTACK_HIT,
+                    action: ExperienceAction.ATTACK,
+                    targetId: target.id,
+                    multiplier: battleResult.isCritical ? 1.5 : 1.0, // Bonus for critical hits
+                    timestamp: Date.now(),
+                    battleContext,
+                    metadata: {
+                        weaponType: weapon.type,
+                        damageDealt: battleResult.finalDamage,
+                        isCritical: battleResult.isCritical
+                    }
+                };
+
+                const hitResult = this.experienceSystem.awardExperience(
+                    attacker.id,
+                    ExperienceAction.ATTACK,
+                    hitContext
+                );
+
+                if (hitResult) {
+                    totalExperience += hitResult.finalAmount;
+                    this.log('Experience awarded for attack hit', {
+                        attacker: attacker.name,
+                        target: target.name,
+                        experience: hitResult.finalAmount,
+                        critical: battleResult.isCritical
+                    });
+                }
+            }
+
+            // Award experience for enemy defeat
+            if (battleResult.targetDefeated && target.faction === 'enemy') {
+                const defeatContext: ExperienceContext = {
+                    source: ExperienceSource.ENEMY_DEFEAT,
+                    action: ExperienceAction.DEFEAT,
+                    targetId: target.id,
+                    multiplier: 1.0,
+                    timestamp: Date.now(),
+                    battleContext,
+                    metadata: {
+                        targetLevel: target.stats?.level || 1,
+                        targetType: target.name,
+                        overkillDamage: Math.max(0, battleResult.finalDamage - target.stats.maxHP)
+                    }
+                };
+
+                const defeatResult = this.experienceSystem.awardExperience(
+                    attacker.id,
+                    ExperienceAction.DEFEAT,
+                    defeatContext
+                );
+
+                if (defeatResult) {
+                    totalExperience += defeatResult.finalAmount;
+                    this.log('Experience awarded for enemy defeat', {
+                        attacker: attacker.name,
+                        target: target.name,
+                        experience: defeatResult.finalAmount
+                    });
+                }
+            }
+
+            // Check for level up after experience gain
+            if (totalExperience > 0) {
+                const levelUpResult = this.experienceSystem.checkAndProcessLevelUp(attacker.id);
+                if (levelUpResult) {
+                    // Apply level up immediately in battle
+                    this.applyBattleLevelUp(attacker, levelUpResult);
+
+                    this.emit('battle-level-up', {
+                        unit: attacker,
+                        levelUpResult,
+                        battleContext
+                    });
+
+                    this.log('Level up occurred during battle', {
+                        character: attacker.name,
+                        oldLevel: levelUpResult.oldLevel,
+                        newLevel: levelUpResult.newLevel,
+                        statGrowth: levelUpResult.statGrowth
+                    });
+                }
+            }
+
+        } catch (error) {
+            this.log('Error processing experience gain', {
+                error: error.message,
+                attacker: attacker.name,
+                target: target.name
+            });
+            // Return fallback experience on error
+            return battleResult.targetDefeated ? 50 : 10;
+        }
+
+        return totalExperience;
+    }
+
+    /**
+     * Process experience gain for support actions (healing, buffs, etc.)
+     * 
+     * @param supporter - Unit performing the support action
+     * @param target - Target of the support action
+     * @param actionType - Type of support action
+     * @param healingAmount - Amount of healing done (if applicable)
+     * @param skillId - ID of skill used (if applicable)
+     * @returns Experience gained
+     */
+    public processSupportExperience(
+        supporter: Unit,
+        target: Unit,
+        actionType: 'heal' | 'buff' | 'debuff',
+        healingAmount?: number,
+        skillId?: string
+    ): number {
+        if (!this.experienceSystem) {
+            return 0;
+        }
+
+        try {
+            const battleContext: ExpBattleContext = {
+                battleId: `support_${supporter.id}_${target.id}_${Date.now()}`,
+                turnNumber: 1, // Would come from game state in full implementation
+                attackerId: supporter.id,
+                defenderId: target.id,
+                damageDealt: 0,
+                healingAmount: healingAmount || 0,
+                skillId
+            };
+
+            let experienceAction: ExperienceAction;
+            let experienceSource: ExperienceSource;
+
+            switch (actionType) {
+                case 'heal':
+                    experienceAction = ExperienceAction.HEAL;
+                    experienceSource = ExperienceSource.HEALING;
+                    break;
+                case 'buff':
+                    experienceAction = ExperienceAction.BUFF_APPLY;
+                    experienceSource = ExperienceSource.ALLY_SUPPORT;
+                    break;
+                case 'debuff':
+                    experienceAction = ExperienceAction.DEBUFF_APPLY;
+                    experienceSource = ExperienceSource.ALLY_SUPPORT;
+                    break;
+                default:
+                    experienceAction = ExperienceAction.SUPPORT;
+                    experienceSource = ExperienceSource.ALLY_SUPPORT;
+            }
+
+            const supportContext: ExperienceContext = {
+                source: experienceSource,
+                action: experienceAction,
+                targetId: target.id,
+                multiplier: 1.0,
+                timestamp: Date.now(),
+                battleContext,
+                metadata: {
+                    actionType,
+                    healingAmount: healingAmount || 0,
+                    skillId,
+                    targetFaction: target.faction
+                }
+            };
+
+            const result = this.experienceSystem.awardExperience(
+                supporter.id,
+                experienceAction,
+                supportContext
+            );
+
+            if (result) {
+                this.log('Experience awarded for support action', {
+                    supporter: supporter.name,
+                    target: target.name,
+                    actionType,
+                    experience: result.finalAmount,
+                    healingAmount
+                });
+
+                // Check for level up
+                const levelUpResult = this.experienceSystem.checkAndProcessLevelUp(supporter.id);
+                if (levelUpResult) {
+                    this.applyBattleLevelUp(supporter, levelUpResult);
+
+                    this.emit('battle-level-up', {
+                        unit: supporter,
+                        levelUpResult,
+                        battleContext
+                    });
+                }
+
+                return result.finalAmount;
+            }
+
+        } catch (error) {
+            this.log('Error processing support experience', {
+                error: error.message,
+                supporter: supporter.name,
+                target: target.name,
+                actionType
+            });
+        }
+
+        return 0;
+    }
+
+    /**
+     * Apply level up effects immediately during battle
+     * Updates unit stats and current HP/MP proportionally
+     * 
+     * @param unit - Unit that leveled up
+     * @param levelUpResult - Level up result from experience system
+     */
+    private applyBattleLevelUp(unit: Unit, levelUpResult: LevelUpResult): void {
+        try {
+            // Store old max values for proportional adjustment
+            const oldMaxHP = unit.stats.maxHP;
+            const oldMaxMP = unit.stats.maxMP;
+
+            // Apply new stats
+            unit.stats = { ...levelUpResult.newStats };
+
+            // Adjust current HP/MP proportionally
+            if (oldMaxHP > 0) {
+                const hpRatio = unit.currentHP / oldMaxHP;
+                unit.currentHP = Math.floor(unit.stats.maxHP * hpRatio);
+            }
+
+            if (oldMaxMP > 0 && 'currentMP' in unit) {
+                const mpRatio = (unit as any).currentMP / oldMaxMP;
+                (unit as any).currentMP = Math.floor(unit.stats.maxMP * mpRatio);
+            }
+
+            this.log('Battle level up applied', {
+                unit: unit.name,
+                oldLevel: levelUpResult.oldLevel,
+                newLevel: levelUpResult.newLevel,
+                oldHP: `${unit.currentHP}/${oldMaxHP}`,
+                newHP: `${unit.currentHP}/${unit.stats.maxHP}`,
+                statGrowth: levelUpResult.statGrowth
+            });
+
+        } catch (error) {
+            this.log('Error applying battle level up', {
+                error: error.message,
+                unit: unit.name,
+                levelUpResult
+            });
+        }
+    }
+
+    /**
+     * Process experience gain for skill usage
+     * 
+     * @param caster - Unit casting the skill
+     * @param skillId - ID of the skill used
+     * @param targets - Targets affected by the skill
+     * @param skillResult - Result of skill execution
+     * @returns Experience gained
+     */
+    public processSkillExperience(
+        caster: Unit,
+        skillId: string,
+        targets: Unit[],
+        skillResult: any
+    ): number {
+        if (!this.experienceSystem) {
+            return 0;
+        }
+
+        try {
+            const battleContext: ExpBattleContext = {
+                battleId: `skill_${caster.id}_${skillId}_${Date.now()}`,
+                turnNumber: 1, // Would come from game state in full implementation
+                attackerId: caster.id,
+                defenderId: targets[0]?.id,
+                damageDealt: skillResult.totalDamage || 0,
+                healingAmount: skillResult.totalHealing || 0,
+                skillId
+            };
+
+            const skillContext: ExperienceContext = {
+                source: ExperienceSource.SKILL_USE,
+                action: ExperienceAction.SKILL_CAST,
+                targetId: targets[0]?.id,
+                multiplier: 1.0,
+                timestamp: Date.now(),
+                battleContext,
+                metadata: {
+                    skillId,
+                    targetCount: targets.length,
+                    totalDamage: skillResult.totalDamage || 0,
+                    totalHealing: skillResult.totalHealing || 0,
+                    effectsApplied: skillResult.effectsApplied || 0
+                }
+            };
+
+            const result = this.experienceSystem.awardExperience(
+                caster.id,
+                ExperienceAction.SKILL_CAST,
+                skillContext
+            );
+
+            if (result) {
+                this.log('Experience awarded for skill usage', {
+                    caster: caster.name,
+                    skillId,
+                    targetCount: targets.length,
+                    experience: result.finalAmount
+                });
+
+                // Check for level up
+                const levelUpResult = this.experienceSystem.checkAndProcessLevelUp(caster.id);
+                if (levelUpResult) {
+                    this.applyBattleLevelUp(caster, levelUpResult);
+
+                    this.emit('battle-level-up', {
+                        unit: caster,
+                        levelUpResult,
+                        battleContext
+                    });
+                }
+
+                return result.finalAmount;
+            }
+
+        } catch (error) {
+            this.log('Error processing skill experience', {
+                error: error.message,
+                caster: caster.name,
+                skillId
+            });
+        }
+
+        return 0;
     }
 
     /**

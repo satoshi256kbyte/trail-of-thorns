@@ -1,0 +1,123 @@
+{
+    "characterGrowthRates": {
+        "protagonist": {
+            "hp": 85,
+            "mp": 50,
+            "attack": 75,
+            "defense": 70,
+            "speed": 60,
+            "skill": 65,
+            "luck": 45
+        },
+        "ally_mage": {
+            "hp": 60,
+            "mp": 90,
+            "attack": 80,
+            "defense": 40,
+            "speed": 55,
+            "skill": 85,
+            "luck": 70
+        },
+        "enemy_knight_01": {
+            "hp": 80,
+            "mp": 40,
+            "attack": 70,
+            "defense": 85,
+            "speed": 45,
+            "skill": 60,
+            "luck": 35
+        },
+        "enemy_archer_01": {
+            "hp": 70,
+            "mp": 55,
+            "attack": 75,
+            "defense": 50,
+            "speed": 80,
+            "skill": 75,
+            "luck": 60
+        },
+        "enemy_mage_01": {
+            "hp": 55,
+            "mp": 95,
+            "attack": 85,
+            "defense": 35,
+            "speed": 65,
+            "skill": 90,
+            "luck": 75
+        },
+        "boss_corrupted_paladin": {
+            "hp": 90,
+            "mp": 60,
+            "attack": 85,
+            "defense": 90,
+            "speed": 30,
+            "skill": 70,
+            "luck": 25
+        }
+    },
+    "jobClassGrowthRates": {
+        "warrior": {
+            "hp": 80,
+            "mp": 45,
+            "attack": 75,
+            "defense": 70,
+            "speed": 55,
+            "skill": 60,
+            "luck": 40
+        },
+        "mage": {
+            "hp": 55,
+            "mp": 90,
+            "attack": 80,
+            "defense": 40,
+            "speed": 60,
+            "skill": 85,
+            "luck": 70
+        },
+        "knight": {
+            "hp": 85,
+            "mp": 40,
+            "attack": 70,
+            "defense": 85,
+            "speed": 45,
+            "skill": 65,
+            "luck": 35
+        },
+        "archer": {
+            "hp": 70,
+            "mp": 55,
+            "attack": 75,
+            "defense": 50,
+            "speed": 80,
+            "skill": 75,
+            "luck": 60
+        },
+        "dark_mage": {
+            "hp": 50,
+            "mp": 95,
+            "attack": 85,
+            "defense": 30,
+            "speed": 65,
+            "skill": 90,
+            "luck": 80
+        },
+        "corrupted_paladin": {
+            "hp": 95,
+            "mp": 65,
+            "attack": 90,
+            "defense": 95,
+            "speed": 25,
+            "skill": 75,
+            "luck": 20
+        }
+    },
+    "statLimits": {
+        "maxHP": 999,
+        "maxMP": 999,
+        "attack": 99,
+        "defense": 99,
+        "speed": 99,
+        "skill": 99,
+        "luck": 99
+    }
+}

@@ -71,7 +71,18 @@
                 "duration": 1200
             },
             "icon": "skill_heal",
-            "aiPriority": 80
+            "aiPriority": 80,
+            "experienceBonus": {
+                "effectValueMultiplier": 0.1,
+                "specialConditions": [
+                    {
+                        "type": "low_hp",
+                        "value": 25,
+                        "bonus": 5,
+                        "description": "対象のHPが25%以下の時にボーナス経験値"
+                    }
+                ]
+            }
         },
         {
             "id": "fireball",
@@ -190,7 +201,21 @@
                 "duration": 2000
             },
             "icon": "skill_group_heal",
-            "aiPriority": 90
+            "aiPriority": 90,
+            "experienceBonus": {
+                "baseMultiplier": 1.3,
+                "fixedBonus": 8,
+                "targetCountBonus": 4,
+                "effectValueMultiplier": 0.15,
+                "specialConditions": [
+                    {
+                        "type": "multiple_targets",
+                        "value": 3,
+                        "bonus": 12,
+                        "description": "3人以上を同時に回復した時のボーナス"
+                    }
+                ]
+            }
         },
         {
             "id": "lightning_bolt",
@@ -322,7 +347,18 @@
                 "duration": 1800
             },
             "icon": "skill_blessing",
-            "aiPriority": 70
+            "aiPriority": 70,
+            "experienceBonus": {
+                "fixedBonus": 6,
+                "specialConditions": [
+                    {
+                        "type": "low_hp",
+                        "value": 50,
+                        "bonus": 4,
+                        "description": "対象のHPが50%以下の時にボーナス経験値"
+                    }
+                ]
+            }
         },
         {
             "id": "poison_dart",
@@ -459,7 +495,18 @@
                 "duration": 1400
             },
             "icon": "skill_weakness",
-            "aiPriority": 45
+            "aiPriority": 45,
+            "experienceBonus": {
+                "fixedBonus": 7,
+                "specialConditions": [
+                    {
+                        "type": "high_damage",
+                        "value": 100,
+                        "bonus": 5,
+                        "description": "強敵（高HP）に使用した時のボーナス"
+                    }
+                ]
+            }
         },
         {
             "id": "regeneration",

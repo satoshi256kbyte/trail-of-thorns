@@ -27,6 +27,7 @@ import { SkillManager, SkillManagerResult } from './SkillManager';
 import { SkillExecutor, SkillExecutionConfig } from './SkillExecutor';
 import { SkillConditionChecker, ExtendedSkillUsabilityResult } from './SkillConditionChecker';
 import { SkillUI, SkillUIConfig, SkillMenuItem, SkillSelectionResult } from './SkillUI';
+import { ExperienceSystem } from '../experience/ExperienceSystem';
 
 /**
  * スキルシステム設定
@@ -113,6 +114,9 @@ export class SkillSystem extends Phaser.Events.EventEmitter {
 
     // 戦場状態（外部から注入される）
     private battlefieldState: any = null;
+
+    // 経験値システム（外部から注入される）
+    private experienceSystem: ExperienceSystem | null = null;
 
     // パフォーマンス監視
     private performanceMetrics: Map<string, number> = new Map();
@@ -274,6 +278,19 @@ export class SkillSystem extends Phaser.Events.EventEmitter {
     setBattlefieldState(battlefieldState: any): void {
         this.battlefieldState = battlefieldState;
         this.log('Battlefield state set');
+    }
+
+    /**
+     * 経験値システムを設定する
+     * @param experienceSystem 経験値システム
+     */
+    setExperienceSystem(experienceSystem: ExperienceSystem): void {
+        this.experienceSystem = experienceSystem;
+
+        // スキル実行システムにも経験値システムを設定
+        this.skillExecutor.setExperienceSystem(experienceSystem);
+
+        this.log('Experience system set');
     }
 
     /**

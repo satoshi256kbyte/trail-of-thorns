@@ -25,6 +25,7 @@ import { BattleSystem } from '../systems/BattleSystem';
 import { RecruitmentSystem } from '../systems/recruitment/RecruitmentSystem';
 import { RecruitmentUI } from '../systems/recruitment/RecruitmentUI';
 import { SkillSystem } from '../systems/skills/SkillSystem';
+import { ExperienceSystem } from '../systems/experience/ExperienceSystem';
 import {
     StageData,
     MapData,
@@ -39,6 +40,7 @@ import { BattleResult, BattleError } from '../types/battle';
 import { RecruitmentResult, RecruitmentProgress, RecruitmentCondition } from '../types/recruitment';
 import { AISystemManager } from '../systems/ai/AISystemManager';
 import { AISystemManagerConfig, AIExecutionResult } from '../types/ai';
+import { ExperienceAction, ExperienceSource, ExperienceContext } from '../types/experience';
 
 /**
  * GameplayScene configuration interface
@@ -73,6 +75,7 @@ export class GameplayScene extends Phaser.Scene {
     private recruitmentSystem!: RecruitmentSystem;
     private recruitmentUI!: RecruitmentUI;
     private skillSystem!: SkillSystem;
+    private experienceSystem!: ExperienceSystem;
     private aiSystemManager!: AISystemManager;
 
     // Scene data and state
@@ -246,6 +249,9 @@ export class GameplayScene extends Phaser.Scene {
 
             // Initialize skill system with battlefield state
             this.initializeSkillSystem();
+
+            // Initialize experience system
+            this.initializeExperienceSystem();
 
             // Initialize AI system with all game systems
             this.initializeAISystem();
@@ -629,6 +635,9 @@ export class GameplayScene extends Phaser.Scene {
             autoErrorRecovery: true
         });
 
+        // Initialize ExperienceSystem
+        this.experienceSystem = new ExperienceSystem(this);
+
         // Initialize AISystemManager
         const aiConfig: AISystemManagerConfig = {
             thinkingTimeLimit: 2000, // 2 seconds
@@ -835,7 +844,7 @@ export class GameplayScene extends Phaser.Scene {
         });
 
         this.events.on('unit-selected', (data: any) => {
-            this.uiManager.showCharacterInfo(data.selectedUnit);
+            this.updateCharacterInfoDisplay(data.selectedUnit);
         });
 
         this.events.on('unit-deselected', () => {
@@ -1044,6 +1053,9 @@ export class GameplayScene extends Phaser.Scene {
         this.skillSystem.on('skill-executed', (data: any) => {
             console.log('Skill executed:', data.result?.skillId);
 
+            // Award experience for skill usage
+            this.handleSkillExperienceGain(data);
+
             // Update UI based on skill execution
             if (data.result?.success) {
                 this.uiManager.showNotification({
@@ -1155,6 +1167,128 @@ export class GameplayScene extends Phaser.Scene {
         });
 
         console.log('GameplayScene: AI event listeners setup completed');
+    }
+
+    /**
+     * Setup experience system event listeners
+     */
+    private setupExperienceEventListeners(): void {
+        console.log('GameplayScene: Setting up experience event listeners');
+
+        if (!this.experienceSystem) {
+            console.warn('Experience system not available for event listener setup');
+            return;
+        }
+
+        // Experience gained events
+        this.experienceSystem.on('experience-awarded', (data: any) => {
+            console.log('Experience awarded:', data.characterId, data.result.finalAmount);
+
+            // Update character info display if this character is selected
+            const selectedUnit = this.gameStateManager.getSelectedUnit();
+            if (selectedUnit && selectedUnit.id === data.characterId) {
+                this.updateCharacterInfoDisplay(selectedUnit);
+            }
+        });
+
+        // Level up events
+        this.experienceSystem.on('level-up-processed', (data: any) => {
+            console.log('Level up processed:', data.characterId, data.result);
+
+            // Update character info display if this character is selected
+            const selectedUnit = this.gameStateManager.getSelectedUnit();
+            if (selectedUnit && selectedUnit.id === data.characterId) {
+                this.updateCharacterInfoDisplay(selectedUnit);
+            }
+
+            // Show notification
+            this.uiManager.showNotification({
+                message: `${data.result.characterName || 'Character'} reached level ${data.result.newLevel}!`,
+                type: 'success',
+                duration: 3000
+            });
+        });
+
+        // Battle level up events (immediate stat updates)
+        this.experienceSystem.on('battle-level-up-applied', (data: any) => {
+            console.log('Battle level up applied:', data.characterId);
+
+            // Update the character in all systems
+            const character = this.findUnitById(data.characterId);
+            if (character && this.stageData) {
+                // Update character manager
+                this.characterManager.updateCharacterStats(character.id, character.stats);
+
+                // Update all systems with the new character data
+                const allCharacters = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+                this.movementSystem.updateUnits(allCharacters);
+                this.battleSystem.initialize(allCharacters, this.stageData.mapData);
+            }
+        });
+
+        // Error handling events
+        this.experienceSystem.on('experience-error-handled', (eventData: any) => {
+            console.log(`Experience error handled: ${eventData.error} with strategy: ${eventData.strategy}`);
+
+            // 重要なエラーの場合は追加の処理
+            if (eventData.severity === 'critical' || eventData.severity === 'high') {
+                this.handleExperienceError(eventData);
+            }
+        });
+
+        // System recovery events
+        this.experienceSystem.on('system-recovery-completed', (eventData: any) => {
+            if (eventData.success) {
+                console.log('Experience system recovery completed successfully');
+                this.uiManager.showNotification({
+                    message: '経験値システムが回復しました',
+                    type: 'success',
+                    duration: 3000
+                });
+            } else {
+                console.error('Experience system recovery failed');
+                this.handleCriticalExperienceError('システム回復に失敗しました');
+            }
+        });
+
+        // Character data repair events
+        this.experienceSystem.on('character-data-repaired', (eventData: any) => {
+            console.log(`Character data repaired for ${eventData.characterId}`);
+            this.uiManager.showNotification({
+                message: `キャラクター「${eventData.characterId}」のデータを修復しました`,
+                type: 'info',
+                duration: 2000
+            });
+        });
+
+        // User notification action events
+        this.events.on('notification-action-selected', (action: string) => {
+            this.handleNotificationAction(action);
+        });
+
+        console.log('GameplayScene: Experience event listeners setup completed');
+    }
+
+    /**
+     * Update character info display with experience information
+     */
+    private updateCharacterInfoDisplay(character: Unit): void {
+        try {
+            if (!this.experienceSystem) {
+                return;
+            }
+
+            // Get experience information
+            const experienceInfo = this.experienceSystem.getExperienceInfo(character.id);
+
+            // Update UI with character and experience info
+            this.uiManager.showCharacterInfo(character, experienceInfo);
+
+        } catch (error) {
+            console.warn('Failed to update character info display with experience:', error);
+            // Fallback to showing character info without experience
+            this.uiManager.showCharacterInfo(character);
+        }
     }
 
     /**
@@ -1322,9 +1456,28 @@ export class GameplayScene extends Phaser.Scene {
             return;
         }
 
+        // Process any pending level ups before advancing turn
+        this.processPendingLevelUps();
+
         const turnResult = this.gameStateManager.nextTurn();
         if (!turnResult.success) {
             console.error('GameplayScene: Failed to advance turn:', turnResult.message);
+        }
+    }
+
+    /**
+     * Process pending level ups at turn end
+     */
+    private processPendingLevelUps(): void {
+        if (!this.experienceSystem) {
+            return;
+        }
+
+        try {
+            // Process all pending level ups
+            this.experienceSystem.processPendingLevelUps();
+        } catch (error) {
+            console.error('Failed to process pending level ups:', error);
         }
     }
 
@@ -2676,7 +2829,10 @@ export class GameplayScene extends Phaser.Scene {
             }
         }
 
-        // Show experience gained
+        // Award experience through experience system
+        this.handleBattleExperienceGain(result);
+
+        // Show experience gained (legacy UI - will be replaced by experience system UI)
         if (result.experienceGained > 0) {
             const attackerScreenPos = this.getUnitScreenPosition(result.attacker);
             if (attackerScreenPos) {
@@ -2728,6 +2884,157 @@ export class GameplayScene extends Phaser.Scene {
                 console.error('Failed to advance turn after battle:', turnResult.message);
             }
         }, 1000);
+    }
+
+    /**
+     * Handle battle experience gain
+     * @param result - Battle result data
+     */
+    private handleBattleExperienceGain(result: BattleResult): void {
+        if (!this.experienceSystem) {
+            return;
+        }
+
+        try {
+            // Award experience for attack hit (if not evaded)
+            if (!result.isEvaded) {
+                this.awardBattleExperience(result.attacker, ExperienceAction.ATTACK, {
+                    target: result.target,
+                    damage: result.finalDamage,
+                    wasHit: true,
+                    wasCritical: result.isCritical || false
+                });
+            }
+
+            // Award experience for defeat
+            if (result.targetDefeated) {
+                this.awardBattleExperience(result.attacker, ExperienceAction.DEFEAT, {
+                    target: result.target,
+                    damage: result.finalDamage,
+                    wasDefeated: true
+                });
+            }
+
+        } catch (error) {
+            console.error('Failed to handle battle experience gain:', error);
+        }
+    }
+
+    /**
+     * Award battle experience through experience system
+     * @param character - Character to award experience to
+     * @param action - Experience action
+     * @param battleData - Battle context data
+     */
+    private awardBattleExperience(
+        character: Unit,
+        action: ExperienceAction,
+        battleData: any
+    ): void {
+        if (!this.experienceSystem) {
+            return;
+        }
+
+        try {
+            const battleContext = {
+                attacker: character,
+                target: battleData.target,
+                damage: battleData.damage,
+                wasHit: battleData.wasHit,
+                wasCritical: battleData.wasCritical,
+                wasDefeated: battleData.wasDefeated,
+                turnNumber: this.gameStateManager.getCurrentTurn(),
+                timestamp: Date.now()
+            };
+
+            const experienceContext: ExperienceContext = {
+                source: this.mapActionToExperienceSource(action),
+                action,
+                battleContext,
+                timestamp: Date.now()
+            };
+
+            this.experienceSystem.handleBattleExperience(character.id, action, battleContext);
+
+        } catch (error) {
+            console.error('Failed to award battle experience:', error);
+        }
+    }
+
+    /**
+     * Handle skill experience gain
+     * @param data - Skill execution data
+     */
+    private handleSkillExperienceGain(data: any): void {
+        if (!this.experienceSystem || !data.result?.success) {
+            return;
+        }
+
+        try {
+            const skill = data.result;
+            const caster = this.findUnitById(skill.casterId);
+
+            if (!caster) {
+                return;
+            }
+
+            // Determine experience action based on skill type
+            let experienceAction: ExperienceAction;
+
+            if (skill.skillType === 'healing' || skill.effects?.some((e: any) => e.type === 'heal')) {
+                experienceAction = ExperienceAction.HEAL;
+            } else if (skill.skillType === 'support' || skill.effects?.some((e: any) => e.type === 'buff')) {
+                experienceAction = ExperienceAction.SUPPORT;
+            } else if (skill.skillType === 'debuff' || skill.effects?.some((e: any) => e.type === 'debuff')) {
+                experienceAction = ExperienceAction.SUPPORT; // Debuffs count as support
+            } else {
+                experienceAction = ExperienceAction.SKILL_CAST; // Generic skill usage
+            }
+
+            // Create skill context
+            const skillContext = {
+                skillId: skill.skillId,
+                skillName: skill.skillName,
+                skillType: skill.skillType,
+                targets: skill.targets || [],
+                effects: skill.effects || [],
+                mpCost: skill.mpCost || 0,
+                turnNumber: this.gameStateManager.getCurrentTurn(),
+                timestamp: Date.now()
+            };
+
+            const experienceContext: ExperienceContext = {
+                source: this.mapActionToExperienceSource(experienceAction),
+                action: experienceAction,
+                skillContext,
+                timestamp: Date.now()
+            };
+
+            this.experienceSystem.handleBattleExperience(caster.id, experienceAction, skillContext);
+
+        } catch (error) {
+            console.error('Failed to handle skill experience gain:', error);
+        }
+    }
+
+    /**
+     * Map experience action to experience source
+     */
+    private mapActionToExperienceSource(action: ExperienceAction): ExperienceSource {
+        switch (action) {
+            case ExperienceAction.ATTACK:
+                return ExperienceSource.ATTACK_HIT;
+            case ExperienceAction.DEFEAT:
+                return ExperienceSource.ENEMY_DEFEAT;
+            case ExperienceAction.HEAL:
+                return ExperienceSource.HEALING;
+            case ExperienceAction.SUPPORT:
+                return ExperienceSource.ALLY_SUPPORT;
+            case ExperienceAction.SKILL_CAST:
+                return ExperienceSource.SKILL_USE;
+            default:
+                return ExperienceSource.ATTACK_HIT;
+        }
     }
 
     /**
@@ -3003,6 +3310,10 @@ export class GameplayScene extends Phaser.Scene {
 
         if (this.skillSystem) {
             this.skillSystem.destroy();
+        }
+
+        if (this.experienceSystem) {
+            this.experienceSystem.destroy();
         }
 
         // Cleanup UI elements
@@ -3581,6 +3892,65 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     /**
+     * Initialize experience system
+     */
+    private async initializeExperienceSystem(): Promise<void> {
+        try {
+            console.log('GameplayScene: Initializing experience system');
+
+            // Initialize the experience system with default data
+            const initialized = await this.experienceSystem.initialize(
+                'data/experience-table.json' // This will use defaults if file doesn't exist
+            );
+
+            if (!initialized) {
+                console.warn('Experience system initialization failed, attempting recovery');
+
+                // システム回復を試行
+                const recoverySuccess = await this.experienceSystem.attemptSystemRecovery();
+                if (!recoverySuccess) {
+                    console.error('Experience system recovery failed');
+                    // 致命的エラーの場合はユーザーに通知
+                    this.handleCriticalExperienceError('システム初期化に失敗しました');
+                    return;
+                }
+            }
+
+            // Register all characters in the experience system
+            if (this.stageData) {
+                const allCharacters = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+
+                for (const character of allCharacters) {
+                    try {
+                        // Initialize with level 1 and 0 experience for now
+                        // In a full implementation, this would come from save data
+                        this.experienceSystem.registerCharacter(character, 1, 0);
+                    } catch (characterError) {
+                        console.warn(`Failed to register character ${character.id}:`, characterError);
+
+                        // キャラクターデータの修復を試行
+                        const repairSuccess = this.experienceSystem.repairCharacterData(character.id);
+                        if (repairSuccess) {
+                            console.log(`Successfully repaired and registered character ${character.id}`);
+                        } else {
+                            console.error(`Failed to repair character data for ${character.id}`);
+                        }
+                    }
+                }
+            }
+
+            // Setup experience system event listeners
+            this.setupExperienceEventListeners();
+
+            console.log('GameplayScene: Experience system initialized successfully');
+
+        } catch (error) {
+            console.error('GameplayScene: Failed to initialize experience system:', error);
+            this.handleCriticalExperienceError('経験値システムの初期化中にエラーが発生しました');
+        }
+    }
+
+    /**
      * Initialize AI system with all game systems
      */
     private initializeAISystem(): void {
@@ -3780,6 +4150,291 @@ export class GameplayScene extends Phaser.Scene {
                 return 'システムエラーが発生しました';
             default:
                 return '仲間化に失敗しました';
+        }
+    }
+
+    /**
+     * Handle experience system errors
+     * @param eventData - Error event data
+     */
+    private handleExperienceError(eventData: any): void {
+        try {
+            console.warn('Handling experience error:', eventData);
+
+            // 重要度に応じた処理
+            switch (eventData.severity) {
+                case 'critical':
+                    this.handleCriticalExperienceError(eventData.error);
+                    break;
+                case 'high':
+                    this.handleHighSeverityExperienceError(eventData);
+                    break;
+                default:
+                    console.log('Experience error handled by error handler');
+                    break;
+            }
+
+        } catch (error) {
+            console.error('Error handling experience error:', error);
+        }
+    }
+
+    /**
+     * Handle critical experience system errors
+     * @param errorMessage - Error message to display
+     */
+    private handleCriticalExperienceError(errorMessage: string): void {
+        try {
+            console.error('Critical experience error:', errorMessage);
+
+            // ゲームを一時停止
+            this.isPaused = true;
+
+            // 緊急通知を表示
+            this.uiManager.showMessage(
+                `致命的エラー: ${errorMessage}`,
+                'error'
+            );
+
+            // 回復ガイダンスを表示
+            if (this.experienceSystem) {
+                const experienceUI = this.experienceSystem['experienceUI'];
+                if (experienceUI && experienceUI.showRecoveryGuidance) {
+                    experienceUI.showRecoveryGuidance(
+                        '経験値システムエラー',
+                        errorMessage,
+                        [
+                            'ゲームを再起動してください',
+                            'セーブデータを確認してください',
+                            '問題が続く場合はサポートにお問い合わせください'
+                        ],
+                        () => {
+                            // ガイダンス完了後の処理
+                            this.attemptExperienceSystemRecovery();
+                        }
+                    );
+                }
+            }
+
+        } catch (error) {
+            console.error('Error handling critical experience error:', error);
+            // 最後の手段: シーンを再起動
+            this.scene.restart();
+        }
+    }
+
+    /**
+     * Handle high severity experience system errors
+     * @param eventData - Error event data
+     */
+    private handleHighSeverityExperienceError(eventData: any): void {
+        try {
+            console.warn('High severity experience error:', eventData);
+
+            // 自動回復を試行
+            this.attemptExperienceSystemRecovery();
+
+            // ユーザーに状況を通知
+            this.uiManager.showMessage(
+                '経験値システムで問題が発生しました。自動回復を試行中...',
+                'warning'
+            );
+
+        } catch (error) {
+            console.error('Error handling high severity experience error:', error);
+        }
+    }
+
+    /**
+     * Attempt experience system recovery
+     */
+    private async attemptExperienceSystemRecovery(): Promise<void> {
+        try {
+            console.log('Attempting experience system recovery...');
+
+            if (!this.experienceSystem) {
+                console.error('Experience system not available for recovery');
+                return;
+            }
+
+            // システム回復を試行
+            const recoverySuccess = await this.experienceSystem.attemptSystemRecovery();
+
+            if (recoverySuccess) {
+                console.log('Experience system recovery successful');
+
+                // ゲームの一時停止を解除
+                this.isPaused = false;
+
+                // 成功通知
+                this.uiManager.showMessage(
+                    '経験値システムが正常に回復しました',
+                    'success'
+                );
+
+                // キャラクターを再登録
+                await this.reregisterCharactersInExperienceSystem();
+
+            } else {
+                console.error('Experience system recovery failed');
+                this.handleCriticalExperienceError('システム回復に失敗しました');
+            }
+
+        } catch (error) {
+            console.error('Error during experience system recovery:', error);
+            this.handleCriticalExperienceError('回復処理中にエラーが発生しました');
+        }
+    }
+
+    /**
+     * Re-register all characters in the experience system after recovery
+     */
+    private async reregisterCharactersInExperienceSystem(): Promise<void> {
+        try {
+            if (!this.experienceSystem || !this.stageData) {
+                return;
+            }
+
+            console.log('Re-registering characters in experience system...');
+
+            const allCharacters = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+
+            for (const character of allCharacters) {
+                try {
+                    // キャラクターを再登録（レベルと経験値は保存データから復元される）
+                    this.experienceSystem.registerCharacter(character, character.level || 1, 0);
+                } catch (characterError) {
+                    console.warn(`Failed to re-register character ${character.id}:`, characterError);
+
+                    // データ修復を試行
+                    const repairSuccess = this.experienceSystem.repairCharacterData(character.id);
+                    if (!repairSuccess) {
+                        console.error(`Failed to repair character data for ${character.id}`);
+                    }
+                }
+            }
+
+            console.log('Character re-registration completed');
+
+        } catch (error) {
+            console.error('Error re-registering characters:', error);
+        }
+    }
+
+    /**
+     * Handle notification actions from error handler
+     * @param action - Selected action
+     */
+    private handleNotificationAction(action: string): void {
+        try {
+            console.log('Handling notification action:', action);
+
+            switch (action) {
+                case 'ゲームを再起動してください':
+                    this.restartGame();
+                    break;
+                case 'セーブデータを確認してください':
+                    this.checkSaveData();
+                    break;
+                case 'サポートにお問い合わせください':
+                    this.showSupportInfo();
+                    break;
+                default:
+                    console.log('Unknown notification action:', action);
+                    break;
+            }
+
+        } catch (error) {
+            console.error('Error handling notification action:', error);
+        }
+    }
+
+    /**
+     * Restart the game
+     */
+    private restartGame(): void {
+        try {
+            console.log('Restarting game...');
+
+            // シーンを再起動
+            this.scene.restart();
+
+        } catch (error) {
+            console.error('Error restarting game:', error);
+            // ブラウザリロードを試行
+            window.location.reload();
+        }
+    }
+
+    /**
+     * Check save data integrity
+     */
+    private async checkSaveData(): Promise<void> {
+        try {
+            console.log('Checking save data...');
+
+            // セーブデータの整合性チェックを実行
+            if (this.experienceSystem && this.experienceSystem.getPersistenceManager()) {
+                const persistenceManager = this.experienceSystem.getPersistenceManager()!;
+
+                // データ整合性チェック（実装されている場合）
+                this.uiManager.showMessage(
+                    'セーブデータをチェックしています...',
+                    'info'
+                );
+
+                // 簡単な整合性チェック
+                const systemState = this.experienceSystem.getSystemState();
+                if (systemState.isInitialized) {
+                    this.uiManager.showMessage(
+                        'セーブデータは正常です',
+                        'success'
+                    );
+                } else {
+                    this.uiManager.showMessage(
+                        'セーブデータに問題があります',
+                        'warning'
+                    );
+                }
+            } else {
+                this.uiManager.showMessage(
+                    'セーブデータシステムが利用できません',
+                    'warning'
+                );
+            }
+
+        } catch (error) {
+            console.error('Error checking save data:', error);
+            this.uiManager.showMessage(
+                'セーブデータチェック中にエラーが発生しました',
+                'error'
+            );
+        }
+    }
+
+    /**
+     * Show support information
+     */
+    private showSupportInfo(): void {
+        try {
+            console.log('Showing support info...');
+
+            // サポート情報を表示
+            const supportMessage = `
+サポート情報:
+- ゲーム名: Trail of Thorns
+- バージョン: 1.0.0
+- エラー発生時刻: ${new Date().toLocaleString()}
+- ブラウザ: ${navigator.userAgent}
+
+問題が解決しない場合は、上記の情報と共に
+開発チームにお問い合わせください。
+            `;
+
+            this.uiManager.showMessage(supportMessage, 'info');
+
+        } catch (error) {
+            console.error('Error showing support info:', error);
         }
     }
 }

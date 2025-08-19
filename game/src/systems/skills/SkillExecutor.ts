@@ -22,12 +22,15 @@ import {
     BuffType,
     StatusEffectType,
     DamageType,
-    HealType
+    HealType,
+    SkillType
 } from '../../types/skill';
 
 import { Skill } from './Skill';
 import { SkillManager } from './SkillManager';
 import { SkillConditionChecker } from './SkillConditionChecker';
+import { ExperienceSystem } from '../experience/ExperienceSystem';
+import { ExperienceAction, ExperienceSource, ExperienceContext } from '../../types/experience';
 
 /**
  * スキル実行エラー種別
@@ -128,6 +131,7 @@ export class SkillExecutor extends Phaser.Events.EventEmitter {
     private skillManager: SkillManager;
     private conditionChecker: SkillConditionChecker;
     private animator: SkillAnimator | null = null;
+    private experienceSystem: ExperienceSystem | null = null;
 
     /** 実行履歴 */
     private executionHistory: SkillResult[] = [];
@@ -189,6 +193,15 @@ export class SkillExecutor extends Phaser.Events.EventEmitter {
     }
 
     /**
+     * 経験値システムを設定する
+     * @param experienceSystem 経験値システム
+     */
+    setExperienceSystem(experienceSystem: ExperienceSystem): void {
+        this.experienceSystem = experienceSystem;
+        this.log('Experience system set');
+    }
+
+    /**
      * スキルを実行する（メインフロー）
      * @param context スキル実行コンテキスト
      * @returns 実行結果
@@ -234,6 +247,9 @@ export class SkillExecutor extends Phaser.Events.EventEmitter {
             if (!effectResult.success) {
                 return effectResult;
             }
+
+            // フェーズ4.5: 経験値付与処理
+            await this.processSkillExperience(skill, context, effectResult);
 
             // フェーズ5: 後処理（状態更新、戦闘システム反映）
             this.state.phase = 'postprocessing';
@@ -559,6 +575,613 @@ export class SkillExecutor extends Phaser.Events.EventEmitter {
                     context.battlefieldState?.applyStatusEffect?.(effect.targetId, activeEffect);
                 }
             }
+        }
+    }
+
+    /**
+     * スキル使用時の経験値処理
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     */
+    private async processSkillExperience(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult
+    ): Promise<void> {
+        if (!this.experienceSystem || !result.success) {
+            return;
+        }
+
+        try {
+            // スキル種別に基づいて経験値アクションを決定
+            const experienceAction = this.getExperienceActionForSkill(skill);
+
+            // 基本経験値コンテキストを作成
+            const experienceContext: ExperienceContext = {
+                source: this.getExperienceSourceForSkill(skill),
+                action: experienceAction,
+                timestamp: Date.now(),
+                battleContext: {
+                    battleId: context.battlefieldState?.battleId || 'unknown',
+                    turnNumber: context.currentTurn,
+                    attackerId: context.caster,
+                    skillId: skill.id
+                },
+                metadata: {
+                    skillType: skill.skillType,
+                    targetCount: result.targets.length,
+                    effectCount: result.effects.length
+                }
+            };
+
+            // スキル種別に応じた経験値処理
+            await this.processSkillTypeExperience(skill, context, result, experienceContext);
+
+            this.log('Skill experience processed', {
+                skillId: skill.id,
+                caster: context.caster,
+                action: experienceAction,
+                targetCount: result.targets.length
+            });
+
+        } catch (error) {
+            this.log('Failed to process skill experience', {
+                error: error.message,
+                skillId: skill.id,
+                caster: context.caster
+            });
+        }
+    }
+
+    /**
+     * スキル種別に応じた経験値処理
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @param experienceContext 経験値コンテキスト
+     */
+    private async processSkillTypeExperience(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult,
+        experienceContext: ExperienceContext
+    ): Promise<void> {
+        // スキル効果による経験値ボーナスを計算
+        const skillBonus = this.calculateSkillExperienceBonus(skill, context, result);
+
+        // 経験値コンテキストにボーナスを追加
+        const enhancedContext: ExperienceContext = {
+            ...experienceContext,
+            bonusAmount: (experienceContext.bonusAmount || 0) + skillBonus.totalBonus,
+            multiplier: (experienceContext.multiplier || 1.0) * skillBonus.multiplier,
+            metadata: {
+                ...experienceContext.metadata,
+                skillBonus: skillBonus
+            }
+        };
+
+        switch (skill.skillType) {
+            case SkillType.HEAL:
+                await this.processHealingExperience(skill, context, result, enhancedContext);
+                break;
+
+            case SkillType.BUFF:
+                await this.processBuffExperience(skill, context, result, enhancedContext);
+                break;
+
+            case SkillType.DEBUFF:
+                await this.processDebuffExperience(skill, context, result, enhancedContext);
+                break;
+
+            case SkillType.ATTACK:
+                await this.processAttackSkillExperience(skill, context, result, enhancedContext);
+                break;
+
+            case SkillType.STATUS:
+                await this.processStatusSkillExperience(skill, context, result, enhancedContext);
+                break;
+
+            case SkillType.SPECIAL:
+                await this.processSpecialSkillExperience(skill, context, result, enhancedContext);
+                break;
+
+            default:
+                // 基本的なスキル使用経験値を付与
+                this.experienceSystem!.awardExperience(
+                    context.caster,
+                    ExperienceAction.SKILL_CAST,
+                    enhancedContext
+                );
+                break;
+        }
+    }
+
+    /**
+     * 回復スキル使用時の経験値処理
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @param experienceContext 経験値コンテキスト
+     */
+    private async processHealingExperience(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult,
+        experienceContext: ExperienceContext
+    ): Promise<void> {
+        // 回復量に基づいて経験値ボーナスを計算
+        let totalHealing = 0;
+        let successfulHeals = 0;
+
+        for (const effect of result.effects) {
+            if (effect.success && effect.effectType === 'heal') {
+                totalHealing += effect.actualValue;
+                successfulHeals++;
+            }
+        }
+
+        if (successfulHeals > 0) {
+            // 回復経験値を付与
+            const healingContext: ExperienceContext = {
+                ...experienceContext,
+                source: ExperienceSource.HEALING,
+                action: ExperienceAction.HEAL,
+                bonusAmount: Math.floor(totalHealing / 10), // 回復量の10%をボーナス経験値として付与
+                metadata: {
+                    ...experienceContext.metadata,
+                    totalHealing,
+                    successfulHeals,
+                    averageHealing: totalHealing / successfulHeals
+                }
+            };
+
+            this.experienceSystem!.awardExperience(
+                context.caster,
+                ExperienceAction.HEAL,
+                healingContext
+            );
+
+            this.log('Healing experience awarded', {
+                caster: context.caster,
+                totalHealing,
+                successfulHeals,
+                bonusAmount: healingContext.bonusAmount
+            });
+        }
+    }
+
+    /**
+     * バフスキル使用時の経験値処理
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @param experienceContext 経験値コンテキスト
+     */
+    private async processBuffExperience(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult,
+        experienceContext: ExperienceContext
+    ): Promise<void> {
+        let successfulBuffs = 0;
+        let buffTargets: string[] = [];
+
+        for (const effect of result.effects) {
+            if (effect.success && effect.effectType === 'buff') {
+                successfulBuffs++;
+                if (!buffTargets.includes(effect.targetId)) {
+                    buffTargets.push(effect.targetId);
+                }
+            }
+        }
+
+        if (successfulBuffs > 0) {
+            // バフ経験値を付与
+            const buffContext: ExperienceContext = {
+                ...experienceContext,
+                source: ExperienceSource.ALLY_SUPPORT,
+                action: ExperienceAction.BUFF_APPLY,
+                bonusAmount: successfulBuffs * 2, // バフ1つにつき2ポイントのボーナス
+                metadata: {
+                    ...experienceContext.metadata,
+                    successfulBuffs,
+                    buffTargets: buffTargets.length,
+                    isGroupBuff: buffTargets.length > 1
+                }
+            };
+
+            this.experienceSystem!.awardExperience(
+                context.caster,
+                ExperienceAction.BUFF_APPLY,
+                buffContext
+            );
+
+            this.log('Buff experience awarded', {
+                caster: context.caster,
+                successfulBuffs,
+                buffTargets: buffTargets.length,
+                bonusAmount: buffContext.bonusAmount
+            });
+        }
+    }
+
+    /**
+     * デバフスキル使用時の経験値処理
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @param experienceContext 経験値コンテキスト
+     */
+    private async processDebuffExperience(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult,
+        experienceContext: ExperienceContext
+    ): Promise<void> {
+        let successfulDebuffs = 0;
+        let debuffTargets: string[] = [];
+
+        for (const effect of result.effects) {
+            if (effect.success && effect.effectType === 'debuff') {
+                successfulDebuffs++;
+                if (!debuffTargets.includes(effect.targetId)) {
+                    debuffTargets.push(effect.targetId);
+                }
+            }
+        }
+
+        if (successfulDebuffs > 0) {
+            // デバフ経験値を付与
+            const debuffContext: ExperienceContext = {
+                ...experienceContext,
+                source: ExperienceSource.ALLY_SUPPORT,
+                action: ExperienceAction.DEBUFF_APPLY,
+                bonusAmount: successfulDebuffs * 3, // デバフ1つにつき3ポイントのボーナス（バフより高め）
+                metadata: {
+                    ...experienceContext.metadata,
+                    successfulDebuffs,
+                    debuffTargets: debuffTargets.length,
+                    isGroupDebuff: debuffTargets.length > 1
+                }
+            };
+
+            this.experienceSystem!.awardExperience(
+                context.caster,
+                ExperienceAction.DEBUFF_APPLY,
+                debuffContext
+            );
+
+            this.log('Debuff experience awarded', {
+                caster: context.caster,
+                successfulDebuffs,
+                debuffTargets: debuffTargets.length,
+                bonusAmount: debuffContext.bonusAmount
+            });
+        }
+    }
+
+    /**
+     * 攻撃スキル使用時の経験値処理
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @param experienceContext 経験値コンテキスト
+     */
+    private async processAttackSkillExperience(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult,
+        experienceContext: ExperienceContext
+    ): Promise<void> {
+        let totalDamage = 0;
+        let successfulHits = 0;
+        let criticalHits = 0;
+
+        for (const effect of result.effects) {
+            if (effect.success && effect.effectType === 'damage') {
+                totalDamage += effect.actualValue;
+                successfulHits++;
+                if (effect.isCritical) {
+                    criticalHits++;
+                }
+            }
+        }
+
+        if (successfulHits > 0) {
+            // 攻撃スキル経験値を付与
+            let bonusAmount = Math.floor(totalDamage / 20); // ダメージの5%をボーナス経験値として付与
+            bonusAmount += criticalHits * 5; // クリティカルヒット1回につき5ポイント追加
+
+            const attackContext: ExperienceContext = {
+                ...experienceContext,
+                source: ExperienceSource.ATTACK_HIT,
+                action: ExperienceAction.ATTACK,
+                bonusAmount,
+                metadata: {
+                    ...experienceContext.metadata,
+                    totalDamage,
+                    successfulHits,
+                    criticalHits,
+                    averageDamage: totalDamage / successfulHits
+                }
+            };
+
+            this.experienceSystem!.awardExperience(
+                context.caster,
+                ExperienceAction.ATTACK,
+                attackContext
+            );
+
+            this.log('Attack skill experience awarded', {
+                caster: context.caster,
+                totalDamage,
+                successfulHits,
+                criticalHits,
+                bonusAmount
+            });
+        }
+    }
+
+    /**
+     * 状態異常スキル使用時の経験値処理
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @param experienceContext 経験値コンテキスト
+     */
+    private async processStatusSkillExperience(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult,
+        experienceContext: ExperienceContext
+    ): Promise<void> {
+        let successfulStatusEffects = 0;
+        let statusTargets: string[] = [];
+
+        for (const effect of result.effects) {
+            if (effect.success && effect.effectType === 'status') {
+                successfulStatusEffects++;
+                if (!statusTargets.includes(effect.targetId)) {
+                    statusTargets.push(effect.targetId);
+                }
+            }
+        }
+
+        if (successfulStatusEffects > 0) {
+            // 状態異常経験値を付与
+            const statusContext: ExperienceContext = {
+                ...experienceContext,
+                source: ExperienceSource.ALLY_SUPPORT,
+                action: ExperienceAction.SUPPORT,
+                bonusAmount: successfulStatusEffects * 4, // 状態異常1つにつき4ポイントのボーナス
+                metadata: {
+                    ...experienceContext.metadata,
+                    successfulStatusEffects,
+                    statusTargets: statusTargets.length
+                }
+            };
+
+            this.experienceSystem!.awardExperience(
+                context.caster,
+                ExperienceAction.SUPPORT,
+                statusContext
+            );
+
+            this.log('Status skill experience awarded', {
+                caster: context.caster,
+                successfulStatusEffects,
+                statusTargets: statusTargets.length,
+                bonusAmount: statusContext.bonusAmount
+            });
+        }
+    }
+
+    /**
+     * 特殊スキル使用時の経験値処理
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @param experienceContext 経験値コンテキスト
+     */
+    private async processSpecialSkillExperience(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult,
+        experienceContext: ExperienceContext
+    ): Promise<void> {
+        // 特殊スキルは基本経験値 + 固定ボーナス
+        const specialContext: ExperienceContext = {
+            ...experienceContext,
+            source: ExperienceSource.SKILL_USE,
+            action: ExperienceAction.SKILL_CAST,
+            bonusAmount: 10, // 特殊スキルは固定で10ポイントのボーナス
+            metadata: {
+                ...experienceContext.metadata,
+                isSpecialSkill: true
+            }
+        };
+
+        this.experienceSystem!.awardExperience(
+            context.caster,
+            ExperienceAction.SKILL_CAST,
+            specialContext
+        );
+
+        this.log('Special skill experience awarded', {
+            caster: context.caster,
+            skillId: skill.id,
+            bonusAmount: specialContext.bonusAmount
+        });
+    }
+
+    /**
+     * スキルに対応する経験値アクションを取得
+     * @param skill スキル
+     * @returns 経験値アクション
+     */
+    private getExperienceActionForSkill(skill: Skill): ExperienceAction {
+        switch (skill.skillType) {
+            case SkillType.HEAL:
+                return ExperienceAction.HEAL;
+            case SkillType.BUFF:
+                return ExperienceAction.BUFF_APPLY;
+            case SkillType.DEBUFF:
+                return ExperienceAction.DEBUFF_APPLY;
+            case SkillType.ATTACK:
+                return ExperienceAction.ATTACK;
+            case SkillType.STATUS:
+                return ExperienceAction.SUPPORT;
+            case SkillType.SPECIAL:
+            default:
+                return ExperienceAction.SKILL_CAST;
+        }
+    }
+
+    /**
+     * スキルに対応する経験値ソースを取得
+     * @param skill スキル
+     * @returns 経験値ソース
+     */
+    private getExperienceSourceForSkill(skill: Skill): ExperienceSource {
+        switch (skill.skillType) {
+            case SkillType.HEAL:
+                return ExperienceSource.HEALING;
+            case SkillType.BUFF:
+            case SkillType.DEBUFF:
+            case SkillType.STATUS:
+                return ExperienceSource.ALLY_SUPPORT;
+            case SkillType.ATTACK:
+                return ExperienceSource.ATTACK_HIT;
+            case SkillType.SPECIAL:
+            default:
+                return ExperienceSource.SKILL_USE;
+        }
+    }
+
+    /**
+     * スキル効果による経験値ボーナスを計算
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @returns 経験値ボーナス情報
+     */
+    private calculateSkillExperienceBonus(
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult
+    ): { totalBonus: number; multiplier: number; details: any } {
+        const skillData = skill as any; // SkillDataにアクセスするためのキャスト
+        const experienceBonus = skillData.data?.experienceBonus;
+
+        if (!experienceBonus) {
+            return { totalBonus: 0, multiplier: 1.0, details: {} };
+        }
+
+        let totalBonus = experienceBonus.fixedBonus || 0;
+        let multiplier = experienceBonus.baseMultiplier || 1.0;
+        const details: any = {
+            fixedBonus: experienceBonus.fixedBonus || 0,
+            baseMultiplier: experienceBonus.baseMultiplier || 1.0
+        };
+
+        // 効果値に基づくボーナス
+        if (experienceBonus.effectValueMultiplier) {
+            const totalEffectValue = result.effects.reduce((sum, effect) =>
+                effect.success ? sum + effect.actualValue : sum, 0);
+            const effectBonus = Math.floor(totalEffectValue * experienceBonus.effectValueMultiplier);
+            totalBonus += effectBonus;
+            details.effectValueBonus = effectBonus;
+        }
+
+        // 対象数に基づくボーナス
+        if (experienceBonus.targetCountBonus) {
+            const targetBonus = result.targets.length * experienceBonus.targetCountBonus;
+            totalBonus += targetBonus;
+            details.targetCountBonus = targetBonus;
+        }
+
+        // クリティカル時の追加ボーナス
+        if (experienceBonus.criticalBonus) {
+            const criticalCount = result.effects.filter(effect => effect.isCritical).length;
+            if (criticalCount > 0) {
+                const criticalBonus = criticalCount * experienceBonus.criticalBonus;
+                totalBonus += criticalBonus;
+                details.criticalBonus = criticalBonus;
+            }
+        }
+
+        // 特殊条件ボーナス
+        if (experienceBonus.specialConditions) {
+            let specialBonus = 0;
+            const specialDetails: any[] = [];
+
+            for (const condition of experienceBonus.specialConditions) {
+                const conditionMet = this.checkSpecialCondition(condition, skill, context, result);
+                if (conditionMet) {
+                    specialBonus += condition.bonus;
+                    specialDetails.push({
+                        type: condition.type,
+                        bonus: condition.bonus,
+                        description: condition.description
+                    });
+                }
+            }
+
+            if (specialBonus > 0) {
+                totalBonus += specialBonus;
+                details.specialConditions = specialDetails;
+            }
+        }
+
+        return { totalBonus, multiplier, details };
+    }
+
+    /**
+     * 特殊条件をチェック
+     * @param condition 条件
+     * @param skill スキル
+     * @param context 実行コンテキスト
+     * @param result スキル実行結果
+     * @returns 条件を満たしているかどうか
+     */
+    private checkSpecialCondition(
+        condition: any, // SkillExperienceBonusCondition
+        skill: Skill,
+        context: SkillExecutionContext,
+        result: SkillResult
+    ): boolean {
+        const caster = context.battlefieldState?.getCharacter?.(context.caster);
+        if (!caster) return false;
+
+        switch (condition.type) {
+            case 'low_hp':
+                // HP が指定値以下の場合
+                const hpPercentage = (caster.currentHP / caster.stats.maxHP) * 100;
+                return hpPercentage <= (condition.value || 25);
+
+            case 'high_damage':
+                // 指定値以上のダメージを与えた場合
+                const totalDamage = result.effects
+                    .filter(effect => effect.effectType === 'damage' && effect.success)
+                    .reduce((sum, effect) => sum + effect.actualValue, 0);
+                return totalDamage >= (condition.value || 50);
+
+            case 'multiple_targets':
+                // 指定数以上の対象に効果を与えた場合
+                return result.targets.length >= (condition.value || 3);
+
+            case 'status_effect':
+                // 状態異常効果を与えた場合
+                return result.effects.some(effect =>
+                    effect.effectType === 'status' && effect.success);
+
+            case 'combo':
+                // コンボ攻撃の場合（実装は戦闘システムに依存）
+                return context.battlefieldState?.isComboAttack?.(context.caster) || false;
+
+            default:
+                return false;
         }
     }
 

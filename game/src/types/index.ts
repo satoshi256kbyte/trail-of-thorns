@@ -24,5 +24,8 @@ export * from './skill';
 // AI system types
 export * from './ai';
 
+// Experience system types
+export * from './experience';
+
 // Stage data types
 export * from './StageData';
