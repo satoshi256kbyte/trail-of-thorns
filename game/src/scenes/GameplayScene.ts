@@ -41,6 +41,9 @@ import { RecruitmentResult, RecruitmentProgress, RecruitmentCondition } from '..
 import { AISystemManager } from '../systems/ai/AISystemManager';
 import { AISystemManagerConfig, AIExecutionResult } from '../types/ai';
 import { ExperienceAction, ExperienceSource, ExperienceContext } from '../types/experience';
+import { JobSystem, JobSystemConfig } from '../systems/jobs/JobSystem';
+import { JobUI, JobUIConfig } from '../ui/JobUI';
+import { JobData, RoseEssenceData, JobChangeResult, RankUpResult, CharacterRankUpInfo, StatModifiers } from '../types/job';
 
 /**
  * GameplayScene configuration interface
@@ -77,6 +80,8 @@ export class GameplayScene extends Phaser.Scene {
     private skillSystem!: SkillSystem;
     private experienceSystem!: ExperienceSystem;
     private aiSystemManager!: AISystemManager;
+    private jobSystem!: JobSystem;
+    private jobUI!: JobUI;
 
     // Scene data and state
     private stageData?: StageData;
@@ -255,6 +260,9 @@ export class GameplayScene extends Phaser.Scene {
 
             // Initialize AI system with all game systems
             this.initializeAISystem();
+
+            // Initialize job system
+            this.initializeJobSystem();
 
             // Setup input handling
             this.setupInputHandling();
@@ -655,6 +663,45 @@ export class GameplayScene extends Phaser.Scene {
         };
 
         this.aiSystemManager = new AISystemManager(this, aiConfig, this.events);
+
+        // Initialize JobSystem
+        const jobSystemConfig: Partial<JobSystemConfig> = {
+            enableAnimations: true,
+            enableSoundEffects: false, // Disabled for now
+            animationSpeed: 1.0,
+            debugMode: this.config.debugMode,
+            autoSaveEnabled: true,
+            maxConcurrentAnimations: 3,
+        };
+
+        this.jobSystem = new JobSystem(jobSystemConfig);
+
+        // Initialize JobUI
+        const jobUIConfig: Partial<JobUIConfig> = {
+            jobSelection: {
+                maxJobsPerPage: 6,
+                showJobDetails: true,
+                enableJobComparison: true,
+                allowJobChange: true,
+            },
+            rankUp: {
+                showPreview: true,
+                showCostBreakdown: true,
+                enableBatchRankUp: false,
+                confirmationRequired: true,
+            },
+            jobInfo: {
+                showStatModifiers: true,
+                showSkillList: true,
+                showJobTraits: true,
+                showRankProgress: true,
+                compactMode: false,
+            },
+            enableAnimations: true,
+            enableSoundEffects: false,
+        };
+
+        this.jobUI = new JobUI(this, jobUIConfig);
 
         console.log('GameplayScene: Manager systems initialized');
     }
@@ -1490,6 +1537,9 @@ export class GameplayScene extends Phaser.Scene {
         // Handle battle shortcuts first
         this.handleBattleShortcuts(shortcut, keyInfo);
 
+        // Handle job shortcuts
+        this.handleJobShortcuts(shortcut, keyInfo);
+
         switch (shortcut) {
             case 'cancel':
             case 'ESCAPE':
@@ -1518,6 +1568,17 @@ export class GameplayScene extends Phaser.Scene {
             case 'S':
             case 's':
                 this.handleSkillShortcut();
+                break;
+            case 'J':
+            case 'j':
+                // Job selection shortcut (handled in handleJobShortcuts)
+                break;
+            case 'R':
+            case 'r':
+                // Rank up shortcut (handled in handleJobShortcuts)
+                break;
+            case 'Shift+J':
+                // Job info shortcut (handled in handleJobShortcuts)
                 break;
             case 'Shift+TAB':
                 this.handlePreviousUnit();
@@ -3079,6 +3140,11 @@ export class GameplayScene extends Phaser.Scene {
         // Update character manager to show defeated state
         if (data.unit) {
             this.characterManager.updateCharacterPosition(data.unit.id, data.unit.position);
+
+            // Check if this was a boss and award rose essence
+            if (this.isBossUnit(data.unit)) {
+                this.handleBossDefeat(data.unit);
+            }
         }
     }
 
@@ -3314,6 +3380,15 @@ export class GameplayScene extends Phaser.Scene {
 
         if (this.experienceSystem) {
             this.experienceSystem.destroy();
+        }
+
+        if (this.jobSystem) {
+            this.jobSystem.destroy();
+        }
+
+        if (this.jobUI) {
+            // JobUI doesn't have a destroy method, but we can clean up references
+            console.log('Cleaning up job UI');
         }
 
         // Cleanup UI elements
@@ -3951,6 +4026,58 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     /**
+     * Initialize job system
+     * 要件3.1-3.5: 職業システムのGameplaySceneへの統合
+     */
+    private async initializeJobSystem(): Promise<void> {
+        try {
+            console.log('GameplayScene: Initializing job system');
+
+            // Initialize the job system with scene and default data
+            await this.jobSystem.initialize(this);
+
+            // Set external system references
+            this.jobSystem.setCharacterManager(this.characterManager);
+            this.jobSystem.setSkillSystem(this.skillSystem);
+            this.jobSystem.setBattleSystem(this.battleSystem);
+
+            // Load mock job data for testing
+            await this.loadMockJobData();
+
+            // Initialize characters with default jobs
+            if (this.stageData) {
+                const allCharacters = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+
+                for (const character of allCharacters) {
+                    try {
+                        // Set default job based on character name/type
+                        const defaultJobId = this.getDefaultJobForCharacter(character);
+                        this.jobSystem.setCharacterJob(character.id, defaultJobId, 1);
+                    } catch (characterError) {
+                        console.warn(`Failed to set job for character ${character.id}:`, characterError);
+                    }
+                }
+            }
+
+            // Setup job system event listeners
+            this.setupJobSystemEventListeners();
+
+            // Setup job UI callbacks
+            this.setupJobUICallbacks();
+
+            console.log('GameplayScene: Job system initialized successfully');
+
+        } catch (error) {
+            console.error('GameplayScene: Failed to initialize job system:', error);
+            this.uiManager.showErrorNotification({
+                message: '職業システムの初期化に失敗しました',
+                type: 'error',
+                duration: 3000,
+            });
+        }
+    }
+
+    /**
      * Initialize AI system with all game systems
      */
     private initializeAISystem(): void {
@@ -4437,4 +4564,543 @@ export class GameplayScene extends Phaser.Scene {
             console.error('Error showing support info:', error);
         }
     }
+}
+console.log('Unknown notification action:', action);
+break;
+            }
+
+        } catch (error) {
+    console.error('Error handling notification action:', error);
+}
+    }
+
+    /**
+     * Restart the game
+     */
+    private restartGame(): void {
+    try {
+        console.log('Restarting game...');
+        this.scene.restart();
+    } catch(error) {
+        console.error('Error restarting game:', error);
+        // Force reload as fallback
+        window.location.reload();
+    }
+}
+
+    /**
+     * Check save data integrity
+     */
+    private checkSaveData(): void {
+    try {
+        console.log('Checking save data...');
+
+        // 経験値システムのセーブデータをチェック
+        if(this.experienceSystem) {
+    const saveDataStatus = this.experienceSystem.checkSaveDataIntegrity();
+    console.log('Save data status:', saveDataStatus);
+
+    this.uiManager.showMessage(
+        `セーブデータ状態: ${saveDataStatus.isValid ? '正常' : '破損'}`,
+        saveDataStatus.isValid ? 'success' : 'error'
+    );
+}
+
+        } catch (error) {
+    console.error('Error checking save data:', error);
+    this.uiManager.showMessage('セーブデータチェック中にエラーが発生しました', 'error');
+}
+    }
+
+    /**
+     * Show support information
+     */
+    private showSupportInfo(): void {
+    try {
+        console.log('Showing support info...');
+
+        this.uiManager.showMessage(
+            'サポート情報: ゲームログを確認し、問題を報告してください',
+            'info'
+        );
+
+    } catch(error) {
+        console.error('Error showing support info:', error);
+    }
+}
+
+    // ===== JOB SYSTEM INTEGRATION METHODS =====
+
+    /**
+     * Load mock job data for testing
+     * 要件2.1-2.5: 職業データ管理
+     */
+    private async loadMockJobData(): Promise < void> {
+    try {
+        // Create mock job data for testing
+        const mockJobData = new Map<string, JobData>();
+
+        // Warrior job
+        mockJobData.set('warrior', {
+            id: 'warrior',
+            name: '戦士',
+            description: '近接戦闘に特化した職業',
+            category: 'warrior' as any,
+            maxRank: 3,
+            statModifiers: {
+                1: { hp: 10, mp: 0, attack: 5, defense: 3, speed: -1, skill: 0, luck: 0 },
+                2: { hp: 20, mp: 0, attack: 10, defense: 6, speed: -1, skill: 1, luck: 0 },
+                3: { hp: 30, mp: 0, attack: 15, defense: 9, speed: -1, skill: 2, luck: 1 },
+            },
+            availableSkills: {
+                1: ['sword_slash', 'guard'],
+                2: ['sword_slash', 'guard', 'power_strike'],
+                3: ['sword_slash', 'guard', 'power_strike', 'berserker_rage'],
+            },
+            rankUpRequirements: {
+                2: { roseEssenceCost: 10, levelRequirement: 5, prerequisiteSkills: ['sword_slash'] },
+                3: { roseEssenceCost: 20, levelRequirement: 10, prerequisiteSkills: ['power_strike'] },
+            },
+            growthRateModifiers: {
+                1: { hp: 1.2, mp: 0.8, attack: 1.1, defense: 1.1, speed: 0.9, skill: 1.0, luck: 1.0 },
+                2: { hp: 1.3, mp: 0.8, attack: 1.2, defense: 1.2, speed: 0.9, skill: 1.0, luck: 1.0 },
+                3: { hp: 1.4, mp: 0.8, attack: 1.3, defense: 1.3, speed: 0.9, skill: 1.1, luck: 1.0 },
+            },
+            jobTraits: [
+                { id: 'heavy_armor', name: '重装備', description: '重い装備を身に着けられる', effect: {} },
+            ],
+            visual: {
+                iconPath: 'icons/warrior.png',
+                spriteModifications: [],
+                colorScheme: { primary: 0xff0000, secondary: 0x800000 },
+            },
+        });
+
+        // Mage job
+        mockJobData.set('mage', {
+            id: 'mage',
+            name: '魔法使い',
+            description: '魔法攻撃に特化した職業',
+            category: 'mage' as any,
+            maxRank: 3,
+            statModifiers: {
+                1: { hp: -5, mp: 15, attack: 8, defense: -2, speed: 1, skill: 3, luck: 1 },
+                2: { hp: -5, mp: 25, attack: 12, defense: -2, speed: 1, skill: 5, luck: 2 },
+                3: { hp: -5, mp: 35, attack: 16, defense: -1, speed: 2, skill: 7, luck: 3 },
+            },
+            availableSkills: {
+                1: ['fire_bolt', 'heal'],
+                2: ['fire_bolt', 'heal', 'ice_shard', 'group_heal'],
+                3: ['fire_bolt', 'heal', 'ice_shard', 'group_heal', 'meteor', 'resurrection'],
+            },
+            rankUpRequirements: {
+                2: { roseEssenceCost: 12, levelRequirement: 4, prerequisiteSkills: ['fire_bolt', 'heal'] },
+                3: { roseEssenceCost: 25, levelRequirement: 8, prerequisiteSkills: ['ice_shard'] },
+            },
+            growthRateModifiers: {
+                1: { hp: 0.8, mp: 1.4, attack: 1.2, defense: 0.8, speed: 1.1, skill: 1.3, luck: 1.1 },
+                2: { hp: 0.8, mp: 1.5, attack: 1.3, defense: 0.8, speed: 1.1, skill: 1.4, luck: 1.2 },
+                3: { hp: 0.9, mp: 1.6, attack: 1.4, defense: 0.9, speed: 1.2, skill: 1.5, luck: 1.3 },
+            },
+            jobTraits: [
+                { id: 'magic_mastery', name: '魔法精通', description: '魔法の威力が上昇する', effect: {} },
+            ],
+            visual: {
+                iconPath: 'icons/mage.png',
+                spriteModifications: [],
+                colorScheme: { primary: 0x0000ff, secondary: 0x000080 },
+            },
+        });
+
+        // Initialize job system with mock data
+        // Note: The actual job loading would be done through JobDataLoader in a full implementation
+        console.log('Mock job data loaded successfully');
+
+    } catch(error) {
+        console.error('Failed to load mock job data:', error);
+        throw error;
+    }
+}
+
+    /**
+     * Get default job for a character based on their characteristics
+     * 要件1.1: キャラクターの初期職業設定
+     */
+    private getDefaultJobForCharacter(character: Unit): string {
+    // Determine default job based on character name or stats
+    if (character.name.toLowerCase().includes('mage') || character.stats.maxMP > character.stats.maxHP) {
+        return 'mage';
+    } else if (character.name.toLowerCase().includes('warrior') || character.stats.attack > character.stats.skill) {
+        return 'warrior';
+    } else if (character.name.toLowerCase().includes('archer')) {
+        return 'archer';
+    } else if (character.name.toLowerCase().includes('healer')) {
+        return 'healer';
+    } else if (character.name.toLowerCase().includes('thief')) {
+        return 'thief';
+    }
+
+    // Default to warrior for unknown characters
+    return 'warrior';
+}
+
+    /**
+     * Setup job system event listeners
+     * 要件3.1-3.5: UI表示の統合
+     */
+    private setupJobSystemEventListeners(): void {
+    console.log('GameplayScene: Setting up job system event listeners');
+
+    if(!this.jobSystem) {
+    console.warn('Job system not available for event listener setup');
+    return;
+}
+
+// Job system events
+this.jobSystem.on('system_initialized', (data: any) => {
+    console.log('Job system initialized:', data);
+    this.jobUI.updateRoseEssenceDisplay(this.jobSystem.getCurrentRoseEssence());
+});
+
+this.jobSystem.on('character_job_set', (data: any) => {
+    console.log('Character job set:', data);
+    // Update character display if this character is selected
+    const selectedUnit = this.gameStateManager.getSelectedUnit();
+    if (selectedUnit && selectedUnit.id === data.characterId) {
+        this.updateCharacterInfoDisplay(selectedUnit);
+    }
+});
+
+this.jobSystem.on('job_changed', (data: any) => {
+    console.log('Job changed:', data);
+    // Update character stats in all systems
+    this.updateCharacterAfterJobChange(data.characterId);
+
+    // Show notification
+    this.uiManager.showNotification({
+        message: `${data.characterName || 'Character'} changed job to ${data.newJobName || 'Unknown'}!`,
+        type: 'success',
+        duration: 3000,
+    });
+});
+
+this.jobSystem.on('rank_up_completed', (data: any) => {
+    console.log('Rank up completed:', data);
+    // Update character stats in all systems
+    this.updateCharacterAfterJobChange(data.characterId);
+
+    // Show notification
+    this.uiManager.showNotification({
+        message: `${data.characterName || 'Character'} ranked up to ${data.newRank}!`,
+        type: 'success',
+        duration: 3000,
+    });
+});
+
+this.jobSystem.on('rose_essence_awarded', (data: any) => {
+    console.log('Rose essence awarded:', data);
+    // Update UI display
+    this.jobUI.updateRoseEssenceDisplay(data.currentTotal);
+
+    // Show notification
+    this.uiManager.showNotification({
+        message: `Rose Essence +${data.amount} (Total: ${data.currentTotal})`,
+        type: 'info',
+        duration: 2000,
+    });
+});
+
+this.jobSystem.on('rank_up_candidates_available', (data: any) => {
+    console.log('Rank up candidates available:', data);
+    // Show notification that rank ups are available
+    this.uiManager.showNotification({
+        message: `${data.length} character(s) can rank up!`,
+        type: 'info',
+        duration: 3000,
+    });
+});
+
+this.jobSystem.on('system_error', (data: any) => {
+    console.error('Job system error:', data);
+    this.uiManager.showErrorNotification({
+        message: data.context?.error || 'Job system error occurred',
+        type: 'error',
+        duration: 3000,
+    });
+});
+
+console.log('GameplayScene: Job system event listeners setup completed');
+    }
+
+    /**
+     * Setup job UI callbacks
+     * 要件3.1-3.5: 職業・ランクアップ関連の入力処理
+     */
+    private setupJobUICallbacks(): void {
+    console.log('GameplayScene: Setting up job UI callbacks');
+
+    // Job change callback
+    this.jobUI['onJobChangeCallback'] = async (characterId: string, newJobId: string): Promise<JobChangeResult> => {
+        try {
+            return await this.jobSystem.changeJob(characterId, newJobId);
+        } catch (error) {
+            console.error('Failed to change job:', error);
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Job change failed',
+                characterId,
+                oldJobId: '',
+                newJobId,
+            };
+        }
+    };
+
+    // Rank up callback
+    this.jobUI['onRankUpCallback'] = async (characterId: string, targetRank?: number): Promise<RankUpResult> => {
+        try {
+            return await this.jobSystem.rankUpJob(characterId, targetRank);
+        } catch (error) {
+            console.error('Failed to rank up:', error);
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Rank up failed',
+                characterId,
+                oldRank: 1,
+                newRank: targetRank || 1,
+                roseEssenceUsed: 0,
+                newSkills: [],
+                statChanges: {},
+            };
+        }
+    };
+
+    // Close callback
+    this.jobUI['onCloseCallback'] = () => {
+        console.log('Job UI closed');
+        // Re-enable normal input
+        this.inputHandler.enable();
+    };
+
+    console.log('GameplayScene: Job UI callbacks setup completed');
+}
+
+    /**
+     * Update character after job change or rank up
+     * 要件1.1, 1.4: 職業による能力値修正の適用
+     */
+    private updateCharacterAfterJobChange(characterId: string): void {
+    try {
+        const character = this.findUnitById(characterId);
+        if(!character) {
+            console.warn(`Character ${characterId} not found for job update`);
+            return;
+        }
+
+            // Get job stat modifiers
+            const jobStats = this.jobSystem.getCharacterJobStats(characterId);
+
+        // Apply job modifiers to character stats (this would be more sophisticated in a full implementation)
+        // For now, just log the changes
+        console.log(`Applying job stat modifiers to ${character.name}:`, jobStats);
+
+        // Update character manager
+        this.characterManager.updateCharacterStats(character.id, character.stats);
+
+        // Update all systems with new character data
+        if(this.stageData) {
+    const allCharacters = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+    this.movementSystem.updateUnits(allCharacters);
+    this.battleSystem.initialize(allCharacters, this.stageData.mapData);
+}
+
+// Update skill system with new job skills
+if (this.skillSystem) {
+    const jobSkills = this.jobSystem.getCharacterJobSkills(characterId);
+    console.log(`Updating skills for ${character.name}:`, jobSkills);
+    // The skill system would handle job skill updates here
+}
+
+        } catch (error) {
+    console.error('Failed to update character after job change:', error);
+}
+    }
+
+    /**
+     * Handle job-related input shortcuts
+     * 要件3.1-3.5: 職業・ランクアップ関連の入力処理
+     */
+    private handleJobShortcuts(shortcut: string, keyInfo: any): void {
+    switch(shortcut) {
+            case 'J':
+    case 'j':
+    // Show job selection for selected character
+    this.handleJobSelectionShortcut();
+    break;
+    case 'R':
+    case 'r':
+    // Show rank up UI
+    this.handleRankUpShortcut();
+    break;
+    case 'Shift+J':
+    // Show job info for selected character
+    this.handleJobInfoShortcut();
+    break;
+}
+    }
+
+    /**
+     * Handle job selection shortcut
+     */
+    private handleJobSelectionShortcut(): void {
+    const selectedUnit = this.gameStateManager.getSelectedUnit();
+    if(!selectedUnit) {
+        this.uiManager.showNotification({
+            message: 'No character selected',
+            type: 'warning',
+            duration: 2000,
+        });
+        return;
+    }
+
+        if(selectedUnit.faction !== 'player') {
+    this.uiManager.showNotification({
+        message: 'Cannot change jobs for enemy units',
+        type: 'warning',
+        duration: 2000,
+    });
+    return;
+}
+
+// Show job selection UI
+const availableJobs = this.jobSystem.getAllJobs();
+this.jobUI.showJobSelection(selectedUnit, availableJobs);
+
+// Disable normal input while UI is open
+this.inputHandler.disable();
+    }
+
+    /**
+     * Handle rank up shortcut
+     */
+    private handleRankUpShortcut(): void {
+    // Get rank up candidates
+    const candidates = this.jobSystem.getRankUpCandidates();
+    const currentRoseEssence = this.jobSystem.getCurrentRoseEssence();
+
+    if(candidates.length === 0) {
+    this.uiManager.showNotification({
+        message: 'No characters can rank up',
+        type: 'info',
+        duration: 2000,
+    });
+    return;
+}
+
+// Show rank up UI
+this.jobUI.showRankUpUI(candidates, currentRoseEssence);
+
+// Disable normal input while UI is open
+this.inputHandler.disable();
+    }
+
+    /**
+     * Handle job info shortcut
+     */
+    private handleJobInfoShortcut(): void {
+    const selectedUnit = this.gameStateManager.getSelectedUnit();
+    if(!selectedUnit) {
+        this.uiManager.showNotification({
+            message: 'No character selected',
+            type: 'warning',
+            duration: 2000,
+        });
+        return;
+    }
+
+        const job = this.jobSystem.getCharacterJob(selectedUnit.id);
+    if(!job) {
+        this.uiManager.showNotification({
+            message: 'Character has no job assigned',
+            type: 'warning',
+            duration: 2000,
+        });
+        return;
+    }
+
+        // Show job info UI
+        this.jobUI.showJobInfo(selectedUnit, job);
+
+    // Disable normal input while UI is open
+    this.inputHandler.disable();
+}
+
+    /**
+     * Handle boss defeat and award rose essence
+     * 要件4.1-4.2: ボス撃破時の薔薇の力獲得
+     */
+    private handleBossDefeat(boss: Unit): void {
+    try {
+        // Calculate rose essence reward based on boss type/level
+        const roseEssenceAmount = this.calculateRoseEssenceReward(boss);
+
+        // Award rose essence
+        const bossScreenPos = this.getUnitScreenPosition(boss);
+        this.jobSystem.awardRoseEssence(
+            roseEssenceAmount,
+            `boss_defeat_${boss.id}`,
+            bossScreenPos || undefined
+        );
+
+        console.log(`Boss ${boss.name} defeated, awarded ${roseEssenceAmount} rose essence`);
+
+    } catch(error) {
+        console.error('Failed to handle boss defeat:', error);
+    }
+}
+
+    /**
+     * Calculate rose essence reward for defeating a boss
+     */
+    private calculateRoseEssenceReward(boss: Unit): number {
+    // Base reward calculation (this would be more sophisticated in a full implementation)
+    let baseReward = 10;
+
+    // Bonus based on boss level or stats
+    if (boss.stats.maxHP > 200) {
+        baseReward += 10; // Strong boss bonus
+    }
+
+    // Bonus for special boss types (would check boss metadata)
+    if (boss.name.toLowerCase().includes('boss') || boss.name.toLowerCase().includes('dragon')) {
+        baseReward += 15; // Special boss bonus
+    }
+
+    return baseReward;
+}
+}
+    /**
+
+     * Check if a unit is a boss
+     * 要件4.1: ボス撃破時の薔薇の力獲得判定
+     */
+    private isBossUnit(unit: Unit): boolean {
+    // Check if unit is a boss based on various criteria
+
+    // Check name for boss indicators
+    const name = unit.name.toLowerCase();
+    if (name.includes('boss') || name.includes('dragon') || name.includes('lord') || name.includes('king')) {
+        return true;
+    }
+
+    // Check stats for boss-level power
+    if (unit.stats.maxHP > 150 && unit.stats.attack > 30) {
+        return true;
+    }
+
+    // Check metadata for boss flag (would be set in stage data)
+    if (unit.metadata && (unit.metadata as any).isBoss) {
+        return true;
+    }
+
+    return false;
 }

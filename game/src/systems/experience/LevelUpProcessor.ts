@@ -22,6 +22,7 @@ export class LevelUpProcessor {
     private growthCalculator: GrowthCalculator;
     private experienceManager: ExperienceManager;
     private eventEmitter?: Phaser.Events.EventEmitter;
+    private jobIntegration?: any;
 
     constructor(
         growthCalculator: GrowthCalculator,
@@ -31,6 +32,13 @@ export class LevelUpProcessor {
         this.growthCalculator = growthCalculator;
         this.experienceManager = experienceManager;
         this.eventEmitter = eventEmitter;
+    }
+
+    /**
+     * 職業統合システムを設定
+     */
+    public setJobIntegration(jobIntegration: any): void {
+        this.jobIntegration = jobIntegration;
     }
 
     /**
@@ -57,11 +65,12 @@ export class LevelUpProcessor {
         const oldStats = this.convertToExperienceStats(character.stats);
         const timestamp = Date.now();
 
-        // 成長率を取得
+        // 成長率を取得（職業統合を含む）
         const growthRates = this.growthCalculator.getGrowthRates(
             character.id,
             oldLevel,
-            jobClass
+            jobClass,
+            this.jobIntegration
         );
 
         // 能力値成長を計算
@@ -123,7 +132,20 @@ export class LevelUpProcessor {
         const currentStats = this.convertToExperienceStats(character.stats);
 
         // 成長計算を実行
-        const statGrowth = this.growthCalculator.calculateStatGrowth(currentStats, growthRates);
+        let statGrowth = this.growthCalculator.calculateStatGrowth(currentStats, growthRates);
+
+        // 職業効果を統合
+        if (this.jobIntegration && typeof this.jobIntegration.integrateJobEffectsIntoGrowth === 'function') {
+            try {
+                statGrowth = this.jobIntegration.integrateJobEffectsIntoGrowth(
+                    character.id,
+                    statGrowth,
+                    character.level
+                );
+            } catch (error) {
+                console.warn('Failed to integrate job effects into growth:', error);
+            }
+        }
 
         // イベント発行
         this.eventEmitter?.emit('stat-growth-calculated', {

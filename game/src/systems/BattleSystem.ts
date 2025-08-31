@@ -184,6 +184,10 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     // Experience system integration
     private experienceSystem: ExperienceSystem | null = null;
 
+    // Job system integration
+    private jobSystem: any = null;
+    private battleJobIntegration: any = null;
+
     // Battle data
     private allUnits: Unit[] = [];
     private mapData: MapData | null = null;
@@ -335,6 +339,33 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     }
 
     /**
+     * Set job system for integration
+     * @param jobSystem - Job system instance
+     */
+    public setJobSystem(jobSystem: any): void {
+        this.jobSystem = jobSystem;
+
+        // Initialize battle-job integration
+        if (this.jobSystem) {
+            const { BattleJobIntegration } = require('../systems/jobs/BattleJobIntegration');
+            this.battleJobIntegration = new BattleJobIntegration(this.jobSystem, this.scene);
+
+            // Set up event listeners for job system integration
+            this.setupJobSystemEventListeners();
+        }
+
+        this.log('Job system integrated with battle system');
+    }
+
+    /**
+     * Check if job system is integrated
+     * @returns True if job system is available
+     */
+    public hasJobSystem(): boolean {
+        return this.jobSystem !== null;
+    }
+
+    /**
      * Get recruitment conditions for a target unit
      * @param target - Target unit to check
      * @returns Array of recruitment conditions or empty array
@@ -393,6 +424,44 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
         this.errorHandler.on('retry-requested', this.onRetryRequested.bind(this));
         this.errorHandler.on('cancel-requested', this.onCancelRequested.bind(this));
         this.errorHandler.on('reset-requested', this.onResetRequested.bind(this));
+    }
+
+    /**
+     * Setup event listeners for job system integration
+     */
+    private setupJobSystemEventListeners(): void {
+        if (!this.battleJobIntegration) return;
+
+        // Listen to job system integration events
+        this.battleJobIntegration.on('rose_essence_gained', (data: any) => {
+            this.emit('rose_essence_gained', data);
+            this.log('Rose essence gained from boss defeat', {
+                amount: data.amount,
+                boss: data.bossInfo.name
+            });
+        });
+
+        this.battleJobIntegration.on('rank_up_available', (data: any) => {
+            this.emit('rank_up_available', data);
+            this.log('Rank up candidates available', {
+                candidates: data.candidates.length
+            });
+        });
+
+        this.battleJobIntegration.on('job_battle_modification_applied', (data: any) => {
+            this.log('Job battle modifications applied', {
+                unit: data.unit.name,
+                job: data.job.name,
+                modifiers: data.modification.damageModifiers.length
+            });
+        });
+
+        this.battleJobIntegration.on('job_effects_applied_to_battle', (data: any) => {
+            this.log('Job effects applied to battle result', {
+                attacker: data.attackerJob?.name || 'none',
+                defender: data.targetJob?.name || 'none'
+            });
+        });
     }
 
     /**
@@ -848,6 +917,198 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
 
             return errorResult;
         }
+    }
+
+    /**
+     * Handle boss defeat and rose essence gain
+     * @param defeatedUnit - The defeated boss unit
+     * @param defeatingUnit - The unit that defeated the boss
+     * @returns Promise that resolves when boss defeat processing is complete
+     */
+    public async handleBossDefeat(defeatedUnit: Unit, defeatingUnit: Unit): Promise<void> {
+        if (!this.battleJobIntegration) {
+            this.log('Job system not integrated, skipping boss defeat processing');
+            return;
+        }
+
+        try {
+            // Check if the defeated unit is a boss
+            if (!this.isBossUnit(defeatedUnit)) {
+                return;
+            }
+
+            // Create boss info from defeated unit
+            const bossInfo = this.createBossInfo(defeatedUnit);
+
+            // Handle boss defeat through job integration
+            const gainedRoseEssence = await this.battleJobIntegration.handleBossDefeat(
+                bossInfo,
+                defeatingUnit
+            );
+
+            // Emit boss defeat event
+            this.emit('boss_defeated', {
+                boss: defeatedUnit,
+                defeater: defeatingUnit,
+                roseEssenceGained: gainedRoseEssence,
+                bossInfo
+            });
+
+            this.log('Boss defeat processed', {
+                boss: defeatedUnit.name,
+                defeater: defeatingUnit.name,
+                roseEssence: gainedRoseEssence
+            });
+
+        } catch (error) {
+            this.log('Error processing boss defeat', { error: error.message });
+            this.handleBattleError(error as Error, {
+                attacker: defeatingUnit,
+                target: defeatedUnit,
+                phase: 'result'
+            });
+        }
+    }
+
+    /**
+     * Apply job modifications to battle calculation
+     * @param attacker - Attacking unit
+     * @param target - Target unit
+     * @param weapon - Weapon being used
+     * @returns Modified battle parameters
+     */
+    public applyJobModificationsToBattle(
+        attacker: Unit,
+        target: Unit,
+        weapon: Weapon
+    ): {
+        attackerMods: any;
+        defenderMods: any;
+        modifiedWeapon: Weapon
+    } {
+        let attackerMods = null;
+        let defenderMods = null;
+        let modifiedWeapon = { ...weapon };
+
+        if (this.battleJobIntegration) {
+            try {
+                // Apply attacker job modifications
+                attackerMods = this.battleJobIntegration.applyJobBattleModifications(
+                    attacker,
+                    weapon,
+                    target
+                );
+
+                // Apply defender job modifications (for defensive bonuses)
+                defenderMods = this.battleJobIntegration.applyJobBattleModifications(
+                    target,
+                    weapon,
+                    attacker
+                );
+
+                // Modify weapon stats based on job compatibility
+                if (attackerMods?.accuracyModifier) {
+                    modifiedWeapon.accuracy = Math.max(0, Math.min(100,
+                        weapon.accuracy + attackerMods.accuracyModifier
+                    ));
+                }
+
+                if (attackerMods?.criticalRateModifier) {
+                    modifiedWeapon.criticalRate = Math.max(0, Math.min(100,
+                        weapon.criticalRate + attackerMods.criticalRateModifier
+                    ));
+                }
+
+            } catch (error) {
+                this.log('Error applying job modifications', { error: error.message });
+            }
+        }
+
+        return { attackerMods, defenderMods, modifiedWeapon };
+    }
+
+    /**
+     * Apply job effects to battle result
+     * @param battleResult - The battle result to modify
+     * @returns Modified battle result
+     */
+    public applyJobEffectsToBattleResult(battleResult: BattleResult): BattleResult {
+        if (!this.battleJobIntegration) {
+            return battleResult;
+        }
+
+        try {
+            return this.battleJobIntegration.applyJobEffectsToBattleResult(battleResult);
+        } catch (error) {
+            this.log('Error applying job effects to battle result', { error: error.message });
+            return battleResult;
+        }
+    }
+
+    /**
+     * Show job aura effect during battle
+     * @param unit - Unit to show aura for
+     * @param duration - Duration in milliseconds
+     */
+    public showJobAuraInBattle(unit: Unit, duration: number = 3000): void {
+        if (this.battleJobIntegration) {
+            this.battleJobIntegration.showJobAuraInBattle(unit, duration);
+        }
+    }
+
+    // =============================================================================
+    // Private helper methods for job system integration
+    // =============================================================================
+
+    /**
+     * Check if a unit is a boss
+     * @param unit - Unit to check
+     * @returns True if the unit is a boss
+     */
+    private isBossUnit(unit: Unit): boolean {
+        // Check various indicators that a unit is a boss
+        return (
+            unit.name.toLowerCase().includes('boss') ||
+            unit.name.toLowerCase().includes('魔性の薔薇') ||
+            (unit as any).isBoss === true ||
+            (unit as any).bossType !== undefined ||
+            unit.stats.maxHP > 200 // Simple heuristic for boss detection
+        );
+    }
+
+    /**
+     * Create boss info from a defeated unit
+     * @param unit - The defeated boss unit
+     * @returns Boss info object
+     */
+    private createBossInfo(unit: Unit): any {
+        // Determine boss type based on unit properties
+        let bossType = 'minor_boss';
+        let roseEssenceReward = 10;
+
+        if (unit.name.toLowerCase().includes('final') || unit.name.toLowerCase().includes('最終')) {
+            bossType = 'final_boss';
+            roseEssenceReward = 50;
+        } else if (unit.name.toLowerCase().includes('chapter') || unit.name.toLowerCase().includes('章')) {
+            bossType = 'chapter_boss';
+            roseEssenceReward = 25;
+        } else if (unit.stats.maxHP > 300) {
+            bossType = 'major_boss';
+            roseEssenceReward = 15;
+        }
+
+        // Check if this is first time defeat (simplified implementation)
+        const isFirstTimeDefeat = !(unit as any).hasBeenDefeatedBefore;
+
+        return {
+            id: unit.id,
+            name: unit.name,
+            type: bossType,
+            roseEssenceReward,
+            isFirstTimeDefeat,
+            stageId: (unit as any).stageId,
+            chapterId: (unit as any).chapterId
+        };
     }
 
     /**
@@ -1396,21 +1657,32 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
             this.performanceMonitor.startOperation('totalBattleTime', battleId);
             this.performanceMonitor.startOperation('damageCalculation', battleId);
 
-            // Calculate damage
+            // Apply job modifications to battle parameters
+            const jobMods = this.applyJobModificationsToBattle(attacker, target, weapon);
+            const modifiedWeapon = jobMods.modifiedWeapon;
+
+            // Combine custom modifiers with job modifiers
+            const allModifiers = [
+                ...(options?.customModifiers || []),
+                ...(jobMods.attackerMods?.damageModifiers || []),
+                ...(jobMods.defenderMods?.damageModifiers || [])
+            ];
+
+            // Calculate damage with job modifications
             const damageContext = this.damageCalculator.performCompleteCalculation(
                 attacker,
                 target,
-                weapon,
-                options?.customModifiers
+                modifiedWeapon,
+                allModifiers
             );
 
             this.performanceMonitor.endOperation('damageCalculation', battleId);
 
             // Create battle result
-            const battleResult: BattleResult = {
+            let battleResult: BattleResult = {
                 attacker,
                 target,
-                weapon,
+                weapon: modifiedWeapon,
                 baseDamage: damageContext.baseDamage,
                 finalDamage: damageContext.finalDamage,
                 modifiers: damageContext.modifiers,
@@ -1422,6 +1694,9 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
                 timestamp: Date.now(),
             };
 
+            // Apply job effects to battle result
+            battleResult = this.applyJobEffectsToBattleResult(battleResult);
+
             // Play animations if enabled
             if (this.config.enableAnimations && !options?.skipAnimations) {
                 this.state.isAnimating = true;
@@ -1429,7 +1704,10 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
 
                 this.performanceMonitor.startOperation('animationExecution', battleId);
 
-                await this.battleAnimator.playAttackAnimation(attacker, target, weapon);
+                // Show job aura for attacker during attack
+                this.showJobAuraInBattle(attacker, 2000);
+
+                await this.battleAnimator.playAttackAnimation(attacker, target, modifiedWeapon);
 
                 if (!damageContext.isEvaded) {
                     const damageType = damageContext.isCritical ? DamageType.CRITICAL : DamageType.PHYSICAL;
@@ -1472,6 +1750,16 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
 
                 // Check if target was defeated
                 battleResult.targetDefeated = target.currentHP <= 0;
+
+                // Handle boss defeat if target was defeated and is a boss
+                if (battleResult.targetDefeated && this.isBossUnit(target)) {
+                    try {
+                        await this.handleBossDefeat(target, attacker);
+                    } catch (error) {
+                        this.log('Error handling boss defeat', { error: error.message });
+                        // Don't throw - battle should continue even if boss defeat handling fails
+                    }
+                }
 
                 // Process recruitment if target was defeated and conditions are met
                 if (

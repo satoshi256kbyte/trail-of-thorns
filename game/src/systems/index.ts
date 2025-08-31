@@ -64,6 +64,9 @@ export { CameraController } from './CameraController';
 // Recruitment System
 export { RecruitmentDataManager } from './RecruitmentDataManager';
 
+// Job System
+export * from './jobs';
+
 // Skill System (if available)
 // Note: Add skill system exports when implemented
 

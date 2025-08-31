@@ -31,34 +31,54 @@ export class GrowthCalculator {
      * @param characterId キャラクターID
      * @param level 現在のレベル（将来的なレベル依存成長率用）
      * @param jobClass 職業クラス（オプション）
+     * @param jobIntegration 職業統合システム（オプション）
      * @returns 成長率データ
      */
-    public getGrowthRates(characterId: string, level: number, jobClass?: string): GrowthRates {
+    public getGrowthRates(
+        characterId: string,
+        level: number,
+        jobClass?: string,
+        jobIntegration?: any
+    ): GrowthRates {
         if (!this.growthRateData) {
             throw new Error('Growth rate data not loaded');
         }
 
+        // 基本成長率を取得
+        let baseGrowthRates: GrowthRates;
+
         // キャラクター固有の成長率を優先
         const characterGrowthRates = this.growthRateData.characterGrowthRates[characterId];
         if (characterGrowthRates) {
-            return { ...characterGrowthRates };
+            baseGrowthRates = { ...characterGrowthRates };
         }
-
         // 職業クラスの成長率をフォールバック
-        if (jobClass && this.growthRateData.jobClassGrowthRates[jobClass]) {
-            return { ...this.growthRateData.jobClassGrowthRates[jobClass] };
+        else if (jobClass && this.growthRateData.jobClassGrowthRates[jobClass]) {
+            baseGrowthRates = { ...this.growthRateData.jobClassGrowthRates[jobClass] };
+        }
+        // デフォルト成長率（全て50%）
+        else {
+            baseGrowthRates = {
+                hp: 50,
+                mp: 50,
+                attack: 50,
+                defense: 50,
+                speed: 50,
+                skill: 50,
+                luck: 50
+            };
         }
 
-        // デフォルト成長率（全て50%）
-        return {
-            hp: 50,
-            mp: 50,
-            attack: 50,
-            defense: 50,
-            speed: 50,
-            skill: 50,
-            luck: 50
-        };
+        // 職業システム統合が利用可能な場合、職業成長率修正を適用
+        if (jobIntegration && typeof jobIntegration.applyJobGrowthRateModifiers === 'function') {
+            try {
+                return jobIntegration.applyJobGrowthRateModifiers(characterId, baseGrowthRates, level);
+            } catch (error) {
+                console.warn('Failed to apply job growth rate modifiers:', error);
+            }
+        }
+
+        return baseGrowthRates;
     }
 
     /**

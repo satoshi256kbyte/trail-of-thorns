@@ -1612,27 +1612,12 @@ export class GameConfig implements IGameConfig {
             }
 
             console.log(`Skill debug setting updated: ${setting} = ${value}`);
-                case 'autoexecuteskills':
-            this.skillSystemConfig.testingConfig.autoExecuteSkills = value;
-            break;
-                case 'logallexecutions':
-            this.skillSystemConfig.testingConfig.logAllExecutions = value;
-            break;
-                case 'generatestatistics':
-            this.skillSystemConfig.testingConfig.generateStatistics = value;
-            break;
-                default:
-        console.warn(`Unknown skill debug setting: ${setting}`);
-return false;
-            }
-
-console.log(`Skill debug setting updated: ${setting} = ${value}`);
-return true;
+            return true;
 
         } catch (error) {
-    console.error(`Failed to update skill debug setting ${setting}:`, error);
-    return false;
-}
+            console.error(`Failed to update skill debug setting ${setting}:`, error);
+            return false;
+        }
     }
 
     /**
@@ -1640,212 +1625,211 @@ return true;
      * @returns Balance settings object
      */
     public getSkillSystemBalanceSettings(): any {
-    return { ...this.skillSystemConfig.balanceSettings };
-}
+        return { ...this.skillSystemConfig.balanceSettings };
+    }
 
     /**
      * Get current skill system debug settings
      * @returns Debug settings object
      */
     public getSkillSystemDebugSettings(): any {
-    return {
-        enableSkillDebug: this.skillSystemConfig.enableSkillDebug,
-        showConditionCheckDebug: this.skillSystemConfig.showConditionCheckDebug,
-        showExecutionDebug: this.skillSystemConfig.showExecutionDebug,
-        showEffectCalculationDebug: this.skillSystemConfig.showEffectCalculationDebug,
-        showSkillStatistics: this.skillSystemConfig.showSkillStatistics,
-        enableDetailedLogging: this.skillSystemConfig.enableDetailedLogging,
-        testingConfig: { ...this.skillSystemConfig.testingConfig }
-    };
-}
+        return {
+            enableSkillDebug: this.skillSystemConfig.enableSkillDebug,
+            showConditionCheckDebug: this.skillSystemConfig.showConditionCheckDebug,
+            showExecutionDebug: this.skillSystemConfig.showExecutionDebug,
+            showEffectCalculationDebug: this.skillSystemConfig.showEffectCalculationDebug,
+            showSkillStatistics: this.skillSystemConfig.showSkillStatistics,
+            enableDetailedLogging: this.skillSystemConfig.enableDetailedLogging,
+            testingConfig: { ...this.skillSystemConfig.testingConfig }
+        };
+    }
 
     /**
      * Reset skill system settings to defaults
      */
     public resetSkillSystemSettings(): void {
-    this.skillSystemConfig = JSON.parse(JSON.stringify(GameConfig.SKILL_SYSTEM));
-    console.log('GameConfig: Skill system settings reset to defaults');
-}
+        this.skillSystemConfig = JSON.parse(JSON.stringify(GameConfig.SKILL_SYSTEM));
+        console.log('GameConfig: Skill system settings reset to defaults');
+    }
 
     /**
      * 設定値をコンソールに出力する（デバッグ用）
      */
     public logConfig(): void {
-    console.log('Game Configuration:');
-    console.log(`- Screen Size: ${GameConfig.GAME_WIDTH}x${GameConfig.GAME_HEIGHT}`);
-    console.log(`- Background Color: ${GameConfig.BACKGROUND_COLOR}`);
-    console.log(`- Target FPS: ${GameConfig.TARGET_FPS}`);
-    console.log(`- Physics Debug: ${GameConfig.PHYSICS_DEBUG}`);
-    console.log('- Movement System:');
-    console.log(`  - Visual Feedback: ${this.movementSystemConfig.enableVisualFeedback}`);
-    console.log(`  - Path Preview: ${this.movementSystemConfig.enablePathPreview}`);
-    console.log(`  - Movement Animation: ${this.movementSystemConfig.enableMovementAnimation}`);
-    console.log(`  - Movement Debug: ${this.movementSystemConfig.enableMovementDebug}`);
-    console.log(`  - Animation Speed: ${this.movementSystemConfig.animationConfig.moveSpeed}px/s`);
-    console.log(`  - Turn Speed: ${this.movementSystemConfig.animationConfig.turnSpeed}rad/s`);
-    console.log(`  - Step Delay: ${this.movementSystemConfig.animationConfig.stepDelay}ms`);
-    console.log(
-        `  - Terrain Types: ${Object.keys(this.movementSystemConfig.terrainCosts).join(', ')}`
-    );
-    console.log('- Battle System:');
-    console.log(`  - Battle Animations: ${this.battleSystemConfig.enableBattleAnimations}`);
-    console.log(`  - Battle Sounds: ${this.battleSystemConfig.enableBattleSounds}`);
-    console.log(`  - Battle Debug: ${this.battleSystemConfig.enableBattleDebug}`);
-    console.log(
-        `  - Global Damage Multiplier: ${this.battleSystemConfig.damageModifiers.globalDamageMultiplier}`
-    );
-    );
-    console.log(
-        `  - Critical Damage Multiplier: ${this.battleSystemConfig.damageModifiers.criticalDamageMultiplier}`
-    );
-    console.log(
-        `  - Base Critical Chance: ${this.battleSystemConfig.balanceSettings.baseCriticalChance}%`
-    );
-    console.log(
-        `  - Base Evasion Chance: ${this.battleSystemConfig.balanceSettings.baseEvasionChance}%`
-    );
-    console.log(
-        `  - Experience Multiplier: ${this.battleSystemConfig.balanceSettings.experienceMultiplier}`
-    );
-    console.log(
-        `  - Attack Animation Duration: ${this.battleSystemConfig.animationConfig.attackAnimationDuration}ms`
-    );
-    console.log(`  - Animation Speed: ${this.battleSystemConfig.animationConfig.animationSpeed}x`);
-    console.log('- Recruitment System:');
-    console.log(
-        `  - Recruitment System Enabled: ${this.recruitmentSystemConfig.enableRecruitmentSystem}`
-    );
-    console.log(`  - Condition Display: ${this.recruitmentSystemConfig.enableConditionDisplay}`);
-    console.log(
-        `  - Progress Indicators: ${this.recruitmentSystemConfig.enableProgressIndicators}`
-    );
-    console.log(`  - NPC Indicators: ${this.recruitmentSystemConfig.enableNPCIndicators}`);
-    console.log(
-        `  - Recruitment Animations: ${this.recruitmentSystemConfig.enableRecruitmentAnimations}`
-    );
-    console.log(`  - Recruitment Debug: ${this.recruitmentSystemConfig.enableRecruitmentDebug}`);
-    console.log(`  - Detailed Logging: ${this.recruitmentSystemConfig.enableDetailedLogging}`);
-    console.log(
-        `  - NPC Survival Bonus: ${this.recruitmentSystemConfig.balanceSettings.npcSurvivalBonus}`
-    );
-    console.log(
-        `  - Condition Display Duration: ${this.recruitmentSystemConfig.balanceSettings.conditionDisplayDuration}ms`
-    );
-    console.log(
-        `  - Console Commands: ${this.recruitmentSystemConfig.consoleCommands.enableCommands}`
-    );
-    console.log(
-        `  - Command Prefix: ${this.recruitmentSystemConfig.consoleCommands.commandPrefix}`
-    );
-    console.log(
-        `  - Animation Speed: ${this.recruitmentSystemConfig.animationConfig.animationSpeed}x`
-    );
-    console.log('- Skill System:');
-    console.log(`  - Skill System Enabled: ${this.skillSystemConfig.enableSkillSystem}`);
-    console.log(`  - Skill Animations: ${this.skillSystemConfig.enableSkillAnimations}`);
-    console.log(`  - Skill Sounds: ${this.skillSystemConfig.enableSkillSounds}`);
-    console.log(`  - Skill Debug: ${this.skillSystemConfig.enableSkillDebug}`);
-    console.log(`  - Detailed Logging: ${this.skillSystemConfig.enableDetailedLogging}`);
-    console.log(
-        `  - Global Skill Damage Multiplier: ${this.skillSystemConfig.balanceSettings.globalSkillDamageMultiplier}`
-    );
-    console.log(
-        `  - Global Skill Healing Multiplier: ${this.skillSystemConfig.balanceSettings.globalSkillHealingMultiplier}`
-    );
-    console.log(
-        `  - Global MP Cost Multiplier: ${this.skillSystemConfig.balanceSettings.globalMPCostMultiplier}`
-    );
-    console.log(
-        `  - Max Skills Per Turn: ${this.skillSystemConfig.balanceSettings.maxSkillUsagePerTurn}`
-    );
-    console.log(
-        `  - Cast Animation Duration: ${this.skillSystemConfig.animationConfig.castAnimationDuration}ms`
-    );
-    console.log(
-        `  - Effect Animation Duration: ${this.skillSystemConfig.animationConfig.effectAnimationDuration}ms`
-    );
-    console.log(`  - Console Commands: ${this.skillSystemConfig.consoleCommands.enableCommands}`);
-    console.log(`  - Command Prefix: ${this.skillSystemConfig.consoleCommands.commandPrefix}`);
-    console.log(`  - Testing Mode: ${this.skillSystemConfig.testingConfig.enableTestingMode}`);
-    console.log(
-        `  - Animation Speed: ${this.skillSystemConfig.animationConfig.animationSpeed}x`
-    );
-}
+        console.log('Game Configuration:');
+        console.log(`- Screen Size: ${GameConfig.GAME_WIDTH}x${GameConfig.GAME_HEIGHT}`);
+        console.log(`- Background Color: ${GameConfig.BACKGROUND_COLOR}`);
+        console.log(`- Target FPS: ${GameConfig.TARGET_FPS}`);
+        console.log(`- Physics Debug: ${GameConfig.PHYSICS_DEBUG}`);
+        console.log('- Movement System:');
+        console.log(`  - Visual Feedback: ${this.movementSystemConfig.enableVisualFeedback}`);
+        console.log(`  - Path Preview: ${this.movementSystemConfig.enablePathPreview}`);
+        console.log(`  - Movement Animation: ${this.movementSystemConfig.enableMovementAnimation}`);
+        console.log(`  - Movement Debug: ${this.movementSystemConfig.enableMovementDebug}`);
+        console.log(`  - Animation Speed: ${this.movementSystemConfig.animationConfig.moveSpeed}px/s`);
+        console.log(`  - Turn Speed: ${this.movementSystemConfig.animationConfig.turnSpeed}rad/s`);
+        console.log(`  - Step Delay: ${this.movementSystemConfig.animationConfig.stepDelay}ms`);
+        console.log(
+            `  - Terrain Types: ${Object.keys(this.movementSystemConfig.terrainCosts).join(', ')}`
+        );
+        console.log('- Battle System:');
+        console.log(`  - Battle Animations: ${this.battleSystemConfig.enableBattleAnimations}`);
+        console.log(`  - Battle Sounds: ${this.battleSystemConfig.enableBattleSounds}`);
+        console.log(`  - Battle Debug: ${this.battleSystemConfig.enableBattleDebug}`);
+        console.log(
+            `  - Global Damage Multiplier: ${this.battleSystemConfig.damageModifiers.globalDamageMultiplier}`
+        );
+        console.log(
+            `  - Critical Damage Multiplier: ${this.battleSystemConfig.damageModifiers.criticalDamageMultiplier}`
+        );
+        console.log(
+            `  - Base Critical Chance: ${this.battleSystemConfig.balanceSettings.baseCriticalChance}%`
+        );
+        console.log(
+            `  - Base Evasion Chance: ${this.battleSystemConfig.balanceSettings.baseEvasionChance}%`
+        );
+        console.log(
+            `  - Experience Multiplier: ${this.battleSystemConfig.balanceSettings.experienceMultiplier}`
+        );
+        console.log(
+            `  - Attack Animation Duration: ${this.battleSystemConfig.animationConfig.attackAnimationDuration}ms`
+        );
+        console.log(`  - Animation Speed: ${this.battleSystemConfig.animationConfig.animationSpeed}x`);
+        console.log('- Recruitment System:');
+        console.log(
+            `  - Recruitment System Enabled: ${this.recruitmentSystemConfig.enableRecruitmentSystem}`
+        );
+        console.log(`  - Condition Display: ${this.recruitmentSystemConfig.enableConditionDisplay}`);
+        console.log(
+            `  - Progress Indicators: ${this.recruitmentSystemConfig.enableProgressIndicators}`
+        );
+        console.log(`  - NPC Indicators: ${this.recruitmentSystemConfig.enableNPCIndicators}`);
+        console.log(
+            `  - Recruitment Animations: ${this.recruitmentSystemConfig.enableRecruitmentAnimations}`
+        );
+        console.log(`  - Recruitment Debug: ${this.recruitmentSystemConfig.enableRecruitmentDebug}`);
+        console.log(`  - Detailed Logging: ${this.recruitmentSystemConfig.enableDetailedLogging}`);
+        console.log(
+            `  - NPC Survival Bonus: ${this.recruitmentSystemConfig.balanceSettings.npcSurvivalBonus}`
+        );
+        console.log(
+            `  - Condition Display Duration: ${this.recruitmentSystemConfig.balanceSettings.conditionDisplayDuration}ms`
+        );
+        console.log(
+            `  - Console Commands: ${this.recruitmentSystemConfig.consoleCommands.enableCommands}`
+        );
+        console.log(
+            `  - Command Prefix: ${this.recruitmentSystemConfig.consoleCommands.commandPrefix}`
+        );
+        console.log(
+            `  - Animation Speed: ${this.recruitmentSystemConfig.animationConfig.animationSpeed}x`
+        );
+        console.log('- Skill System:');
+        console.log(`  - Skill System Enabled: ${this.skillSystemConfig.enableSkillSystem}`);
+        console.log(`  - Skill Animations: ${this.skillSystemConfig.enableSkillAnimations}`);
+        console.log(`  - Skill Sounds: ${this.skillSystemConfig.enableSkillSounds}`);
+        console.log(`  - Skill Debug: ${this.skillSystemConfig.enableSkillDebug}`);
+        console.log(`  - Detailed Logging: ${this.skillSystemConfig.enableDetailedLogging}`);
+        console.log(
+            `  - Global Skill Damage Multiplier: ${this.skillSystemConfig.balanceSettings.globalSkillDamageMultiplier}`
+        );
+        console.log(
+            `  - Global Skill Healing Multiplier: ${this.skillSystemConfig.balanceSettings.globalSkillHealingMultiplier}`
+        );
+        console.log(
+            `  - Global MP Cost Multiplier: ${this.skillSystemConfig.balanceSettings.globalMPCostMultiplier}`
+        );
+        console.log(
+            `  - Max Skills Per Turn: ${this.skillSystemConfig.balanceSettings.maxSkillUsagePerTurn}`
+        );
+        console.log(
+            `  - Cast Animation Duration: ${this.skillSystemConfig.animationConfig.castAnimationDuration}ms`
+        );
+        console.log(
+            `  - Effect Animation Duration: ${this.skillSystemConfig.animationConfig.effectAnimationDuration}ms`
+        );
+        console.log(`  - Console Commands: ${this.skillSystemConfig.consoleCommands.enableCommands}`);
+        console.log(`  - Command Prefix: ${this.skillSystemConfig.consoleCommands.commandPrefix}`);
+        console.log(`  - Testing Mode: ${this.skillSystemConfig.testingConfig.enableTestingMode}`);
+        console.log(
+            `  - Animation Speed: ${this.skillSystemConfig.animationConfig.animationSpeed}x`
+        );
+    }
 
     /**
      * Validate experience system configuration
      * @returns True if valid, false otherwise
      */
     private validateExperienceSystemConfig(): boolean {
-    try {
-        const config = this.experienceSystemConfig;
+        try {
+            const config = this.experienceSystemConfig;
 
-        // Experience multiplier validation
-        if (config.experienceMultiplier < 0) {
-            console.error('Experience multiplier cannot be negative');
+            // Experience multiplier validation
+            if (config.experienceMultiplier < 0) {
+                console.error('Experience multiplier cannot be negative');
+                return false;
+            }
+
+            // Max level validation
+            if (config.balanceSettings.maxLevel <= 0 || config.balanceSettings.maxLevel > 99) {
+                console.error('Max level must be between 1 and 99');
+                return false;
+            }
+
+            // Base experience values validation
+            if (config.balanceSettings.baseAttackHitExperience < 0 ||
+                config.balanceSettings.baseEnemyDefeatExperience < 0 ||
+                config.balanceSettings.baseAllySupportExperience < 0 ||
+                config.balanceSettings.baseHealingExperience < 0) {
+                console.error('Base experience values cannot be negative');
+                return false;
+            }
+
+            // Animation duration validation
+            if (config.animationConfig.experiencePopupDuration < 0 ||
+                config.animationConfig.levelUpEffectDuration < 0 ||
+                config.animationConfig.statGrowthDisplayDuration < 0 ||
+                config.animationConfig.experienceBarAnimationDuration < 0) {
+                console.error('Animation durations cannot be negative');
+                return false;
+            }
+
+            // Animation speed validation
+            if (config.animationConfig.animationSpeed <= 0) {
+                console.error('Animation speed must be positive');
+                return false;
+            }
+
+            // Variance validation
+            if (config.balanceSettings.experienceVariance < 0 || config.balanceSettings.experienceVariance > 1) {
+                console.error('Experience variance must be between 0 and 1');
+                return false;
+            }
+
+            if (config.balanceSettings.statGrowthVariance < 0 || config.balanceSettings.statGrowthVariance > 1) {
+                console.error('Stat growth variance must be between 0 and 1');
+                return false;
+            }
+
+            // Statistics collection interval validation
+            if (config.statisticsConfig.collectionInterval <= 0) {
+                console.error('Statistics collection interval must be positive');
+                return false;
+            }
+
+            // Statistics history size validation
+            if (config.statisticsConfig.maxHistorySize <= 0) {
+                console.error('Statistics history size must be positive');
+                return false;
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('Experience system configuration validation failed:', error);
             return false;
         }
-
-        // Max level validation
-        if (config.balanceSettings.maxLevel <= 0 || config.balanceSettings.maxLevel > 99) {
-            console.error('Max level must be between 1 and 99');
-            return false;
-        }
-
-        // Base experience values validation
-        if (config.balanceSettings.baseAttackHitExperience < 0 ||
-            config.balanceSettings.baseEnemyDefeatExperience < 0 ||
-            config.balanceSettings.baseAllySupportExperience < 0 ||
-            config.balanceSettings.baseHealingExperience < 0) {
-            console.error('Base experience values cannot be negative');
-            return false;
-        }
-
-        // Animation duration validation
-        if (config.animationConfig.experiencePopupDuration < 0 ||
-            config.animationConfig.levelUpEffectDuration < 0 ||
-            config.animationConfig.statGrowthDisplayDuration < 0 ||
-            config.animationConfig.experienceBarAnimationDuration < 0) {
-            console.error('Animation durations cannot be negative');
-            return false;
-        }
-
-        // Animation speed validation
-        if (config.animationConfig.animationSpeed <= 0) {
-            console.error('Animation speed must be positive');
-            return false;
-        }
-
-        // Variance validation
-        if (config.balanceSettings.experienceVariance < 0 || config.balanceSettings.experienceVariance > 1) {
-            console.error('Experience variance must be between 0 and 1');
-            return false;
-        }
-
-        if (config.balanceSettings.statGrowthVariance < 0 || config.balanceSettings.statGrowthVariance > 1) {
-            console.error('Stat growth variance must be between 0 and 1');
-            return false;
-        }
-
-        // Statistics collection interval validation
-        if (config.statisticsConfig.collectionInterval <= 0) {
-            console.error('Statistics collection interval must be positive');
-            return false;
-        }
-
-        // Statistics history size validation
-        if (config.statisticsConfig.maxHistorySize <= 0) {
-            console.error('Statistics history size must be positive');
-            return false;
-        }
-
-        return true;
-
-    } catch (error) {
-        console.error('Experience system configuration validation failed:', error);
-        return false;
     }
-}
 
     /**
      * Update experience system balance settings dynamically
@@ -1854,81 +1838,80 @@ return true;
      * @returns Success status
      */
     public updateExperienceSystemBalanceSetting(setting: string, value: number): boolean {
-    try {
-        switch (setting.toLowerCase()) {
-            case 'experiencemultiplier':
-            case 'globalmultiplier':
-                if (value < 0) {
-                    console.error('Experience multiplier cannot be negative');
+        try {
+            switch (setting.toLowerCase()) {
+                case 'experiencemultiplier':
+                case 'globalmultiplier':
+                    if (value < 0) {
+                        console.error('Experience multiplier cannot be negative');
+                        return false;
+                    }
+                    this.experienceSystemConfig.experienceMultiplier = value;
+                    break;
+                case 'baseattackhitexperience':
+                case 'attackhitexp':
+                    if (value < 0) {
+                        console.error('Base attack hit experience cannot be negative');
+                        return false;
+                    }
+                    this.experienceSystemConfig.balanceSettings.baseAttackHitExperience = value;
+                    break;
+                case 'baseenemydefeatexperience':
+                case 'defeatexp':
+                    if (value < 0) {
+                        console.error('Base enemy defeat experience cannot be negative');
+                        return false;
+                    }
+                    this.experienceSystemConfig.balanceSettings.baseEnemyDefeatExperience = value;
+                    break;
+                case 'baseallysupportexperience':
+                case 'supportexp':
+                    if (value < 0) {
+                        console.error('Base ally support experience cannot be negative');
+                        return false;
+                    }
+                    this.experienceSystemConfig.balanceSettings.baseAllySupportExperience = value;
+                    break;
+                case 'basehealingexperience':
+                case 'healingexp':
+                    if (value < 0) {
+                        console.error('Base healing experience cannot be negative');
+                        return false;
+                    }
+                    this.experienceSystemConfig.balanceSettings.baseHealingExperience = value;
+                    break;
+                case 'maxlevel':
+                    if (value <= 0 || value > 99) {
+                        console.error('Max level must be between 1 and 99');
+                        return false;
+                    }
+                    this.experienceSystemConfig.balanceSettings.maxLevel = value;
+                    break;
+                case 'experiencevariance':
+                    if (value < 0 || value > 1) {
+                        console.error('Experience variance must be between 0 and 1');
+                        return false;
+                    }
+                    this.experienceSystemConfig.balanceSettings.experienceVariance = value;
+                    break;
+                case 'statgrowthvariance':
+                    if (value < 0 || value > 1) {
+                        console.error('Stat growth variance must be between 0 and 1');
+                        return false;
+                    }
+                    this.experienceSystemConfig.balanceSettings.statGrowthVariance = value;
+                    break;
+                default:
+                    console.warn(`Unknown experience system balance setting: ${setting}`);
                     return false;
-                }
-                this.experienceSystemConfig.experienceMultiplier = value;
-                break;
-            case 'baseattackhitexperience':
-            case 'attackhitexp':
-                if (value < 0) {
-                    console.error('Base attack hit experience cannot be negative');
-                    return false;
-                }
-                this.experienceSystemConfig.balanceSettings.baseAttackHitExperience = value;
-                break;
-            case 'baseenemydefeatexperience':
-            case 'defeatexp':
-                if (value < 0) {
-                    console.error('Base enemy defeat experience cannot be negative');
-                    return false;
-                }
-                this.experienceSystemConfig.balanceSettings.baseEnemyDefeatExperience = value;
-                break;
-            case 'baseallysupportexperience':
-            case 'supportexp':
-                if (value < 0) {
-                    console.error('Base ally support experience cannot be negative');
-                    return false;
-                }
-                this.experienceSystemConfig.balanceSettings.baseAllySupportExperience = value;
-                break;
-            case 'basehealingexperience':
-            case 'healingexp':
-                if (value < 0) {
-                    console.error('Base healing experience cannot be negative');
-                    return false;
-                }
-                this.experienceSystemConfig.balanceSettings.baseHealingExperience = value;
-                break;
-            case 'maxlevel':
-                if (value <= 0 || value > 99) {
-                    console.error('Max level must be between 1 and 99');
-                    return false;
-                }
-                this.experienceSystemConfig.balanceSettings.maxLevel = value;
-                break;
-            case 'experiencevariance':
-                if (value < 0 || value > 1) {
-                    console.error('Experience variance must be between 0 and 1');
-                    return false;
-                }
-                this.experienceSystemConfig.balanceSettings.experienceVariance = value;
-                break;
-            case 'statgrowthvariance':
-                if (value < 0 || value > 1) {
-                    console.error('Stat growth variance must be between 0 and 1');
-                    return false;
-                }
-                this.experienceSystemConfig.balanceSettings.statGrowthVariance = value;
-                break;
-            default:
-                console.warn(`Unknown experience system balance setting: ${setting}`);
-                return false;
+            }
+
+            console.log(`Experience system balance setting updated: ${setting} = ${value}`);
+            return true;
+
+        } catch (error) {
+            console.error(`Failed to update experience system balance setting ${setting}:`, error);
+            return false;
         }
-
-        console.log(`Experience system balance setting updated: ${setting} = ${value}`);
-        return true;
-
-    } catch (error) {
-        console.error(`Failed to update experience system balance setting ${setting}:`, error);
-        return false;
     }
-}
-}
 }

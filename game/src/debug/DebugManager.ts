@@ -119,6 +119,10 @@ export class DebugManager {
     private skillSystem?: any; // SkillSystem reference
     private skillDebugManager?: any; // SkillDebugManager reference
 
+    // Rose essence system references for debugging
+    private roseEssenceManager?: any; // RoseEssenceManager reference
+    private roseEssenceDebugManager?: any; // RoseEssenceDebugManager reference
+
     // Default configuration
     private static readonly DEFAULT_CONFIG: DebugConfig = {
         showGridCoordinates: true,
@@ -817,6 +821,16 @@ export class DebugManager {
             },
         });
 
+        // Rose essence system debug commands
+        this.addConsoleCommand({
+            name: 'rose',
+            description: 'Rose essence system debug commands',
+            parameters: ['<action>', '[...args]'],
+            handler: (action: string, ...args: any[]) => {
+                this.handleRoseEssenceDebugCommand(action, ...args);
+            },
+        });
+
         // Clear console
         this.addConsoleCommand({
             name: 'clear',
@@ -880,6 +894,24 @@ export class DebugManager {
     public setSkillDebugManager(skillDebugManager: any): void {
         this.skillDebugManager = skillDebugManager;
         console.log('DebugManager: Skill debug manager reference set');
+    }
+
+    /**
+     * Set rose essence manager reference for debugging
+     * @param roseEssenceManager - RoseEssenceManager instance
+     */
+    public setRoseEssenceManager(roseEssenceManager: any): void {
+        this.roseEssenceManager = roseEssenceManager;
+        console.log('DebugManager: Rose essence manager reference set');
+    }
+
+    /**
+     * Set rose essence debug manager reference
+     * @param roseEssenceDebugManager - RoseEssenceDebugManager instance
+     */
+    public setRoseEssenceDebugManager(roseEssenceDebugManager: any): void {
+        this.roseEssenceDebugManager = roseEssenceDebugManager;
+        console.log('DebugManager: Rose essence debug manager reference set');
     }
 
     /**
@@ -1863,16 +1895,137 @@ export class DebugManager {
             }
         });
 
+        // F5 - Toggle rose essence debug mode
+        this.scene.input.keyboard?.addKey('F5').on('down', () => {
+            if (this.isEnabled && this.roseEssenceDebugManager) {
+                this.roseEssenceDebugManager.enableDebugMode();
+            }
+        });
+
         // Tilde (~) - Open console (if implemented)
         this.scene.input.keyboard?.addKey('BACKTICK').on('down', () => {
             if (this.isEnabled) {
                 console.log('Debug console - type commands in browser console');
                 console.log(
-                    'Available commands: help, grid, stats, perf, camera, gamestate, character, movement, battle, clear'
+                    'Available commands: help, grid, stats, perf, camera, gamestate, character, movement, battle, skill, rose, clear'
                 );
                 console.log('Movement commands: movement help');
                 console.log('Battle commands: battle help');
+                console.log('Skill commands: skill help');
+                console.log('Rose essence commands: rose help');
             }
         });
+    }
+
+    /**
+     * Handle rose essence system debug commands
+     * @param action - Debug action to perform
+     * @param args - Additional arguments
+     */
+    private handleRoseEssenceDebugCommand(action: string, ...args: any[]): void {
+        if (!this.roseEssenceManager) {
+            console.warn('DebugManager: Rose essence manager not available');
+            return;
+        }
+
+        switch (action.toLowerCase()) {
+            case 'show':
+                console.log(`Current rose essence: ${this.roseEssenceManager.getCurrentRoseEssence()}`);
+                break;
+
+            case 'add':
+                const amount = parseInt(args[0]) || 10;
+                const sourceType = args[1] || 'debug';
+                const sourceId = args[2] || 'console';
+                try {
+                    const source = {
+                        type: sourceType,
+                        sourceId: sourceId
+                    };
+                    const gained = this.roseEssenceManager.addRoseEssence(amount, source);
+                    console.log(`Added ${gained} rose essence. Current: ${this.roseEssenceManager.getCurrentRoseEssence()}`);
+                } catch (error) {
+                    console.error('Error adding rose essence:', error);
+                }
+                break;
+
+            case 'spend':
+                const spendAmount = parseInt(args[0]) || 10;
+                const purpose = args[1] || 'debug';
+                const characterId = args[2];
+                const success = this.roseEssenceManager.consumeRoseEssence(spendAmount, purpose, characterId);
+                console.log(`${success ? 'Successfully spent' : 'Failed to spend'} ${spendAmount} rose essence. Current: ${this.roseEssenceManager.getCurrentRoseEssence()}`);
+                break;
+
+            case 'history':
+                const limit = parseInt(args[0]) || 10;
+                const history = this.roseEssenceManager.getEssenceHistory(limit);
+                console.log(`Rose essence history (last ${limit} transactions):`);
+                history.forEach((transaction, index) => {
+                    const type = transaction.type === 'gain' ? 'Gained' : 'Spent';
+                    const time = transaction.timestamp.toLocaleString();
+                    console.log(`${index + 1}. [${time}] ${type}: ${transaction.amount} - ${transaction.description}`);
+                });
+                break;
+
+            case 'stats':
+                const stats = this.roseEssenceManager.getEssenceStatistics();
+                console.log('Rose essence statistics:');
+                console.log(`  Current: ${stats.current}`);
+                console.log(`  Total earned: ${stats.totalEarned}`);
+                console.log(`  Total spent: ${stats.totalSpent}`);
+                console.log(`  Transaction count: ${stats.transactionCount}`);
+                console.log(`  Average gain: ${stats.averageGain.toFixed(1)}`);
+                console.log(`  Average spend: ${stats.averageSpend.toFixed(1)}`);
+                break;
+
+            case 'boss':
+                const bossType = args[0] || 'minor';
+                const isFirstTime = args[1] === 'true' || args[1] === '1';
+                if (this.roseEssenceDebugManager) {
+                    this.roseEssenceDebugManager.runTestScenario('boss_progression');
+                } else {
+                    console.log('Rose essence debug manager not available for boss simulation');
+                }
+                break;
+
+            case 'test':
+                const scenario = args[0] || 'basic_flow';
+                if (this.roseEssenceDebugManager) {
+                    this.roseEssenceDebugManager.runTestScenario(scenario);
+                } else {
+                    console.log('Rose essence debug manager not available for test scenarios');
+                }
+                break;
+
+            case 'reset':
+                this.roseEssenceManager.reset();
+                console.log('Rose essence data reset');
+                break;
+
+            case 'clear':
+                this.roseEssenceManager.clearHistory();
+                console.log('Rose essence history cleared');
+                break;
+
+            case 'help':
+                console.log('Rose essence debug commands:');
+                console.log('  rose show - Show current rose essence amount');
+                console.log('  rose add [amount] [sourceType] [sourceId] - Add rose essence');
+                console.log('  rose spend [amount] [purpose] [characterId] - Spend rose essence');
+                console.log('  rose history [limit] - Show transaction history');
+                console.log('  rose stats - Show statistics');
+                console.log('  rose boss [type] [firstTime] - Simulate boss defeat');
+                console.log('  rose test [scenario] - Run test scenario');
+                console.log('  rose reset - Reset all data');
+                console.log('  rose clear - Clear history');
+                console.log('  rose help - Show this help');
+                break;
+
+            default:
+                console.warn(`Unknown rose essence debug action: ${action}`);
+                console.log('Use "rose help" for available commands');
+                break;
+        }
     }
 }

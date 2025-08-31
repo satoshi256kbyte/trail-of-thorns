@@ -41,6 +41,7 @@ import { ExperiencePerformanceManager } from './ExperiencePerformanceManager';
 import { ExperienceCache } from './ExperienceCache';
 import { ExperienceObjectPool } from './ExperienceObjectPool';
 import { ExperienceBatchProcessor } from './ExperienceBatchProcessor';
+import { JobExperienceIntegration } from './JobExperienceIntegration';
 import { SaveDataManager } from '../SaveDataManager';
 
 /**
@@ -65,6 +66,9 @@ export class ExperienceSystem {
     private cache: ExperienceCache;
     private objectPool: ExperienceObjectPool;
     private batchProcessor: ExperienceBatchProcessor;
+
+    // 職業システム統合
+    private jobIntegration: JobExperienceIntegration;
 
     // システム状態
     private systemState: ExperienceSystemState;
@@ -98,6 +102,13 @@ export class ExperienceSystem {
 
         // 最適化コンポーネントを相互連携
         this.initializePerformanceOptimization();
+
+        // 職業システム統合を初期化
+        this.jobIntegration = new JobExperienceIntegration();
+        this.jobIntegration.setExperienceSystem(this);
+
+        // LevelUpProcessorに職業統合を設定
+        this.levelUpProcessor.setJobIntegration(this.jobIntegration);
 
         // システム状態を初期化
         this.systemState = {
@@ -249,9 +260,17 @@ export class ExperienceSystem {
 
         try {
             // 経験値計算を実行（パフォーマンス測定付き）
-            const calculationResult = this.measureExperienceCalculation('award-experience', () => {
+            let calculationResult = this.measureExperienceCalculation('award-experience', () => {
                 return this.calculateExperienceGain(action, context);
             });
+
+            // 職業による経験値修正を適用
+            calculationResult = this.jobIntegration.applyJobExperienceModifiers(
+                characterId,
+                calculationResult,
+                action,
+                context
+            );
 
             if (calculationResult.finalAmount < 0) {
                 const recoveryResult = this.errorHandler.handleError(
@@ -381,9 +400,12 @@ export class ExperienceSystem {
                 return null;
             }
 
+            // 職業情報を取得
+            const jobClass = this.getCharacterJobClass(characterId);
+
             // レベルアップ処理を実行（パフォーマンス測定付き）
             const levelUpResult = this.measureLevelUpProcessing('process-levelup', () => {
-                return this.levelUpProcessor.processLevelUp(character);
+                return this.levelUpProcessor.processLevelUp(character, jobClass);
             });
 
             // エラーハンドラーにバックアップを保存
@@ -723,6 +745,54 @@ export class ExperienceSystem {
      */
     public getPersistenceManager(): ExperiencePersistenceManager | undefined {
         return this.persistenceManager;
+    }
+
+    /**
+     * 職業システムの参照を設定
+     * 要件: 1.1, 1.4
+     */
+    public setJobSystem(jobSystem: any): void {
+        this.jobIntegration.setJobSystem(jobSystem);
+    }
+
+    /**
+     * キャラクターの職業クラスを取得
+     * 要件: 1.1, 1.4
+     */
+    public getCharacterJobClass(characterId: string): string | undefined {
+        try {
+            const job = this.jobIntegration.getJobSystem()?.getCharacterJob(characterId);
+            return job?.id || job?.category;
+        } catch (error) {
+            console.warn(`Failed to get job class for character ${characterId}:`, error);
+            return undefined;
+        }
+    }
+
+    /**
+     * 職業統合設定を更新
+     * 要件: 1.1, 1.4
+     */
+    public updateJobIntegrationConfig(config: any): void {
+        this.jobIntegration.updateConfig(config);
+    }
+
+    /**
+     * 職業変更時の経験値処理
+     * 要件: 6.2, 6.4
+     */
+    public processJobChangeExperience(
+        characterId: string,
+        oldJobId: string,
+        newJobId: string,
+        jobChangeResult: any
+    ): any {
+        return this.jobIntegration.processJobChangeExperience(
+            characterId,
+            oldJobId,
+            newJobId,
+            jobChangeResult
+        );
     }
 
     /**
@@ -1576,172 +1646,172 @@ export class ExperienceSystem {
             }
         };
     }
-}
- /**
+
+    /**
      * パフォーマンス最適化を初期化
      * 要件: 8.1, 8.2, 8.3, 8.4, 8.5
      */
     private initializePerformanceOptimization(): void {
-    // バッチプロセッサーに経験値システムを設定
-    this.batchProcessor.setExperienceSystem(this);
+        // バッチプロセッサーに経験値システムを設定
+        this.batchProcessor.setExperienceSystem(this);
 
-    // パフォーマンスマネージャーに最適化コンポーネントを登録
-    this.performanceManager.registerOptimizationComponents({
-        cacheManager: this.cache,
-        objectPoolManager: this.objectPool,
-        batchProcessor: this.batchProcessor
-    });
+        // パフォーマンスマネージャーに最適化コンポーネントを登録
+        this.performanceManager.registerOptimizationComponents({
+            cacheManager: this.cache,
+            objectPoolManager: this.objectPool,
+            batchProcessor: this.batchProcessor
+        });
 
-    // パフォーマンス監視を開始
-    this.performanceManager.startMonitoring();
+        // パフォーマンス監視を開始
+        this.performanceManager.startMonitoring();
 
-    // パフォーマンスアラートのコールバックを設定
-    this.performanceManager.onPerformanceAlert((alert) => {
-        console.warn(`Experience System Performance Alert [${alert.severity}]: ${alert.message}`);
+        // パフォーマンスアラートのコールバックを設定
+        this.performanceManager.onPerformanceAlert((alert) => {
+            console.warn(`Experience System Performance Alert [${alert.severity}]: ${alert.message}`);
 
-        // UIにユーザー通知を表示
-        const notification: UserNotification = {
-            type: alert.type === 'performance' ? 'warning' : 'error',
-            title: 'Performance Alert',
-            message: alert.message,
-            details: alert.suggestions.join(', '),
-            autoHide: true,
-            duration: 5000
-        };
+            // UIにユーザー通知を表示
+            const notification: UserNotification = {
+                type: alert.type === 'performance' ? 'warning' : 'error',
+                title: 'Performance Alert',
+                message: alert.message,
+                details: alert.suggestions.join(', '),
+                autoHide: true,
+                duration: 5000
+            };
 
-        this.experienceUI.showUserNotification(notification);
-    });
+            this.experienceUI.showUserNotification(notification);
+        });
 
-    console.log('Experience system performance optimization initialized');
-}
+        console.log('Experience system performance optimization initialized');
+    }
 
     /**
      * 経験値計算のパフォーマンス測定付きラッパー
      * 要件: 8.1
      */
     private measureExperienceCalculation<T>(operation: string, fn: () => T): T {
-    this.performanceManager.startTimer('experience-calculation');
-    try {
-        const result = fn();
-        return result;
-    } finally {
-        this.performanceManager.endTimer('experience-calculation');
+        this.performanceManager.startTimer('experience-calculation');
+        try {
+            const result = fn();
+            return result;
+        } finally {
+            this.performanceManager.endTimer('experience-calculation');
+        }
     }
-}
 
     /**
      * レベルアップ処理のパフォーマンス測定付きラッパー
      * 要件: 8.2
      */
     private measureLevelUpProcessing<T>(operation: string, fn: () => T): T {
-    this.performanceManager.startTimer('levelup-processing');
-    try {
-        const result = fn();
-        return result;
-    } finally {
-        this.performanceManager.endTimer('levelup-processing');
+        this.performanceManager.startTimer('levelup-processing');
+        try {
+            const result = fn();
+            return result;
+        } finally {
+            this.performanceManager.endTimer('levelup-processing');
+        }
     }
-}
 
     /**
      * UI更新のパフォーマンス測定付きラッパー
      * 要件: 8.3
      */
     private measureUIUpdate<T>(operation: string, fn: () => T): T {
-    this.performanceManager.startTimer('ui-update');
-    try {
-        const result = fn();
-        return result;
-    } finally {
-        this.performanceManager.endTimer('ui-update');
+        this.performanceManager.startTimer('ui-update');
+        try {
+            const result = fn();
+            return result;
+        } finally {
+            this.performanceManager.endTimer('ui-update');
+        }
     }
-}
 
     /**
      * キャッシュ付き経験値テーブル参照
      * 要件: 8.1, 8.4
      */
     private getCachedRequiredExperience(level: number): number {
-    return this.cache.getRequiredExperience(level);
-}
+        return this.cache.getRequiredExperience(level);
+    }
 
     /**
      * キャッシュ付き経験値獲得量参照
      * 要件: 8.1, 8.4
      */
     private getCachedExperienceGain(source: string, difficulty: string = 'normal'): number {
-    return this.cache.getExperienceGain(source, difficulty);
-}
+        return this.cache.getExperienceGain(source, difficulty);
+    }
 
     /**
      * キャッシュ付き成長率参照
      * 要件: 8.1, 8.4
      */
     private getCachedGrowthRates(characterType: string): GrowthRates {
-    return this.cache.getGrowthRates(characterType);
-}
+        return this.cache.getGrowthRates(characterType);
+    }
 
     /**
      * オブジェクトプール付きレベルアップエフェクト表示
      * 要件: 8.3, 8.5
      */
-    private showLevelUpEffectWithPool(character: Unit, result: LevelUpResult): Promise < void> {
-    return this.measureUIUpdate('levelup-effect', () => {
-        const effect = this.objectPool.getLevelUpEffect();
+    private showLevelUpEffectWithPool(character: Unit, result: LevelUpResult): Promise<void> {
+        return this.measureUIUpdate('levelup-effect', () => {
+            const effect = this.objectPool.getLevelUpEffect();
 
-        try {
-            effect.setupEffect(result.oldLevel, result.newLevel);
-            const characterPosition = this.getCharacterScreenPosition(character);
-            effect.setPosition(characterPosition.x, characterPosition.y);
+            try {
+                effect.setupEffect(result.oldLevel, result.newLevel);
+                const characterPosition = this.getCharacterScreenPosition(character);
+                effect.setPosition(characterPosition.x, characterPosition.y);
 
-            // アニメーション完了後にプールに返却
-            return new Promise<void>((resolve) => {
-                this.scene.time.delayedCall(2000, () => {
-                    this.objectPool.returnLevelUpEffect(effect);
-                    resolve();
+                // アニメーション完了後にプールに返却
+                return new Promise<void>((resolve) => {
+                    this.scene.time.delayedCall(2000, () => {
+                        this.objectPool.returnLevelUpEffect(effect);
+                        resolve();
+                    });
                 });
-            });
-        } catch (error) {
-            // エラー時もプールに返却
-            this.objectPool.returnLevelUpEffect(effect);
-            throw error;
-        }
-    });
-}
+            } catch (error) {
+                // エラー時もプールに返却
+                this.objectPool.returnLevelUpEffect(effect);
+                throw error;
+            }
+        });
+    }
 
     /**
      * バッチ処理で複数キャラクターの経験値を処理
      * 要件: 8.2
      */
     public async processBatchExperience(
-    requests: Array<{
-        characterId: string;
-        action: ExperienceAction;
-        context: ExperienceContext;
-        priority?: number;
-    }>
-): Promise < void> {
-    const batchRequests = requests.map(req => ({
-        characterId: req.characterId,
-        action: req.action,
-        context: req.context,
-        priority: req.priority || 0
-    }));
+        requests: Array<{
+            characterId: string;
+            action: ExperienceAction;
+            context: ExperienceContext;
+            priority?: number;
+        }>
+    ): Promise<void> {
+        const batchRequests = requests.map(req => ({
+            characterId: req.characterId,
+            action: req.action,
+            context: req.context,
+            priority: req.priority || 0
+        }));
 
-    this.performanceManager.startTimer('batch-processing');
+        this.performanceManager.startTimer('batch-processing');
 
-    try {
-        this.batchProcessor.addRequests(batchRequests);
-        const result = await this.batchProcessor.processBatch();
+        try {
+            this.batchProcessor.addRequests(batchRequests);
+            const result = await this.batchProcessor.processBatch();
 
-        console.log(`Batch processing completed: ${result.successfulProcessed}/${result.totalProcessed} successful`);
+            console.log(`Batch processing completed: ${result.successfulProcessed}/${result.totalProcessed} successful`);
 
-        if(result.errors.length > 0) {
-    console.warn('Batch processing errors:', result.errors);
-}
+            if (result.errors.length > 0) {
+                console.warn('Batch processing errors:', result.errors);
+            }
         } finally {
-    this.performanceManager.endTimer('batch-processing');
-}
+            this.performanceManager.endTimer('batch-processing');
+        }
     }
 
     /**
@@ -1749,127 +1819,127 @@ export class ExperienceSystem {
      * 要件: 8.1, 8.2, 8.3, 8.4, 8.5
      */
     public getPerformanceMetrics(): {
-    performance: any;
-    cache: any;
-    objectPool: any;
-    batchProcessor: any;
-} {
-    return {
-        performance: this.performanceManager.getMetrics(),
-        cache: this.cache.getStatistics(),
-        objectPool: this.objectPool.getStatistics(),
-        batchProcessor: this.batchProcessor.getStatistics()
-    };
-}
+        performance: any;
+        cache: any;
+        objectPool: any;
+        batchProcessor: any;
+    } {
+        return {
+            performance: this.performanceManager.getMetrics(),
+            cache: this.cache.getStatistics(),
+            objectPool: this.objectPool.getStatistics(),
+            batchProcessor: this.batchProcessor.getStatistics()
+        };
+    }
 
     /**
      * パフォーマンス最適化を手動実行
      * 要件: 8.1, 8.2, 8.3, 8.4, 8.5
      */
-    public async optimizePerformance(): Promise < void> {
-    console.log('Starting experience system performance optimization...');
+    public async optimizePerformance(): Promise<void> {
+        console.log('Starting experience system performance optimization...');
 
-    const results = await Promise.allSettled([
-        this.performanceManager.performOptimization(),
-        this.cache.optimize(),
-        this.objectPool.optimize(),
-        this.batchProcessor.optimize()
-    ]);
+        const results = await Promise.allSettled([
+            this.performanceManager.performOptimization(),
+            this.cache.optimize(),
+            this.objectPool.optimize(),
+            this.batchProcessor.optimize()
+        ]);
 
-    results.forEach((result, index) => {
-        const componentNames = ['PerformanceManager', 'Cache', 'ObjectPool', 'BatchProcessor'];
-        if (result.status === 'fulfilled') {
-            console.log(`${componentNames[index]} optimization completed`);
-        } else {
-            console.error(`${componentNames[index]} optimization failed:`, result.reason);
-        }
-    });
+        results.forEach((result, index) => {
+            const componentNames = ['PerformanceManager', 'Cache', 'ObjectPool', 'BatchProcessor'];
+            if (result.status === 'fulfilled') {
+                console.log(`${componentNames[index]} optimization completed`);
+            } else {
+                console.error(`${componentNames[index]} optimization failed:`, result.reason);
+            }
+        });
 
-    console.log('Experience system performance optimization completed');
-}
+        console.log('Experience system performance optimization completed');
+    }
 
     /**
      * パフォーマンスレポートを生成
      * 要件: 8.1, 8.2, 8.3, 8.4, 8.5
      */
     public generatePerformanceReport(): string {
-    const performanceReport = this.performanceManager.generatePerformanceReport();
-    const cacheStats = this.cache.getStatistics();
-    const poolStats = this.objectPool.getStatistics();
-    const batchStats = this.batchProcessor.getStatistics();
+        const performanceReport = this.performanceManager.generatePerformanceReport();
+        const cacheStats = this.cache.getStatistics();
+        const poolStats = this.objectPool.getStatistics();
+        const batchStats = this.batchProcessor.getStatistics();
 
-    const report = [
-        performanceReport,
-        '',
-        '--- Cache Statistics ---',
-        `Total Requests: ${cacheStats.totalRequests}`,
-        `Cache Hits: ${cacheStats.cacheHits}`,
-        `Hit Rate: ${(cacheStats.hitRate * 100).toFixed(1)}%`,
-        `Entry Count: ${cacheStats.entryCount}`,
-        `Total Size: ${(cacheStats.totalSize / 1024).toFixed(1)}KB`,
-        '',
-        '--- Object Pool Statistics ---',
-        `Total Created: ${poolStats.totalCreated}`,
-        `Total Reused: ${poolStats.totalReused}`,
-        `Reuse Rate: ${(poolStats.reuseRate * 100).toFixed(1)}%`,
-        `Current Active: ${poolStats.currentActive}`,
-        `Current Inactive: ${poolStats.currentInactive}`,
-        `Peak Usage: ${poolStats.peakUsage}`,
-        '',
-        '--- Batch Processor Statistics ---',
-        `Total Batches: ${batchStats.totalBatches}`,
-        `Total Operations: ${batchStats.totalOperations}`,
-        `Average Batch Size: ${batchStats.averageBatchSize.toFixed(1)}`,
-        `Average Processing Time: ${batchStats.averageProcessingTime.toFixed(2)}ms`,
-        `Success Rate: ${(batchStats.successRate * 100).toFixed(1)}%`,
-        `Throughput: ${batchStats.throughputPerSecond.toFixed(1)} ops/sec`
-    ];
+        const report = [
+            performanceReport,
+            '',
+            '--- Cache Statistics ---',
+            `Total Requests: ${cacheStats.totalRequests}`,
+            `Cache Hits: ${cacheStats.cacheHits}`,
+            `Hit Rate: ${(cacheStats.hitRate * 100).toFixed(1)}%`,
+            `Entry Count: ${cacheStats.entryCount}`,
+            `Total Size: ${(cacheStats.totalSize / 1024).toFixed(1)}KB`,
+            '',
+            '--- Object Pool Statistics ---',
+            `Total Created: ${poolStats.totalCreated}`,
+            `Total Reused: ${poolStats.totalReused}`,
+            `Reuse Rate: ${(poolStats.reuseRate * 100).toFixed(1)}%`,
+            `Current Active: ${poolStats.currentActive}`,
+            `Current Inactive: ${poolStats.currentInactive}`,
+            `Peak Usage: ${poolStats.peakUsage}`,
+            '',
+            '--- Batch Processor Statistics ---',
+            `Total Batches: ${batchStats.totalBatches}`,
+            `Total Operations: ${batchStats.totalOperations}`,
+            `Average Batch Size: ${batchStats.averageBatchSize.toFixed(1)}`,
+            `Average Processing Time: ${batchStats.averageProcessingTime.toFixed(2)}ms`,
+            `Success Rate: ${(batchStats.successRate * 100).toFixed(1)}%`,
+            `Throughput: ${batchStats.throughputPerSecond.toFixed(1)} ops/sec`
+        ];
 
-    return report.join('\n');
-}
+        return report.join('\n');
+    }
 
     /**
      * メモリ使用量を記録
      * 要件: 8.5
      */
     private recordMemoryUsage(objectType: string, size: number): void {
-    this.performanceManager.recordMemoryUsage(objectType, size);
-}
+        this.performanceManager.recordMemoryUsage(objectType, size);
+    }
 
     /**
      * メモリ解放を記録
      * 要件: 8.5
      */
     private recordMemoryRelease(objectType: string, size: number): void {
-    this.performanceManager.recordMemoryRelease(objectType, size);
-}
+        this.performanceManager.recordMemoryRelease(objectType, size);
+    }
 
     /**
      * システム終了時のリソース解放
      * 要件: 8.5
      */
     public dispose(): void {
-    console.log('Disposing experience system...');
+        console.log('Disposing experience system...');
 
-    // パフォーマンス監視を停止
-    this.performanceManager.stopMonitoring();
+        // パフォーマンス監視を停止
+        this.performanceManager.stopMonitoring();
 
-    // 各コンポーネントのリソースを解放
-    this.cache.dispose();
-    this.objectPool.dispose();
-    this.batchProcessor.clearQueue();
+        // 各コンポーネントのリソースを解放
+        this.cache.dispose();
+        this.objectPool.dispose();
+        this.batchProcessor.clearQueue();
 
-    // UI要素をクリア
-    this.experienceUI.clearAll();
+        // UI要素をクリア
+        this.experienceUI.clearAll();
 
-    // イベントリスナーを削除
-    this.eventEmitter.removeAllListeners();
+        // イベントリスナーを削除
+        this.eventEmitter.removeAllListeners();
 
-    // 内部状態をクリア
-    this.battleExperienceQueue.clear();
-    this.pendingLevelUps.clear();
-    this.systemState.activeCharacters.clear();
+        // 内部状態をクリア
+        this.battleExperienceQueue.clear();
+        this.pendingLevelUps.clear();
+        this.systemState.activeCharacters.clear();
 
-    console.log('Experience system disposed');
-}
+        console.log('Experience system disposed');
+    }
 }

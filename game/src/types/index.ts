@@ -27,5 +27,8 @@ export * from './ai';
 // Experience system types
 export * from './experience';
 
+// Job system types
+export * from './job';
+
 // Stage data types
 export * from './StageData';

@@ -98,6 +98,13 @@ export interface GameSaveData {
     // ゲーム設定
     gameSettings: GameSettingsSaveData;
 
+    // 職業システム情報
+    jobSystem?: {
+        characterJobs: Record<string, any>;
+        roseEssenceData: any;
+        roseEssenceTransactions: any[];
+    };
+
     // 統計情報
     statistics: {
         totalBattles: number;

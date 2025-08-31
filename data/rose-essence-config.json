@@ -1,0 +1,70 @@
+{
+    "version": "1.0.0",
+    "currentAmount": 0,
+    "totalEarned": 0,
+    "totalSpent": 0,
+    "sources": {
+        "boss_defeat": {
+            "baseAmount": 50,
+            "difficultyMultiplier": 1.5,
+            "firstTimeBonus": 25
+        },
+        "stage_clear": {
+            "baseAmount": 10,
+            "difficultyMultiplier": 1.2,
+            "firstTimeBonus": 5
+        },
+        "special_event": {
+            "baseAmount": 30,
+            "difficultyMultiplier": 1.0,
+            "firstTimeBonus": 15
+        },
+        "item_use": {
+            "baseAmount": 20,
+            "difficultyMultiplier": 1.0,
+            "firstTimeBonus": 0
+        }
+    },
+    "costs": {
+        "rankUp": {
+            "warrior": {
+                "2": 10,
+                "3": 25,
+                "4": 50,
+                "5": 100
+            },
+            "mage": {
+                "2": 12,
+                "3": 30,
+                "4": 60,
+                "5": 120
+            },
+            "archer": {
+                "2": 11,
+                "3": 28,
+                "4": 55,
+                "5": 110
+            },
+            "healer": {
+                "2": 13,
+                "3": 32,
+                "4": 65,
+                "5": 130
+            },
+            "thief": {
+                "2": 9,
+                "3": 23,
+                "4": 45,
+                "5": 90
+            },
+            "special": {
+                "2": 20,
+                "3": 50,
+                "4": 100,
+                "5": 200
+            }
+        },
+        "jobChange": 5,
+        "skillUnlock": 15
+    }
+}

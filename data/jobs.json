@@ -1,0 +1,1187 @@
+{
+    "version": "1.0.0",
+    "jobs": [
+        {
+            "id": "warrior",
+            "name": "戦士",
+            "description": "物理攻撃と防御に特化した職業。高いHP・攻撃力・防御力を持つが、魔法系能力は低い。",
+            "category": "warrior",
+            "maxRank": 5,
+            "statModifiers": {
+                "1": {
+                    "hp": 8,
+                    "mp": 2,
+                    "attack": 5,
+                    "defense": 4,
+                    "speed": -1,
+                    "skill": 2,
+                    "luck": 1
+                },
+                "2": {
+                    "hp": 16,
+                    "mp": 4,
+                    "attack": 10,
+                    "defense": 8,
+                    "speed": -2,
+                    "skill": 4,
+                    "luck": 2
+                },
+                "3": {
+                    "hp": 24,
+                    "mp": 6,
+                    "attack": 15,
+                    "defense": 12,
+                    "speed": -3,
+                    "skill": 6,
+                    "luck": 3
+                },
+                "4": {
+                    "hp": 32,
+                    "mp": 8,
+                    "attack": 20,
+                    "defense": 16,
+                    "speed": -4,
+                    "skill": 8,
+                    "luck": 4
+                },
+                "5": {
+                    "hp": 40,
+                    "mp": 10,
+                    "attack": 25,
+                    "defense": 20,
+                    "speed": -5,
+                    "skill": 10,
+                    "luck": 5
+                }
+            },
+            "availableSkills": {
+                "1": [
+                    "sword_slash",
+                    "guard"
+                ],
+                "2": [
+                    "sword_slash",
+                    "guard",
+                    "power_strike",
+                    "shield_bash"
+                ],
+                "3": [
+                    "sword_slash",
+                    "guard",
+                    "power_strike",
+                    "shield_bash",
+                    "berserker_rage",
+                    "defensive_stance"
+                ],
+                "4": [
+                    "sword_slash",
+                    "guard",
+                    "power_strike",
+                    "shield_bash",
+                    "berserker_rage",
+                    "defensive_stance",
+                    "sword_mastery",
+                    "iron_will"
+                ],
+                "5": [
+                    "sword_slash",
+                    "guard",
+                    "power_strike",
+                    "shield_bash",
+                    "berserker_rage",
+                    "defensive_stance",
+                    "sword_mastery",
+                    "iron_will",
+                    "legendary_strike",
+                    "unbreakable_defense"
+                ]
+            },
+            "rankUpRequirements": {
+                "2": {
+                    "roseEssenceCost": 10,
+                    "levelRequirement": 5,
+                    "prerequisiteSkills": [
+                        "sword_slash"
+                    ]
+                },
+                "3": {
+                    "roseEssenceCost": 25,
+                    "levelRequirement": 12,
+                    "prerequisiteSkills": [
+                        "power_strike",
+                        "guard"
+                    ]
+                },
+                "4": {
+                    "roseEssenceCost": 50,
+                    "levelRequirement": 20,
+                    "prerequisiteSkills": [
+                        "berserker_rage"
+                    ],
+                    "completedStages": [
+                        "stage_boss_1"
+                    ]
+                },
+                "5": {
+                    "roseEssenceCost": 100,
+                    "levelRequirement": 30,
+                    "prerequisiteSkills": [
+                        "sword_mastery",
+                        "iron_will"
+                    ],
+                    "completedStages": [
+                        "stage_boss_2"
+                    ],
+                    "defeatedBosses": [
+                        "demon_lord"
+                    ]
+                }
+            },
+            "growthRateModifiers": {
+                "1": {
+                    "hp": 15,
+                    "mp": 5,
+                    "attack": 12,
+                    "defense": 10,
+                    "speed": 3,
+                    "skill": 6,
+                    "luck": 4
+                },
+                "2": {
+                    "hp": 17,
+                    "mp": 7,
+                    "attack": 14,
+                    "defense": 12,
+                    "speed": 5,
+                    "skill": 8,
+                    "luck": 6
+                },
+                "3": {
+                    "hp": 19,
+                    "mp": 9,
+                    "attack": 16,
+                    "defense": 14,
+                    "speed": 7,
+                    "skill": 10,
+                    "luck": 8
+                },
+                "4": {
+                    "hp": 21,
+                    "mp": 11,
+                    "attack": 18,
+                    "defense": 16,
+                    "speed": 9,
+                    "skill": 12,
+                    "luck": 10
+                },
+                "5": {
+                    "hp": 23,
+                    "mp": 13,
+                    "attack": 20,
+                    "defense": 18,
+                    "speed": 11,
+                    "skill": 14,
+                    "luck": 12
+                }
+            },
+            "jobTraits": [
+                {
+                    "id": "warrior_fortitude",
+                    "name": "戦士の不屈",
+                    "description": "HP減少時に攻撃力が上昇する",
+                    "effect": {
+                        "type": "damage_bonus",
+                        "value": 10,
+                        "target": "self",
+                        "condition": "hp_below_50_percent"
+                    }
+                }
+            ],
+            "visual": {
+                "iconPath": "assets/icons/jobs/warrior.png",
+                "spriteModifications": [
+                    {
+                        "type": "color",
+                        "target": "armor",
+                        "value": "#8B4513"
+                    }
+                ],
+                "colorScheme": {
+                    "primary": "#8B4513",
+                    "secondary": "#CD853F",
+                    "accent": "#FFD700"
+                }
+            }
+        },
+        {
+            "id": "mage",
+            "name": "魔法使い",
+            "description": "魔法攻撃と回復に特化した職業。高いMP・魔法攻撃力・技術を持つが、物理防御は低い。",
+            "category": "mage",
+            "maxRank": 5,
+            "statModifiers": {
+                "1": {
+                    "hp": 4,
+                    "mp": 12,
+                    "attack": 6,
+                    "defense": -2,
+                    "speed": 2,
+                    "skill": 5,
+                    "luck": 3
+                },
+                "2": {
+                    "hp": 8,
+                    "mp": 24,
+                    "attack": 12,
+                    "defense": -4,
+                    "speed": 4,
+                    "skill": 10,
+                    "luck": 6
+                },
+                "3": {
+                    "hp": 12,
+                    "mp": 36,
+                    "attack": 18,
+                    "defense": -6,
+                    "speed": 6,
+                    "skill": 15,
+                    "luck": 9
+                },
+                "4": {
+                    "hp": 16,
+                    "mp": 48,
+                    "attack": 24,
+                    "defense": -8,
+                    "speed": 8,
+                    "skill": 20,
+                    "luck": 12
+                },
+                "5": {
+                    "hp": 20,
+                    "mp": 60,
+                    "attack": 30,
+                    "defense": -10,
+                    "speed": 10,
+                    "skill": 25,
+                    "luck": 15
+                }
+            },
+            "availableSkills": {
+                "1": [
+                    "fire_bolt",
+                    "heal",
+                    "magic_shield"
+                ],
+                "2": [
+                    "fire_bolt",
+                    "heal",
+                    "magic_shield",
+                    "ice_shard",
+                    "group_heal",
+                    "mana_burn"
+                ],
+                "3": [
+                    "fire_bolt",
+                    "heal",
+                    "magic_shield",
+                    "ice_shard",
+                    "group_heal",
+                    "mana_burn",
+                    "lightning_bolt",
+                    "mass_heal",
+                    "dispel_magic"
+                ],
+                "4": [
+                    "fire_bolt",
+                    "heal",
+                    "magic_shield",
+                    "ice_shard",
+                    "group_heal",
+                    "mana_burn",
+                    "lightning_bolt",
+                    "mass_heal",
+                    "dispel_magic",
+                    "meteor",
+                    "resurrection",
+                    "time_stop"
+                ],
+                "5": [
+                    "fire_bolt",
+                    "heal",
+                    "magic_shield",
+                    "ice_shard",
+                    "group_heal",
+                    "mana_burn",
+                    "lightning_bolt",
+                    "mass_heal",
+                    "dispel_magic",
+                    "meteor",
+                    "resurrection",
+                    "time_stop",
+                    "apocalypse",
+                    "divine_intervention",
+                    "reality_warp"
+                ]
+            },
+            "rankUpRequirements": {
+                "2": {
+                    "roseEssenceCost": 12,
+                    "levelRequirement": 4,
+                    "prerequisiteSkills": [
+                        "fire_bolt",
+                        "heal"
+                    ]
+                },
+                "3": {
+                    "roseEssenceCost": 30,
+                    "levelRequirement": 10,
+                    "prerequisiteSkills": [
+                        "ice_shard",
+                        "group_heal"
+                    ]
+                },
+                "4": {
+                    "roseEssenceCost": 60,
+                    "levelRequirement": 18,
+                    "prerequisiteSkills": [
+                        "lightning_bolt",
+                        "mass_heal"
+                    ],
+                    "completedStages": [
+                        "magic_tower"
+                    ]
+                },
+                "5": {
+                    "roseEssenceCost": 120,
+                    "levelRequirement": 28,
+                    "prerequisiteSkills": [
+                        "meteor",
+                        "resurrection"
+                    ],
+                    "completedStages": [
+                        "ancient_library"
+                    ],
+                    "defeatedBosses": [
+                        "archmage_shadow"
+                    ]
+                }
+            },
+            "growthRateModifiers": {
+                "1": {
+                    "hp": 8,
+                    "mp": 18,
+                    "attack": 10,
+                    "defense": 4,
+                    "speed": 8,
+                    "skill": 15,
+                    "luck": 12
+                },
+                "2": {
+                    "hp": 10,
+                    "mp": 20,
+                    "attack": 12,
+                    "defense": 6,
+                    "speed": 10,
+                    "skill": 17,
+                    "luck": 14
+                },
+                "3": {
+                    "hp": 12,
+                    "mp": 22,
+                    "attack": 14,
+                    "defense": 8,
+                    "speed": 12,
+                    "skill": 19,
+                    "luck": 16
+                },
+                "4": {
+                    "hp": 14,
+                    "mp": 24,
+                    "attack": 16,
+                    "defense": 10,
+                    "speed": 14,
+                    "skill": 21,
+                    "luck": 18
+                },
+                "5": {
+                    "hp": 16,
+                    "mp": 26,
+                    "attack": 18,
+                    "defense": 12,
+                    "speed": 16,
+                    "skill": 23,
+                    "luck": 20
+                }
+            },
+            "jobTraits": [
+                {
+                    "id": "mana_efficiency",
+                    "name": "魔力効率",
+                    "description": "スキル使用時のMP消費量が減少する",
+                    "effect": {
+                        "type": "skill_bonus",
+                        "value": 10,
+                        "target": "mp_cost_reduction"
+                    }
+                }
+            ],
+            "visual": {
+                "iconPath": "assets/icons/jobs/mage.png",
+                "spriteModifications": [
+                    {
+                        "type": "color",
+                        "target": "robe",
+                        "value": "#4B0082"
+                    }
+                ],
+                "colorScheme": {
+                    "primary": "#4B0082",
+                    "secondary": "#9370DB",
+                    "accent": "#00FFFF"
+                }
+            }
+        },
+        {
+            "id": "archer",
+            "name": "弓使い",
+            "description": "遠距離攻撃と機動力に特化した職業。高い速度・技術・運を持ち、クリティカル攻撃が得意。",
+            "category": "archer",
+            "maxRank": 5,
+            "statModifiers": {
+                "1": {
+                    "hp": 6,
+                    "mp": 4,
+                    "attack": 4,
+                    "defense": 2,
+                    "speed": 6,
+                    "skill": 5,
+                    "luck": 4
+                },
+                "2": {
+                    "hp": 12,
+                    "mp": 8,
+                    "attack": 8,
+                    "defense": 4,
+                    "speed": 12,
+                    "skill": 10,
+                    "luck": 8
+                },
+                "3": {
+                    "hp": 18,
+                    "mp": 12,
+                    "attack": 12,
+                    "defense": 6,
+                    "speed": 18,
+                    "skill": 15,
+                    "luck": 12
+                },
+                "4": {
+                    "hp": 24,
+                    "mp": 16,
+                    "attack": 16,
+                    "defense": 8,
+                    "speed": 24,
+                    "skill": 20,
+                    "luck": 16
+                },
+                "5": {
+                    "hp": 30,
+                    "mp": 20,
+                    "attack": 20,
+                    "defense": 10,
+                    "speed": 30,
+                    "skill": 25,
+                    "luck": 20
+                }
+            },
+            "availableSkills": {
+                "1": [
+                    "aimed_shot",
+                    "quick_step",
+                    "eagle_eye"
+                ],
+                "2": [
+                    "aimed_shot",
+                    "quick_step",
+                    "eagle_eye",
+                    "double_shot",
+                    "evasion_boost",
+                    "weak_point_strike"
+                ],
+                "3": [
+                    "aimed_shot",
+                    "quick_step",
+                    "eagle_eye",
+                    "double_shot",
+                    "evasion_boost",
+                    "weak_point_strike",
+                    "piercing_arrow",
+                    "shadow_step",
+                    "hunter_instinct"
+                ],
+                "4": [
+                    "aimed_shot",
+                    "quick_step",
+                    "eagle_eye",
+                    "double_shot",
+                    "evasion_boost",
+                    "weak_point_strike",
+                    "piercing_arrow",
+                    "shadow_step",
+                    "hunter_instinct",
+                    "arrow_rain",
+                    "phantom_shot",
+                    "perfect_aim"
+                ],
+                "5": [
+                    "aimed_shot",
+                    "quick_step",
+                    "eagle_eye",
+                    "double_shot",
+                    "evasion_boost",
+                    "weak_point_strike",
+                    "piercing_arrow",
+                    "shadow_step",
+                    "hunter_instinct",
+                    "arrow_rain",
+                    "phantom_shot",
+                    "perfect_aim",
+                    "divine_arrow",
+                    "time_dilation",
+                    "absolute_precision"
+                ]
+            },
+            "rankUpRequirements": {
+                "2": {
+                    "roseEssenceCost": 11,
+                    "levelRequirement": 6,
+                    "prerequisiteSkills": [
+                        "aimed_shot",
+                        "eagle_eye"
+                    ]
+                },
+                "3": {
+                    "roseEssenceCost": 28,
+                    "levelRequirement": 13,
+                    "prerequisiteSkills": [
+                        "double_shot",
+                        "weak_point_strike"
+                    ]
+                },
+                "4": {
+                    "roseEssenceCost": 55,
+                    "levelRequirement": 21,
+                    "prerequisiteSkills": [
+                        "piercing_arrow",
+                        "hunter_instinct"
+                    ],
+                    "completedStages": [
+                        "forest_depths"
+                    ]
+                },
+                "5": {
+                    "roseEssenceCost": 110,
+                    "levelRequirement": 32,
+                    "prerequisiteSkills": [
+                        "arrow_rain",
+                        "perfect_aim"
+                    ],
+                    "completedStages": [
+                        "sky_fortress"
+                    ],
+                    "defeatedBosses": [
+                        "wind_dragon"
+                    ]
+                }
+            },
+            "growthRateModifiers": {
+                "1": {
+                    "hp": 10,
+                    "mp": 8,
+                    "attack": 11,
+                    "defense": 6,
+                    "speed": 16,
+                    "skill": 14,
+                    "luck": 13
+                },
+                "2": {
+                    "hp": 12,
+                    "mp": 10,
+                    "attack": 13,
+                    "defense": 8,
+                    "speed": 18,
+                    "skill": 16,
+                    "luck": 15
+                },
+                "3": {
+                    "hp": 14,
+                    "mp": 12,
+                    "attack": 15,
+                    "defense": 10,
+                    "speed": 20,
+                    "skill": 18,
+                    "luck": 17
+                },
+                "4": {
+                    "hp": 16,
+                    "mp": 14,
+                    "attack": 17,
+                    "defense": 12,
+                    "speed": 22,
+                    "skill": 20,
+                    "luck": 19
+                },
+                "5": {
+                    "hp": 18,
+                    "mp": 16,
+                    "attack": 19,
+                    "defense": 14,
+                    "speed": 24,
+                    "skill": 22,
+                    "luck": 21
+                }
+            },
+            "jobTraits": [
+                {
+                    "id": "keen_sight",
+                    "name": "鋭い視力",
+                    "description": "命中率とクリティカル率が上昇する",
+                    "effect": {
+                        "type": "stat_bonus",
+                        "value": 10,
+                        "target": "accuracy_and_critical"
+                    }
+                }
+            ],
+            "visual": {
+                "iconPath": "assets/icons/jobs/archer.png",
+                "spriteModifications": [
+                    {
+                        "type": "color",
+                        "target": "cloak",
+                        "value": "#228B22"
+                    }
+                ],
+                "colorScheme": {
+                    "primary": "#228B22",
+                    "secondary": "#32CD32",
+                    "accent": "#ADFF2F"
+                }
+            }
+        },
+        {
+            "id": "healer",
+            "name": "僧侶",
+            "description": "回復と支援に特化した職業。高いMP・技術・運を持ち、回復魔法と状態異常回復が得意。",
+            "category": "healer",
+            "maxRank": 5,
+            "statModifiers": {
+                "1": {
+                    "hp": 7,
+                    "mp": 10,
+                    "attack": 2,
+                    "defense": 3,
+                    "speed": 3,
+                    "skill": 6,
+                    "luck": 5
+                },
+                "2": {
+                    "hp": 14,
+                    "mp": 20,
+                    "attack": 4,
+                    "defense": 6,
+                    "speed": 6,
+                    "skill": 12,
+                    "luck": 10
+                },
+                "3": {
+                    "hp": 21,
+                    "mp": 30,
+                    "attack": 6,
+                    "defense": 9,
+                    "speed": 9,
+                    "skill": 18,
+                    "luck": 15
+                },
+                "4": {
+                    "hp": 28,
+                    "mp": 40,
+                    "attack": 8,
+                    "defense": 12,
+                    "speed": 12,
+                    "skill": 24,
+                    "luck": 20
+                },
+                "5": {
+                    "hp": 35,
+                    "mp": 50,
+                    "attack": 10,
+                    "defense": 15,
+                    "speed": 15,
+                    "skill": 30,
+                    "luck": 25
+                }
+            },
+            "availableSkills": {
+                "1": [
+                    "heal",
+                    "cure",
+                    "bless"
+                ],
+                "2": [
+                    "heal",
+                    "cure",
+                    "bless",
+                    "group_heal",
+                    "purify",
+                    "protection"
+                ],
+                "3": [
+                    "heal",
+                    "cure",
+                    "bless",
+                    "group_heal",
+                    "purify",
+                    "protection",
+                    "mass_heal",
+                    "dispel_curse",
+                    "holy_light"
+                ],
+                "4": [
+                    "heal",
+                    "cure",
+                    "bless",
+                    "group_heal",
+                    "purify",
+                    "protection",
+                    "mass_heal",
+                    "dispel_curse",
+                    "holy_light",
+                    "resurrection",
+                    "divine_protection",
+                    "sanctuary"
+                ],
+                "5": [
+                    "heal",
+                    "cure",
+                    "bless",
+                    "group_heal",
+                    "purify",
+                    "protection",
+                    "mass_heal",
+                    "dispel_curse",
+                    "holy_light",
+                    "resurrection",
+                    "divine_protection",
+                    "sanctuary",
+                    "miracle",
+                    "divine_intervention",
+                    "eternal_blessing"
+                ]
+            },
+            "rankUpRequirements": {
+                "2": {
+                    "roseEssenceCost": 13,
+                    "levelRequirement": 5,
+                    "prerequisiteSkills": [
+                        "heal",
+                        "cure"
+                    ]
+                },
+                "3": {
+                    "roseEssenceCost": 32,
+                    "levelRequirement": 11,
+                    "prerequisiteSkills": [
+                        "group_heal",
+                        "purify"
+                    ]
+                },
+                "4": {
+                    "roseEssenceCost": 65,
+                    "levelRequirement": 19,
+                    "prerequisiteSkills": [
+                        "mass_heal",
+                        "holy_light"
+                    ],
+                    "completedStages": [
+                        "sacred_temple"
+                    ]
+                },
+                "5": {
+                    "roseEssenceCost": 130,
+                    "levelRequirement": 29,
+                    "prerequisiteSkills": [
+                        "resurrection",
+                        "sanctuary"
+                    ],
+                    "completedStages": [
+                        "celestial_realm"
+                    ],
+                    "defeatedBosses": [
+                        "fallen_angel"
+                    ]
+                }
+            },
+            "growthRateModifiers": {
+                "1": {
+                    "hp": 12,
+                    "mp": 16,
+                    "attack": 4,
+                    "defense": 8,
+                    "speed": 7,
+                    "skill": 17,
+                    "luck": 15
+                },
+                "2": {
+                    "hp": 14,
+                    "mp": 18,
+                    "attack": 6,
+                    "defense": 10,
+                    "speed": 9,
+                    "skill": 19,
+                    "luck": 17
+                },
+                "3": {
+                    "hp": 16,
+                    "mp": 20,
+                    "attack": 8,
+                    "defense": 12,
+                    "speed": 11,
+                    "skill": 21,
+                    "luck": 19
+                },
+                "4": {
+                    "hp": 18,
+                    "mp": 22,
+                    "attack": 10,
+                    "defense": 14,
+                    "speed": 13,
+                    "skill": 23,
+                    "luck": 21
+                },
+                "5": {
+                    "hp": 20,
+                    "mp": 24,
+                    "attack": 12,
+                    "defense": 16,
+                    "speed": 15,
+                    "skill": 25,
+                    "luck": 23
+                }
+            },
+            "jobTraits": [
+                {
+                    "id": "divine_favor",
+                    "name": "神の恩寵",
+                    "description": "回復魔法の効果が上昇する",
+                    "effect": {
+                        "type": "skill_bonus",
+                        "value": 15,
+                        "target": "healing_power"
+                    }
+                }
+            ],
+            "visual": {
+                "iconPath": "assets/icons/jobs/healer.png",
+                "spriteModifications": [
+                    {
+                        "type": "color",
+                        "target": "robe",
+                        "value": "#FFFFFF"
+                    }
+                ],
+                "colorScheme": {
+                    "primary": "#FFFFFF",
+                    "secondary": "#FFD700",
+                    "accent": "#87CEEB"
+                }
+            }
+        },
+        {
+            "id": "thief",
+            "name": "盗賊",
+            "description": "機動力と特殊技能に特化した職業。高い速度・運・技術を持ち、クリティカル攻撃と特殊効果が得意。",
+            "category": "thief",
+            "maxRank": 5,
+            "statModifiers": {
+                "1": {
+                    "hp": 5,
+                    "mp": 6,
+                    "attack": 4,
+                    "defense": 1,
+                    "speed": 7,
+                    "skill": 6,
+                    "luck": 6
+                },
+                "2": {
+                    "hp": 10,
+                    "mp": 12,
+                    "attack": 8,
+                    "defense": 2,
+                    "speed": 14,
+                    "skill": 12,
+                    "luck": 12
+                },
+                "3": {
+                    "hp": 15,
+                    "mp": 18,
+                    "attack": 12,
+                    "defense": 3,
+                    "speed": 21,
+                    "skill": 18,
+                    "luck": 18
+                },
+                "4": {
+                    "hp": 20,
+                    "mp": 24,
+                    "attack": 16,
+                    "defense": 4,
+                    "speed": 28,
+                    "skill": 24,
+                    "luck": 24
+                },
+                "5": {
+                    "hp": 25,
+                    "mp": 30,
+                    "attack": 20,
+                    "defense": 5,
+                    "speed": 35,
+                    "skill": 30,
+                    "luck": 30
+                }
+            },
+            "availableSkills": {
+                "1": [
+                    "sneak_attack",
+                    "steal",
+                    "lockpick"
+                ],
+                "2": [
+                    "sneak_attack",
+                    "steal",
+                    "lockpick",
+                    "poison_blade",
+                    "smoke_bomb",
+                    "treasure_hunter"
+                ],
+                "3": [
+                    "sneak_attack",
+                    "steal",
+                    "lockpick",
+                    "poison_blade",
+                    "smoke_bomb",
+                    "treasure_hunter",
+                    "assassinate",
+                    "invisibility",
+                    "trap_detection"
+                ],
+                "4": [
+                    "sneak_attack",
+                    "steal",
+                    "lockpick",
+                    "poison_blade",
+                    "smoke_bomb",
+                    "treasure_hunter",
+                    "assassinate",
+                    "invisibility",
+                    "trap_detection",
+                    "shadow_clone",
+                    "time_theft",
+                    "master_thief"
+                ],
+                "5": [
+                    "sneak_attack",
+                    "steal",
+                    "lockpick",
+                    "poison_blade",
+                    "smoke_bomb",
+                    "treasure_hunter",
+                    "assassinate",
+                    "invisibility",
+                    "trap_detection",
+                    "shadow_clone",
+                    "time_theft",
+                    "master_thief",
+                    "void_step",
+                    "fate_steal",
+                    "phantom_thief"
+                ]
+            },
+            "rankUpRequirements": {
+                "2": {
+                    "roseEssenceCost": 9,
+                    "levelRequirement": 7,
+                    "prerequisiteSkills": [
+                        "sneak_attack",
+                        "steal"
+                    ]
+                },
+                "3": {
+                    "roseEssenceCost": 22,
+                    "levelRequirement": 14,
+                    "prerequisiteSkills": [
+                        "poison_blade",
+                        "treasure_hunter"
+                    ]
+                },
+                "4": {
+                    "roseEssenceCost": 45,
+                    "levelRequirement": 22,
+                    "prerequisiteSkills": [
+                        "assassinate",
+                        "invisibility"
+                    ],
+                    "completedStages": [
+                        "thieves_den"
+                    ]
+                },
+                "5": {
+                    "roseEssenceCost": 90,
+                    "levelRequirement": 33,
+                    "prerequisiteSkills": [
+                        "shadow_clone",
+                        "master_thief"
+                    ],
+                    "completedStages": [
+                        "shadow_realm"
+                    ],
+                    "defeatedBosses": [
+                        "shadow_king"
+                    ]
+                }
+            },
+            "growthRateModifiers": {
+                "1": {
+                    "hp": 8,
+                    "mp": 10,
+                    "attack": 9,
+                    "defense": 5,
+                    "speed": 18,
+                    "skill": 16,
+                    "luck": 17
+                },
+                "2": {
+                    "hp": 10,
+                    "mp": 12,
+                    "attack": 11,
+                    "defense": 7,
+                    "speed": 20,
+                    "skill": 18,
+                    "luck": 19
+                },
+                "3": {
+                    "hp": 12,
+                    "mp": 14,
+                    "attack": 13,
+                    "defense": 9,
+                    "speed": 22,
+                    "skill": 20,
+                    "luck": 21
+                },
+                "4": {
+                    "hp": 14,
+                    "mp": 16,
+                    "attack": 15,
+                    "defense": 11,
+                    "speed": 24,
+                    "skill": 22,
+                    "luck": 23
+                },
+                "5": {
+                    "hp": 16,
+                    "mp": 18,
+                    "attack": 17,
+                    "defense": 13,
+                    "speed": 26,
+                    "skill": 24,
+                    "luck": 25
+                }
+            },
+            "jobTraits": [
+                {
+                    "id": "nimble_fingers",
+                    "name": "器用な指先",
+                    "description": "クリティカル率と盗み成功率が上昇する",
+                    "effect": {
+                        "type": "stat_bonus",
+                        "value": 12,
+                        "target": "critical_and_steal"
+                    }
+                }
+            ],
+            "visual": {
+                "iconPath": "assets/icons/jobs/thief.png",
+                "spriteModifications": [
+                    {
+                        "type": "color",
+                        "target": "cloak",
+                        "value": "#2F4F4F"
+                    }
+                ],
+                "colorScheme": {
+                    "primary": "#2F4F4F",
+                    "secondary": "#696969",
+                    "accent": "#C0C0C0"
+                }
+            }
+        }
+    ],
+    "roseEssenceConfig": {
+        "currentAmount": 0,
+        "totalEarned": 0,
+        "totalSpent": 0,
+        "sources": {
+            "boss_defeat": {
+                "baseAmount": 50,
+                "difficultyMultiplier": 1.5,
+                "firstTimeBonus": 25
+            },
+            "stage_clear": {
+                "baseAmount": 10,
+                "difficultyMultiplier": 1.2,
+                "firstTimeBonus": 5
+            },
+            "special_event": {
+                "baseAmount": 20,
+                "difficultyMultiplier": 1.0,
+                "firstTimeBonus": 10
+            }
+        },
+        "costs": {
+            "rankUp": {
+                "warrior": {
+                    "2": 10,
+                    "3": 25,
+                    "4": 50,
+                    "5": 100
+                },
+                "mage": {
+                    "2": 12,
+                    "3": 30,
+                    "4": 60,
+                    "5": 120
+                },
+                "archer": {
+                    "2": 11,
+                    "3": 28,
+                    "4": 55,
+                    "5": 110
+                },
+                "healer": {
+                    "2": 13,
+                    "3": 32,
+                    "4": 65,
+                    "5": 130
+                },
+                "thief": {
+                    "2": 9,
+                    "3": 22,
+                    "4": 45,
+                    "5": 90
+                }
+            },
+            "jobChange": 5,
+            "skillUnlock": 3
+        }
+    }
+}
