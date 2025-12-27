@@ -30,5 +30,14 @@ export * from './experience';
 // Job system types
 export * from './job';
 
+// Victory condition system types
+export * from './victory';
+
+// Boss system types
+export * from './boss';
+
+// Reward system types
+export * from './reward';
+
 // Stage data types
 export * from './StageData';

@@ -35,6 +35,7 @@
 
 ```typescript
 // MovementCalculator.test.ts
+import { describe, test, expect, beforeEach } from 'vitest';
 import { MovementCalculator } from '../src/systems/MovementCalculator';
 import { Unit, MapData } from '../src/types';
 
@@ -110,6 +111,7 @@ describe('MovementCalculator', () => {
 
 ```typescript
 // GameStateManager.test.ts
+import { describe, test, expect, beforeEach } from 'vitest';
 import { GameStateManager } from '../src/systems/GameStateManager';
 import { Unit } from '../src/types';
 
@@ -428,6 +430,9 @@ npm run test:watch
 
 # カバレッジ付き実行
 npm run test:coverage
+
+# UIモード（ブラウザでテスト結果を確認）
+npm run test:ui
 
 # E2Eテスト実行
 npm run test:e2e

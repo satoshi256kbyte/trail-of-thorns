@@ -82,7 +82,7 @@ Phaser3とTypeScriptを使用した2DシミュレーションRPGの開発プロ�
 
 - **パッケージマネージャー**: npm
 - **バージョン管理**: asdf (.tool-versions)
-- **テストフレームワーク**: Jest
+- **テストフレームワーク**: Vitest
 - **コード品質**: ESLint + Prettier
 - **ドキュメント**: Markdown + markdownlint
 

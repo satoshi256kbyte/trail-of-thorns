@@ -288,7 +288,7 @@ class TurnManager {
 - **Phaser 3.88.2**: メインゲームエンジン
 - **TypeScript**: 型安全な開発言語
 - **Vite**: 高速ビルドツール
-- **Jest**: テストフレームワーク
+- **Vitest**: テストフレームワーク
 
 ### 品質管理ツール
 
@@ -308,10 +308,12 @@ class TurnManager {
     "gsap": "^3.12.0"
   },
   "devDependencies": {
-    "vite": "^4.0.0",
+    "vite": "^7.3.0",
+    "vitest": "^4.0.0",
+    "@vitest/ui": "^4.0.0",
+    "@vitest/coverage-v8": "^4.0.0",
     "eslint": "^8.0.0",
     "prettier": "^3.0.0",
-    "jest": "^29.0.0",
     "@types/node": "^20.0.0"
   }
 }

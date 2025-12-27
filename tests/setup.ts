@@ -1,86 +1,60 @@
-// Jest setup file for mocking Phaser and other dependencies
+// Vitest setup file for mocking Phaser and other dependencies
+import { vi, beforeAll, afterAll } from 'vitest';
+
+// Mock phaser3spectorjs before Phaser is imported
+vi.mock('phaser3spectorjs', () => ({}));
 
 // Mock HTMLCanvasElement.getContext to avoid jsdom issues
 Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
-  value: jest.fn(() => ({
-    fillStyle: '',
-    fillRect: jest.fn(),
-    clearRect: jest.fn(),
-    getImageData: jest.fn(() => ({ data: new Array(4) })),
-    putImageData: jest.fn(),
-    createImageData: jest.fn(() => ({ data: new Array(4) })),
-    setTransform: jest.fn(),
-    drawImage: jest.fn(),
-    save: jest.fn(),
-    restore: jest.fn(),
-    beginPath: jest.fn(),
-    moveTo: jest.fn(),
-    lineTo: jest.fn(),
-    closePath: jest.fn(),
-    stroke: jest.fn(),
-    fill: jest.fn(),
-    measureText: jest.fn(() => ({ width: 0 })),
-    transform: jest.fn(),
-    translate: jest.fn(),
-    scale: jest.fn(),
-    rotate: jest.fn(),
-    arc: jest.fn(),
-    fillText: jest.fn(),
-    strokeText: jest.fn(),
-  })),
-});
-
-// Mock WebGL context
-Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
-  value: jest.fn(contextType => {
+  value: vi.fn((contextType: string) => {
     if (contextType === '2d') {
       return {
         fillStyle: '',
-        fillRect: jest.fn(),
-        clearRect: jest.fn(),
-        getImageData: jest.fn(() => ({ data: new Array(4) })),
-        putImageData: jest.fn(),
-        createImageData: jest.fn(() => ({ data: new Array(4) })),
-        setTransform: jest.fn(),
-        drawImage: jest.fn(),
-        save: jest.fn(),
-        restore: jest.fn(),
-        beginPath: jest.fn(),
-        moveTo: jest.fn(),
-        lineTo: jest.fn(),
-        closePath: jest.fn(),
-        stroke: jest.fn(),
-        fill: jest.fn(),
-        measureText: jest.fn(() => ({ width: 0 })),
-        transform: jest.fn(),
-        translate: jest.fn(),
-        scale: jest.fn(),
-        rotate: jest.fn(),
-        arc: jest.fn(),
-        fillText: jest.fn(),
-        strokeText: jest.fn(),
+        fillRect: vi.fn(),
+        clearRect: vi.fn(),
+        getImageData: vi.fn(() => ({ data: new Array(4) })),
+        putImageData: vi.fn(),
+        createImageData: vi.fn(() => ({ data: new Array(4) })),
+        setTransform: vi.fn(),
+        drawImage: vi.fn(),
+        save: vi.fn(),
+        restore: vi.fn(),
+        beginPath: vi.fn(),
+        moveTo: vi.fn(),
+        lineTo: vi.fn(),
+        closePath: vi.fn(),
+        stroke: vi.fn(),
+        fill: vi.fn(),
+        measureText: vi.fn(() => ({ width: 0 })),
+        transform: vi.fn(),
+        translate: vi.fn(),
+        scale: vi.fn(),
+        rotate: vi.fn(),
+        arc: vi.fn(),
+        fillText: vi.fn(),
+        strokeText: vi.fn(),
       };
     }
     if (contextType === 'webgl' || contextType === 'experimental-webgl') {
       return {
-        getExtension: jest.fn(),
-        getParameter: jest.fn(),
-        createShader: jest.fn(),
-        shaderSource: jest.fn(),
-        compileShader: jest.fn(),
-        createProgram: jest.fn(),
-        attachShader: jest.fn(),
-        linkProgram: jest.fn(),
-        useProgram: jest.fn(),
-        createBuffer: jest.fn(),
-        bindBuffer: jest.fn(),
-        bufferData: jest.fn(),
-        enableVertexAttribArray: jest.fn(),
-        vertexAttribPointer: jest.fn(),
-        drawArrays: jest.fn(),
-        clear: jest.fn(),
-        clearColor: jest.fn(),
-        viewport: jest.fn(),
+        getExtension: vi.fn(),
+        getParameter: vi.fn(),
+        createShader: vi.fn(),
+        shaderSource: vi.fn(),
+        compileShader: vi.fn(),
+        createProgram: vi.fn(),
+        attachShader: vi.fn(),
+        linkProgram: vi.fn(),
+        useProgram: vi.fn(),
+        createBuffer: vi.fn(),
+        bindBuffer: vi.fn(),
+        bufferData: vi.fn(),
+        enableVertexAttribArray: vi.fn(),
+        vertexAttribPointer: vi.fn(),
+        drawArrays: vi.fn(),
+        clear: vi.fn(),
+        clearColor: vi.fn(),
+        viewport: vi.fn(),
       };
     }
     return null;
