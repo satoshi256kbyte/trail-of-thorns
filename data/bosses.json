@@ -1,0 +1,413 @@
+{
+  "$schema": "./schemas/boss-schema.json",
+  "bosses": [
+    {
+      "id": "boss_corrupted_paladin",
+      "name": "堕落した聖騎士",
+      "title": "影の薔薇の騎士",
+      "description": "かつて正義を守った聖騎士が、影の薔薇の力に侵され、闇の戦士となった。",
+      "roseEssenceAmount": 50,
+      "roseEssenceType": "shadow",
+      "isBoss": true,
+      "bossType": "minor_boss",
+      "difficulty": "normal",
+      "phases": [
+        {
+          "phaseNumber": 1,
+          "hpThreshold": 100,
+          "statModifiers": {
+            "attack": 1.0,
+            "defense": 1.0,
+            "speed": 1.0
+          },
+          "newAbilities": [],
+          "phaseChangeEffect": null
+        },
+        {
+          "phaseNumber": 2,
+          "hpThreshold": 50,
+          "statModifiers": {
+            "attack": 1.2,
+            "defense": 0.9,
+            "speed": 1.1
+          },
+          "newAbilities": ["shadow_strike"],
+          "phaseChangeEffect": "dark_aura"
+        }
+      ],
+      "currentPhase": 1,
+      "specialAbilities": [
+        {
+          "id": "shadow_strike",
+          "name": "影の一撃",
+          "description": "闇の力を纏った強力な攻撃",
+          "type": "active",
+          "effect": {
+            "type": "damage",
+            "power": 1.5,
+            "element": "dark"
+          },
+          "cooldown": 3
+        },
+        {
+          "id": "dark_resilience",
+          "name": "闇の耐性",
+          "description": "闇属性攻撃に対する耐性",
+          "type": "passive",
+          "effect": {
+            "type": "resistance",
+            "element": "dark",
+            "value": 0.5
+          }
+        }
+      ],
+      "aiPersonality": "aggressive",
+      "aiPriority": 10,
+      "introductionCutscene": "corrupted_paladin_intro",
+      "defeatCutscene": "corrupted_paladin_defeat",
+      "phaseChangeCutscene": "corrupted_paladin_phase2",
+      "experienceReward": 200,
+      "additionalRewards": [
+        {
+          "itemId": "dark_sword",
+          "quantity": 1,
+          "dropRate": 0.3
+        }
+      ]
+    },
+    {
+      "id": "boss_crimson_witch",
+      "name": "紅の魔女",
+      "title": "紅薔薇の支配者",
+      "description": "紅の薔薇の力を操る強大な魔女。血のような赤い薔薇を操り、敵を翻弄する。",
+      "roseEssenceAmount": 100,
+      "roseEssenceType": "crimson",
+      "isBoss": true,
+      "bossType": "major_boss",
+      "difficulty": "hard",
+      "phases": [
+        {
+          "phaseNumber": 1,
+          "hpThreshold": 100,
+          "statModifiers": {
+            "attack": 1.0,
+            "defense": 1.0,
+            "speed": 1.0,
+            "magic": 1.0
+          },
+          "newAbilities": [],
+          "phaseChangeEffect": null
+        },
+        {
+          "phaseNumber": 2,
+          "hpThreshold": 66,
+          "statModifiers": {
+            "attack": 1.1,
+            "defense": 1.0,
+            "speed": 1.1,
+            "magic": 1.3
+          },
+          "newAbilities": ["crimson_thorns"],
+          "phaseChangeEffect": "rose_bloom"
+        },
+        {
+          "phaseNumber": 3,
+          "hpThreshold": 33,
+          "statModifiers": {
+            "attack": 1.2,
+            "defense": 0.8,
+            "speed": 1.2,
+            "magic": 1.5
+          },
+          "newAbilities": ["blood_rain"],
+          "phaseChangeEffect": "crimson_storm"
+        }
+      ],
+      "currentPhase": 1,
+      "specialAbilities": [
+        {
+          "id": "crimson_thorns",
+          "name": "紅の棘",
+          "description": "範囲内の敵全てにダメージを与える",
+          "type": "active",
+          "effect": {
+            "type": "area_damage",
+            "power": 1.3,
+            "range": 2,
+            "element": "fire"
+          },
+          "cooldown": 4
+        },
+        {
+          "id": "blood_rain",
+          "name": "血の雨",
+          "description": "全体攻撃と自己回復",
+          "type": "active",
+          "effect": {
+            "type": "multi_effect",
+            "effects": [
+              {
+                "type": "area_damage",
+                "power": 1.0,
+                "range": 99
+              },
+              {
+                "type": "heal",
+                "power": 0.2
+              }
+            ]
+          },
+          "cooldown": 5
+        },
+        {
+          "id": "rose_barrier",
+          "name": "薔薇の障壁",
+          "description": "魔法攻撃に対する耐性",
+          "type": "passive",
+          "effect": {
+            "type": "resistance",
+            "damageType": "magic",
+            "value": 0.3
+          }
+        }
+      ],
+      "aiPersonality": "tactical",
+      "aiPriority": 15,
+      "introductionCutscene": "crimson_witch_intro",
+      "defeatCutscene": "crimson_witch_defeat",
+      "phaseChangeCutscene": "crimson_witch_phase_change",
+      "experienceReward": 500,
+      "additionalRewards": [
+        {
+          "itemId": "crimson_staff",
+          "quantity": 1,
+          "dropRate": 0.5
+        },
+        {
+          "itemId": "rose_essence_crystal",
+          "quantity": 3,
+          "dropRate": 1.0
+        }
+      ]
+    },
+    {
+      "id": "boss_thorn_guardian",
+      "name": "棘の守護者",
+      "title": "棘薔薇の番人",
+      "description": "古代の遺跡を守る巨大な棘の化身。棘の薔薇の力で強固な防御を誇る。",
+      "roseEssenceAmount": 75,
+      "roseEssenceType": "thorn",
+      "isBoss": true,
+      "bossType": "minor_boss",
+      "difficulty": "normal",
+      "phases": [
+        {
+          "phaseNumber": 1,
+          "hpThreshold": 100,
+          "statModifiers": {
+            "attack": 1.0,
+            "defense": 1.5,
+            "speed": 0.8
+          },
+          "newAbilities": [],
+          "phaseChangeEffect": null
+        },
+        {
+          "phaseNumber": 2,
+          "hpThreshold": 40,
+          "statModifiers": {
+            "attack": 1.3,
+            "defense": 1.8,
+            "speed": 0.7
+          },
+          "newAbilities": ["thorn_counter"],
+          "phaseChangeEffect": "thorn_armor"
+        }
+      ],
+      "currentPhase": 1,
+      "specialAbilities": [
+        {
+          "id": "thorn_counter",
+          "name": "棘の反撃",
+          "description": "攻撃を受けた時、攻撃者にダメージを返す",
+          "type": "passive",
+          "effect": {
+            "type": "counter",
+            "power": 0.5
+          }
+        },
+        {
+          "id": "iron_defense",
+          "name": "鉄壁の守り",
+          "description": "物理攻撃に対する高い耐性",
+          "type": "passive",
+          "effect": {
+            "type": "resistance",
+            "damageType": "physical",
+            "value": 0.4
+          }
+        }
+      ],
+      "aiPersonality": "defensive",
+      "aiPriority": 8,
+      "introductionCutscene": "thorn_guardian_intro",
+      "defeatCutscene": "thorn_guardian_defeat",
+      "phaseChangeCutscene": "thorn_guardian_phase2",
+      "experienceReward": 300,
+      "additionalRewards": [
+        {
+          "itemId": "thorn_shield",
+          "quantity": 1,
+          "dropRate": 0.4
+        }
+      ]
+    },
+    {
+      "id": "boss_cursed_dragon",
+      "name": "呪われし竜",
+      "title": "呪いの薔薇の化身",
+      "description": "呪いの薔薇に侵された古代の竜。その力は計り知れない。",
+      "roseEssenceAmount": 200,
+      "roseEssenceType": "cursed",
+      "isBoss": true,
+      "bossType": "chapter_boss",
+      "difficulty": "extreme",
+      "phases": [
+        {
+          "phaseNumber": 1,
+          "hpThreshold": 100,
+          "statModifiers": {
+            "attack": 1.0,
+            "defense": 1.0,
+            "speed": 1.0,
+            "magic": 1.0
+          },
+          "newAbilities": [],
+          "phaseChangeEffect": null
+        },
+        {
+          "phaseNumber": 2,
+          "hpThreshold": 75,
+          "statModifiers": {
+            "attack": 1.2,
+            "defense": 1.1,
+            "speed": 1.1,
+            "magic": 1.2
+          },
+          "newAbilities": ["cursed_breath"],
+          "phaseChangeEffect": "dark_awakening"
+        },
+        {
+          "phaseNumber": 3,
+          "hpThreshold": 50,
+          "statModifiers": {
+            "attack": 1.4,
+            "defense": 1.2,
+            "speed": 1.2,
+            "magic": 1.4
+          },
+          "newAbilities": ["rose_corruption"],
+          "phaseChangeEffect": "cursed_transformation"
+        },
+        {
+          "phaseNumber": 4,
+          "hpThreshold": 25,
+          "statModifiers": {
+            "attack": 1.6,
+            "defense": 1.0,
+            "speed": 1.4,
+            "magic": 1.6
+          },
+          "newAbilities": ["apocalypse"],
+          "phaseChangeEffect": "final_rage"
+        }
+      ],
+      "currentPhase": 1,
+      "specialAbilities": [
+        {
+          "id": "cursed_breath",
+          "name": "呪いのブレス",
+          "description": "前方範囲に強力な呪いのブレスを放つ",
+          "type": "active",
+          "effect": {
+            "type": "cone_damage",
+            "power": 2.0,
+            "range": 4,
+            "element": "dark"
+          },
+          "cooldown": 3
+        },
+        {
+          "id": "rose_corruption",
+          "name": "薔薇の侵食",
+          "description": "敵の能力値を低下させる",
+          "type": "active",
+          "effect": {
+            "type": "debuff",
+            "stats": ["attack", "defense"],
+            "value": 0.3,
+            "duration": 3
+          },
+          "cooldown": 4
+        },
+        {
+          "id": "apocalypse",
+          "name": "終焉の咆哮",
+          "description": "全体に壊滅的なダメージを与える",
+          "type": "active",
+          "effect": {
+            "type": "area_damage",
+            "power": 2.5,
+            "range": 99,
+            "element": "dark"
+          },
+          "cooldown": 6
+        },
+        {
+          "id": "dragon_scales",
+          "name": "竜の鱗",
+          "description": "全ての攻撃に対する耐性",
+          "type": "passive",
+          "effect": {
+            "type": "resistance",
+            "damageType": "all",
+            "value": 0.2
+          }
+        },
+        {
+          "id": "regeneration",
+          "name": "再生能力",
+          "description": "毎ターンHPを回復する",
+          "type": "passive",
+          "effect": {
+            "type": "regen",
+            "value": 0.05
+          }
+        }
+      ],
+      "aiPersonality": "aggressive",
+      "aiPriority": 20,
+      "introductionCutscene": "cursed_dragon_intro",
+      "defeatCutscene": "cursed_dragon_defeat",
+      "phaseChangeCutscene": "cursed_dragon_phase_change",
+      "experienceReward": 1000,
+      "additionalRewards": [
+        {
+          "itemId": "dragon_fang",
+          "quantity": 1,
+          "dropRate": 0.8
+        },
+        {
+          "itemId": "cursed_essence",
+          "quantity": 5,
+          "dropRate": 1.0
+        },
+        {
+          "itemId": "legendary_weapon",
+          "quantity": 1,
+          "dropRate": 0.1
+        }
+      ]
+    }
+  ]
+}

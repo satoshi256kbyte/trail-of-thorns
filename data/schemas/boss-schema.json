@@ -1,0 +1,228 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Boss Data Schema",
+  "description": "Schema for boss character data in the victory condition system",
+  "type": "object",
+  "required": ["bosses"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "bosses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Boss"
+      }
+    }
+  },
+  "definitions": {
+    "Boss": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "title",
+        "description",
+        "roseEssenceAmount",
+        "roseEssenceType",
+        "isBoss",
+        "bossType",
+        "difficulty",
+        "phases",
+        "currentPhase",
+        "specialAbilities",
+        "aiPersonality",
+        "aiPriority",
+        "experienceReward"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^boss_[a-z_]+$",
+          "description": "Unique identifier for the boss"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the boss"
+        },
+        "title": {
+          "type": "string",
+          "description": "Boss title or epithet"
+        },
+        "description": {
+          "type": "string",
+          "description": "Boss background story"
+        },
+        "roseEssenceAmount": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Amount of rose essence rewarded on defeat"
+        },
+        "roseEssenceType": {
+          "type": "string",
+          "enum": ["crimson", "shadow", "thorn", "cursed"],
+          "description": "Type of rose essence"
+        },
+        "isBoss": {
+          "type": "boolean",
+          "const": true,
+          "description": "Boss flag (must be true)"
+        },
+        "bossType": {
+          "type": "string",
+          "enum": ["minor_boss", "major_boss", "chapter_boss", "final_boss"],
+          "description": "Boss classification"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["easy", "normal", "hard", "extreme"],
+          "description": "Boss difficulty level"
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/BossPhase"
+          },
+          "description": "Boss phase configurations"
+        },
+        "currentPhase": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Current phase number"
+        },
+        "specialAbilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BossAbility"
+          },
+          "description": "Boss special abilities"
+        },
+        "aiPersonality": {
+          "type": "string",
+          "enum": ["aggressive", "defensive", "tactical", "support"],
+          "description": "AI behavior pattern"
+        },
+        "aiPriority": {
+          "type": "number",
+          "minimum": 0,
+          "description": "AI action priority"
+        },
+        "introductionCutscene": {
+          "type": ["string", "null"],
+          "description": "Introduction cutscene ID"
+        },
+        "defeatCutscene": {
+          "type": ["string", "null"],
+          "description": "Defeat cutscene ID"
+        },
+        "phaseChangeCutscene": {
+          "type": ["string", "null"],
+          "description": "Phase change cutscene ID"
+        },
+        "experienceReward": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Experience points rewarded"
+        },
+        "additionalRewards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ItemReward"
+          },
+          "description": "Additional item rewards"
+        }
+      }
+    },
+    "BossPhase": {
+      "type": "object",
+      "required": ["phaseNumber", "hpThreshold", "statModifiers", "newAbilities"],
+      "properties": {
+        "phaseNumber": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Phase number"
+        },
+        "hpThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "HP percentage threshold to enter this phase"
+        },
+        "statModifiers": {
+          "type": "object",
+          "description": "Stat multipliers for this phase",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "newAbilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Abilities unlocked in this phase"
+        },
+        "phaseChangeEffect": {
+          "type": ["string", "null"],
+          "description": "Visual effect on phase change"
+        }
+      }
+    },
+    "BossAbility": {
+      "type": "object",
+      "required": ["id", "name", "description", "type", "effect"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ability identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Ability display name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Ability description"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["passive", "active"],
+          "description": "Ability type"
+        },
+        "effect": {
+          "type": "object",
+          "description": "Ability effect data"
+        },
+        "cooldown": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Cooldown in turns (for active abilities)"
+        }
+      }
+    },
+    "ItemReward": {
+      "type": "object",
+      "required": ["itemId", "quantity", "dropRate"],
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "description": "Item identifier"
+        },
+        "quantity": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Number of items"
+        },
+        "dropRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Drop probability (0-1)"
+        }
+      }
+    }
+  }
+}

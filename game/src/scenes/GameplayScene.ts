@@ -44,6 +44,10 @@ import { ExperienceAction, ExperienceSource, ExperienceContext } from '../types/
 import { JobSystem, JobSystemConfig } from '../systems/jobs/JobSystem';
 import { JobUI, JobUIConfig } from '../ui/JobUI';
 import { JobData, RoseEssenceData, JobChangeResult, RankUpResult, CharacterRankUpInfo, StatModifiers } from '../types/job';
+import { VictoryConditionSystem, VictoryStageData } from '../systems/victory/VictoryConditionSystem';
+import { Objective, ObjectiveType } from '../types/victory';
+import { BossData } from '../types/boss';
+import { StageCompleteResult, StageFailureResult } from '../types/reward';
 
 /**
  * GameplayScene configuration interface
@@ -82,6 +86,7 @@ export class GameplayScene extends Phaser.Scene {
     private aiSystemManager!: AISystemManager;
     private jobSystem!: JobSystem;
     private jobUI!: JobUI;
+    private victoryConditionSystem!: VictoryConditionSystem;
 
     // Scene data and state
     private stageData?: StageData;
@@ -263,6 +268,9 @@ export class GameplayScene extends Phaser.Scene {
 
             // Initialize job system
             this.initializeJobSystem();
+
+            // Initialize victory condition system with stage data
+            this.initializeVictoryConditionSystem();
 
             // Setup input handling
             this.setupInputHandling();
@@ -702,6 +710,14 @@ export class GameplayScene extends Phaser.Scene {
         };
 
         this.jobUI = new JobUI(this, jobUIConfig);
+
+        // Initialize VictoryConditionSystem
+        this.victoryConditionSystem = new VictoryConditionSystem(this, {
+            enableDebugLogs: this.config.debugMode,
+            autoCheckConditions: true,
+            checkOnTurnEnd: true,
+            checkOnBossDefeat: true,
+        });
 
         console.log('GameplayScene: Manager systems initialized');
     }
@@ -2695,6 +2711,11 @@ export class GameplayScene extends Phaser.Scene {
                             true   // Is skill damage
                         );
                     }
+
+                    // Record damage in victory condition system
+                    if (this.victoryConditionSystem && effect.value > 0) {
+                        this.victoryConditionSystem.recordDamage(effect.value, 0);
+                    }
                 } else if (effect.type === 'heal' && effect.target) {
                     // Show heal numbers
                     const targetScreenPos = this.getUnitScreenPosition(effect.target);
@@ -2704,6 +2725,11 @@ export class GameplayScene extends Phaser.Scene {
                             targetScreenPos.y,
                             effect.value
                         );
+                    }
+
+                    // Record healing in victory condition system
+                    if (this.victoryConditionSystem && effect.value > 0) {
+                        this.victoryConditionSystem.recordHealing(effect.value);
                     }
                 }
             });
@@ -2932,6 +2958,11 @@ export class GameplayScene extends Phaser.Scene {
         result.attacker.hasActed = true;
         this.gameStateManager.updateUnit(result.attacker);
 
+        // Record damage dealt in victory condition system
+        if (this.victoryConditionSystem && result.finalDamage > 0) {
+            this.victoryConditionSystem.recordDamage(result.finalDamage, 0);
+        }
+
         // Reset battle state
         this.resetBattleState();
 
@@ -3140,6 +3171,16 @@ export class GameplayScene extends Phaser.Scene {
         // Update character manager to show defeated state
         if (data.unit) {
             this.characterManager.updateCharacterPosition(data.unit.id, data.unit.position);
+
+            // Record enemy defeat in victory condition system
+            if (data.unit.faction === 'enemy') {
+                this.victoryConditionSystem.recordEnemyDefeat(data.unit.id);
+            }
+
+            // Record unit lost in victory condition system
+            if (data.unit.faction === 'player') {
+                this.victoryConditionSystem.recordUnitLost(data.unit.id);
+            }
 
             // Check if this was a boss and award rose essence
             if (this.isBossUnit(data.unit)) {
@@ -4564,29 +4605,20 @@ export class GameplayScene extends Phaser.Scene {
             console.error('Error showing support info:', error);
         }
     }
-}
-console.log('Unknown notification action:', action);
-break;
-            }
-
-        } catch (error) {
-    console.error('Error handling notification action:', error);
-}
-    }
 
     /**
      * Restart the game
      */
     private restartGame(): void {
-    try {
-        console.log('Restarting game...');
-        this.scene.restart();
-    } catch(error) {
-        console.error('Error restarting game:', error);
-        // Force reload as fallback
-        window.location.reload();
+        try {
+            console.log('Restarting game...');
+            this.scene.restart();
+        } catch (error) {
+            console.error('Error restarting game:', error);
+            // Force reload as fallback
+            window.location.reload();
+        }
     }
-}
 
     /**
      * Check save data integrity
@@ -5077,23 +5109,474 @@ this.inputHandler.disable();
 
     return baseReward;
 }
-}
-    /**
 
+    /**
+     * Initialize victory condition system with stage data
+     * 要件1.1: ステージ開始時の目標・ボス情報初期化
+     */
+    private initializeVictoryConditionSystem(): void {
+        try {
+            if (!this.stageData) {
+                console.warn('No stage data available for victory condition system');
+                return;
+            }
+
+            console.log('GameplayScene: Initializing victory condition system');
+
+            // Create victory stage data from current stage data
+            const victoryStageData = this.createVictoryStageData(this.stageData);
+
+            // Initialize the system
+            const initResult = this.victoryConditionSystem.initialize(victoryStageData);
+            if (!initResult.success) {
+                console.error('Failed to initialize victory condition system:', initResult.message);
+                return;
+            }
+
+            // Set RecruitmentSystem reference for stage clear integration
+            this.victoryConditionSystem.setRecruitmentSystem(this.recruitmentSystem);
+
+            // Integrate with BattleSystem
+            this.battleSystem.setVictoryConditionSystem(this.victoryConditionSystem);
+
+            // Register boss units if any
+            this.registerBossUnits(victoryStageData.bosses);
+
+            // Setup victory condition event listeners
+            this.setupVictoryConditionEventListeners();
+
+            console.log('GameplayScene: Victory condition system initialized successfully');
+        } catch (error) {
+            console.error('GameplayScene: Error initializing victory condition system:', error);
+        }
+    }
+
+    /**
+     * Create VictoryStageData from StageData
+     * 要件1.1, 1.2: ステージの勝利条件・敗北条件を読み込む
+     */
+    private createVictoryStageData(stageData: StageData): VictoryStageData {
+        // Create objectives from victory conditions
+        const objectives: Objective[] = [];
+        let objectiveIdCounter = 1;
+
+        // Default objective: Defeat all enemies
+        objectives.push({
+            id: `objective-${objectiveIdCounter++}`,
+            type: ObjectiveType.DEFEAT_ALL_ENEMIES,
+            description: 'Defeat all enemy units',
+            isRequired: true,
+            isComplete: false,
+            progress: {
+                current: 0,
+                target: stageData.enemyUnits.length,
+            },
+        });
+
+        // Check for boss units and add boss defeat objectives
+        const bossUnits = stageData.enemyUnits.filter(unit => this.isBossUnit(unit));
+        for (const boss of bossUnits) {
+            objectives.push({
+                id: `objective-${objectiveIdCounter++}`,
+                type: ObjectiveType.DEFEAT_BOSS,
+                description: `Defeat ${boss.name}`,
+                isRequired: true,
+                isComplete: false,
+                progress: {
+                    current: 0,
+                    target: 1,
+                },
+                targetData: {
+                    bossId: boss.id,
+                },
+            });
+        }
+
+        // Create victory conditions
+        const victoryConditions = [
+            {
+                id: 'victory-all-objectives',
+                type: 'all_objectives_complete' as const,
+                description: 'Complete all objectives',
+                objectiveIds: objectives.filter(obj => obj.isRequired).map(obj => obj.id),
+            },
+        ];
+
+        // Create defeat conditions
+        const defeatConditions = [
+            {
+                id: 'defeat-all-player-units',
+                type: 'all_player_units_defeated' as const,
+                description: 'All player units defeated',
+            },
+        ];
+
+        // Create boss data
+        const bosses: BossData[] = bossUnits.map(boss => ({
+            id: boss.id,
+            name: boss.name,
+            type: 'standard' as const,
+            difficulty: 'normal' as const,
+            roseEssenceReward: {
+                type: 'standard' as const,
+                amount: this.calculateRoseEssenceReward(boss),
+                description: `Rose essence from ${boss.name}`,
+            },
+            phases: [],
+            abilities: [],
+        }));
+
+        return {
+            id: stageData.id,
+            name: stageData.name,
+            description: stageData.description,
+            objectives,
+            victoryConditions,
+            defeatConditions,
+            bosses,
+            baseExperienceReward: 100, // Default value
+            targetTurns: 20, // Default value
+            maxTurns: 50, // Default value
+        };
+    }
+
+    /**
+     * Register boss units with the victory condition system
+     */
+    private registerBossUnits(bosses: BossData[]): void {
+        if (!this.stageData) {
+            return;
+        }
+
+        for (const bossData of bosses) {
+            const bossUnit = this.stageData.enemyUnits.find(unit => unit.id === bossData.id);
+            if (bossUnit) {
+                this.victoryConditionSystem.registerBossUnit(bossUnit, bossData);
+                console.log(`Registered boss unit: ${bossUnit.name}`);
+            }
+        }
+    }
+
+    /**
+     * Setup victory condition system event listeners
+     * 要件1.7, 2.8, 3.5, 3.6: イベント処理
+     */
+    private setupVictoryConditionEventListeners(): void {
+        console.log('GameplayScene: Setting up victory condition event listeners');
+
+        // Objective events
+        this.victoryConditionSystem.on('objective-completed', (data: any) => {
+            console.log('Objective completed:', data.objectiveId);
+            this.handleObjectiveCompleted(data);
+        });
+
+        this.victoryConditionSystem.on('objective-failed', (data: any) => {
+            console.log('Objective failed:', data.objectiveId);
+            this.handleObjectiveFailed(data);
+        });
+
+        // Boss events
+        this.victoryConditionSystem.on('boss-defeated-integrated', (data: any) => {
+            console.log('Boss defeated (integrated):', data);
+            this.handleBossDefeatedIntegrated(data);
+        });
+
+        // Victory/Defeat events
+        this.victoryConditionSystem.on('victory-conditions-met', (data: any) => {
+            console.log('Victory conditions met!', data);
+            this.handleVictoryConditionsMet(data);
+        });
+
+        this.victoryConditionSystem.on('defeat-conditions-met', (data: any) => {
+            console.log('Defeat conditions met!', data);
+            this.handleDefeatConditionsMet(data);
+        });
+
+        this.victoryConditionSystem.on('auto-victory-detected', (data: any) => {
+            console.log('Auto victory detected!', data);
+            this.handleAutoVictory(data);
+        });
+
+        this.victoryConditionSystem.on('auto-defeat-detected', (data: any) => {
+            console.log('Auto defeat detected!', data);
+            this.handleAutoDefeat(data);
+        });
+
+        // Stage complete/failure events
+        this.victoryConditionSystem.on('stage-complete', (data: StageCompleteResult) => {
+            console.log('Stage complete!', data);
+            this.handleStageComplete(data);
+        });
+
+        this.victoryConditionSystem.on('stage-failure', (data: StageFailureResult) => {
+            console.log('Stage failed!', data);
+            this.handleStageFailure(data);
+        });
+
+        // Turn end integration
+        this.events.on('turn-changed', (data: any) => {
+            if (this.victoryConditionSystem && this.victoryConditionSystem.isSystemInitialized()) {
+                const gameState = this.gameStateManager.getGameState();
+                this.victoryConditionSystem.onTurnEnd(gameState);
+            }
+        });
+
+        console.log('GameplayScene: Victory condition event listeners setup completed');
+    }
+
+    /**
+     * Handle objective completed
+     * 要件1.7: 目標達成イベントを発行する
+     */
+    private handleObjectiveCompleted(data: any): void {
+        // Show notification
+        this.uiManager.showNotification({
+            message: `Objective completed: ${data.description || data.objectiveId}`,
+            type: 'success',
+            duration: 3000,
+        });
+
+        // Update UI to show objective completion
+        // TODO: Implement objective UI update
+    }
+
+    /**
+     * Handle objective failed
+     */
+    private handleObjectiveFailed(data: any): void {
+        // Show notification
+        this.uiManager.showNotification({
+            message: `Objective failed: ${data.reason}`,
+            type: 'error',
+            duration: 3000,
+        });
+    }
+
+    /**
+     * Handle boss defeated (integrated with victory system)
+     * 要件2.8: ボス撃破イベントを発行する
+     */
+    private handleBossDefeatedIntegrated(data: any): void {
+        // Show boss defeat notification
+        this.uiManager.showNotification({
+            message: `Boss defeated: ${data.bossName || 'Boss'}`,
+            type: 'success',
+            duration: 5000,
+        });
+
+        // Award rose essence through job system
+        if (data.roseEssenceReward) {
+            const bossUnit = this.findUnitById(data.bossId);
+            const screenPos = bossUnit ? this.getUnitScreenPosition(bossUnit) : undefined;
+            
+            this.jobSystem.awardRoseEssence(
+                data.roseEssenceReward.amount,
+                `boss_defeat_${data.bossId}`,
+                screenPos
+            );
+        }
+    }
+
+    /**
+     * Handle victory conditions met
+     * 要件3.3: すべての勝利条件が満たされるとき、勝利状態に遷移する
+     */
+    private handleVictoryConditionsMet(data: any): void {
+        console.log('Victory conditions met, preparing for stage complete');
+        // The actual stage complete will be triggered by auto-victory-detected
+    }
+
+    /**
+     * Handle defeat conditions met
+     * 要件3.4: いずれかの敗北条件が満たされるとき、敗北状態に遷移する
+     */
+    private handleDefeatConditionsMet(data: any): void {
+        console.log('Defeat conditions met, preparing for stage failure');
+        // The actual stage failure will be triggered by auto-defeat-detected
+    }
+
+    /**
+     * Handle auto victory detection
+     * 要件3.7: 勝利状態に遷移するとき、ゲーム進行を停止する
+     */
+    private async handleAutoVictory(data: any): Promise<void> {
+        try {
+            // Stop game progression
+            this.isPaused = true;
+            this.inputHandler.disable();
+
+            // Get all units for stage complete processing
+            const allUnits = this.getAllUnits();
+
+            // Process stage complete
+            const gameState = this.gameStateManager.getGameState();
+            const stageCompleteResult = await this.victoryConditionSystem.handleStageComplete(
+                gameState,
+                allUnits
+            );
+
+            console.log('Stage complete result:', stageCompleteResult);
+        } catch (error) {
+            console.error('Error handling auto victory:', error);
+        }
+    }
+
+    /**
+     * Handle auto defeat detection
+     * 要件3.8: 敗北状態に遷移するとき、ゲーム進行を停止する
+     */
+    private async handleAutoDefeat(data: any): Promise<void> {
+        try {
+            // Stop game progression
+            this.isPaused = true;
+            this.inputHandler.disable();
+
+            // Process stage failure
+            const gameState = this.gameStateManager.getGameState();
+            const defeatReason = data.triggeredConditions?.[0]?.description || 'Defeat conditions met';
+            
+            const stageFailureResult = await this.victoryConditionSystem.handleStageFailure(
+                defeatReason,
+                gameState
+            );
+
+            console.log('Stage failure result:', stageFailureResult);
+        } catch (error) {
+            console.error('Error handling auto defeat:', error);
+        }
+    }
+
+    /**
+     * Handle stage complete
+     * 要件4.6: 報酬表示UIを表示する
+     * 要件10.7: 報酬受け取り後の次ステージ遷移
+     */
+    private async handleStageComplete(result: StageCompleteResult): Promise<void> {
+        try {
+            console.log('Handling stage complete with rewards:', result);
+
+            // Show victory screen with rewards
+            // TODO: Implement victory screen UI
+            this.uiManager.showNotification({
+                message: `Stage Complete! Rating: ${result.clearRating}`,
+                type: 'success',
+                duration: 5000,
+            });
+
+            // Distribute rewards
+            await this.victoryConditionSystem.distributeRewards(result.rewards);
+
+            // Wait for user confirmation before transitioning
+            // TODO: Implement reward confirmation UI
+            // For now, auto-transition after delay
+            this.time.delayedCall(5000, () => {
+                this.transitionToNextStage();
+            });
+        } catch (error) {
+            console.error('Error handling stage complete:', error);
+        }
+    }
+
+    /**
+     * Handle stage failure
+     * 要件3.8: 敗北状態に遷移するとき、ゲーム進行を停止する
+     */
+    private async handleStageFailure(result: StageFailureResult): Promise<void> {
+        try {
+            console.log('Handling stage failure:', result);
+
+            // Show defeat screen
+            // TODO: Implement defeat screen UI
+            this.uiManager.showNotification({
+                message: `Stage Failed: ${result.defeatReason}`,
+                type: 'error',
+                duration: 5000,
+            });
+
+            // Wait for user confirmation before transitioning
+            // TODO: Implement defeat screen UI with retry/quit options
+            // For now, auto-transition after delay
+            this.time.delayedCall(5000, () => {
+                this.transitionToStageSelect();
+            });
+        } catch (error) {
+            console.error('Error handling stage failure:', error);
+        }
+    }
+
+    /**
+     * Transition to next stage
+     * 要件10.7: 報酬受け取り後の次ステージ遷移
+     */
+    private transitionToNextStage(): void {
+        console.log('Transitioning to next stage...');
+        
+        // For now, return to stage select
+        // TODO: Implement chapter progression and next stage loading
+        this.transitionToStageSelect();
+    }
+
+    /**
+     * Transition to stage select screen
+     */
+    private transitionToStageSelect(): void {
+        console.log('Transitioning to stage select...');
+        
+        // Clean up systems
+        this.cleanup();
+        
+        // Transition to stage select scene
+        SceneTransition.transitionTo(
+            this,
+            'StageSelectScene',
+            TransitionType.FADE_OUT,
+            500,
+            {}
+        );
+    }
+
+    /**
+     * Get all units in the stage
+     */
+    private getAllUnits(): Unit[] {
+        if (!this.stageData) {
+            return [];
+        }
+        return [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+    }
+
+    /**
+     * Cleanup systems before scene transition
+     */
+    private cleanup(): void {
+        try {
+            // Destroy victory condition system
+            if (this.victoryConditionSystem) {
+                this.victoryConditionSystem.destroy();
+            }
+
+            // Other cleanup...
+            console.log('GameplayScene: Cleanup completed');
+        } catch (error) {
+            console.error('Error during cleanup:', error);
+        }
+    }
+
+    /**
      * Check if a unit is a boss
      * 要件4.1: ボス撃破時の薔薇の力獲得判定
      */
     private isBossUnit(unit: Unit): boolean {
-    // Check if unit is a boss based on various criteria
+        // Check if unit is a boss based on various criteria
 
-    // Check name for boss indicators
-    const name = unit.name.toLowerCase();
-    if (name.includes('boss') || name.includes('dragon') || name.includes('lord') || name.includes('king')) {
-        return true;
-    }
+        // Check name for boss indicators
+        const name = unit.name.toLowerCase();
+        if (name.includes('boss') || name.includes('dragon') || name.includes('lord') || name.includes('king')) {
+            return true;
+        }
 
-    // Check stats for boss-level power
-    if (unit.stats.maxHP > 150 && unit.stats.attack > 30) {
+        // Check stats for boss-level power
+        if (unit.stats.maxHP > 150 && unit.stats.attack > 30) {
         return true;
     }
 
@@ -5103,4 +5586,739 @@ this.inputHandler.disable();
     }
 
     return false;
+}
+
+    // ===== VICTORY CONDITION SYSTEM INTEGRATION METHODS =====
+
+    /**
+     * Initialize victory condition system with stage data
+     * 要件1.1: ステージの勝利条件・敗北条件を読み込む
+     * 要件2.1: ボスユニットを定義する
+     */
+    private initializeVictoryConditionSystem(): void {
+        if (!this.stageData) {
+            console.warn('Cannot initialize victory condition system: no stage data');
+            return;
+        }
+
+        console.log('GameplayScene: Initializing victory condition system');
+
+        try {
+            // Create victory stage data from current stage data
+            const victoryStageData: VictoryStageData = this.createVictoryStageData(this.stageData);
+
+            // Initialize the system
+            const initResult = this.victoryConditionSystem.initialize(victoryStageData);
+
+            if (!initResult.success) {
+                console.error('Failed to initialize victory condition system:', initResult.message);
+                return;
+            }
+
+            console.log('Victory condition system initialized:', {
+                objectives: initResult.objectivesRegistered,
+                conditions: initResult.conditionsRegistered,
+                bosses: initResult.bossesRegistered,
+            });
+
+            // Set recruitment system reference for stage completion
+            this.victoryConditionSystem.setRecruitmentSystem(this.recruitmentSystem);
+
+            // Register boss units if any
+            this.registerBossUnits();
+
+            // Setup victory condition event listeners
+            this.setupVictoryConditionEventListeners();
+
+        } catch (error) {
+            console.error('Error initializing victory condition system:', error);
+        }
+    }
+
+    /**
+     * Create victory stage data from stage data
+     * @param stageData - Current stage data
+     * @returns Victory stage data
+     */
+    private createVictoryStageData(stageData: StageData): VictoryStageData {
+        // Create objectives from victory conditions
+        const objectives: Objective[] = [];
+        let objectiveId = 1;
+
+        // Add defeat all enemies objective
+        objectives.push({
+            id: `objective-${objectiveId++}`,
+            type: ObjectiveType.DEFEAT_ALL_ENEMIES,
+            description: 'Defeat all enemy units',
+            isRequired: true,
+            isComplete: false,
+            progress: {
+                current: 0,
+                target: stageData.enemyUnits.length,
+                percentage: 0,
+            },
+        });
+
+        // Add boss defeat objectives if there are bosses
+        const bossUnits = stageData.enemyUnits.filter(unit => this.isBossUnit(unit));
+        bossUnits.forEach(boss => {
+            objectives.push({
+                id: `objective-${objectiveId++}`,
+                type: ObjectiveType.DEFEAT_BOSS,
+                description: `Defeat ${boss.name}`,
+                isRequired: true,
+                isComplete: false,
+                progress: {
+                    current: 0,
+                    target: 1,
+                    percentage: 0,
+                },
+                targetData: {
+                    bossId: boss.id,
+                },
+            });
+        });
+
+        // Create victory conditions
+        const victoryConditions = [
+            {
+                id: 'victory-defeat-all',
+                type: 'defeat_all_enemies' as any,
+                description: 'Defeat all enemy units',
+                isRequired: true,
+                evaluate: (gameState: any) => {
+                    const enemyUnits = stageData.enemyUnits.filter(
+                        unit => unit.currentHP > 0 && !this.recruitmentSystem.isNPC(unit)
+                    );
+                    return enemyUnits.length === 0;
+                },
+            },
+        ];
+
+        // Create defeat conditions
+        const defeatConditions = [
+            {
+                id: 'defeat-all-units-defeated',
+                type: 'all_units_defeated' as any,
+                description: 'All player units defeated',
+                evaluate: (gameState: any) => {
+                    const playerUnits = stageData.playerUnits.filter(unit => unit.currentHP > 0);
+                    return playerUnits.length === 0;
+                },
+            },
+        ];
+
+        // Create boss data for boss units
+        const bosses: BossData[] = bossUnits.map(boss => ({
+            id: boss.id,
+            name: boss.name,
+            title: boss.metadata?.bossTitle || 'Boss',
+            description: boss.metadata?.bossDescription || 'A powerful enemy',
+            roseEssenceAmount: boss.metadata?.roseEssenceAmount || 100,
+            roseEssenceType: boss.metadata?.roseEssenceType || 'crimson',
+            isBoss: true,
+            bossType: boss.metadata?.bossType || 'minor_boss',
+            difficulty: boss.metadata?.bossDifficulty || 'normal',
+            phases: boss.metadata?.bossPhases || [],
+            currentPhase: 0,
+            specialAbilities: boss.metadata?.bossAbilities || [],
+            aiPersonality: boss.metadata?.aiPersonality || 'aggressive',
+            aiPriority: boss.metadata?.aiPriority || 100,
+            experienceReward: boss.metadata?.experienceReward || 200,
+        }));
+
+        return {
+            id: stageData.id,
+            name: stageData.name,
+            description: stageData.description,
+            objectives,
+            victoryConditions,
+            defeatConditions,
+            bosses,
+            baseExperienceReward: 100,
+            targetTurns: 20,
+            maxTurns: 50,
+        };
+    }
+
+    /**
+     * Register boss units with the victory condition system
+     */
+    private registerBossUnits(): void {
+        if (!this.stageData) {
+            return;
+        }
+
+        const bossUnits = this.stageData.enemyUnits.filter(unit => this.isBossUnit(unit));
+
+        bossUnits.forEach(boss => {
+            const bossData: BossData = {
+                id: boss.id,
+                name: boss.name,
+                title: boss.metadata?.bossTitle || 'Boss',
+                description: boss.metadata?.bossDescription || 'A powerful enemy',
+                roseEssenceAmount: boss.metadata?.roseEssenceAmount || 100,
+                roseEssenceType: boss.metadata?.roseEssenceType || 'crimson',
+                isBoss: true,
+                bossType: boss.metadata?.bossType || 'minor_boss',
+                difficulty: boss.metadata?.bossDifficulty || 'normal',
+                phases: boss.metadata?.bossPhases || [],
+                currentPhase: 0,
+                specialAbilities: boss.metadata?.bossAbilities || [],
+                aiPersonality: boss.metadata?.aiPersonality || 'aggressive',
+                aiPriority: boss.metadata?.aiPriority || 100,
+                experienceReward: boss.metadata?.experienceReward || 200,
+            };
+
+            this.victoryConditionSystem.registerBossUnit(boss, bossData);
+            console.log(`Registered boss unit: ${boss.name}`);
+        });
+    }
+
+    /**
+     * Check if a unit is a boss
+     * @param unit - Unit to check
+     * @returns True if unit is a boss
+     */
+    private isBossUnit(unit: Unit): boolean {
+        return unit.metadata?.isBoss === true || unit.metadata?.bossType !== undefined;
+    }
+
+    /**
+     * Handle boss defeat
+     * 要件2.8: ボスが撃破されるとき、ボス撃破イベントを発行する
+     * @param boss - Defeated boss unit
+     */
+    private async handleBossDefeat(boss: Unit): Promise<void> {
+        console.log(`Boss defeated: ${boss.name}`);
+
+        try {
+            // Process boss defeat through victory condition system
+            const defeatResult = await this.victoryConditionSystem.handleBossDefeat(boss);
+
+            console.log('Boss defeat processed:', defeatResult);
+
+            // Show boss defeat notification
+            this.uiManager.showNotification({
+                message: `${boss.name} defeated! Rose Essence gained: ${defeatResult.roseEssenceGained}`,
+                type: 'success',
+                duration: 5000,
+            });
+
+            // Award rose essence through job system
+            if (defeatResult.roseEssenceGained > 0 && this.jobSystem) {
+                this.jobSystem.awardRoseEssence(defeatResult.roseEssenceGained, {
+                    type: 'boss_defeat',
+                    bossId: boss.id,
+                    bossName: boss.name,
+                    essenceType: defeatResult.roseEssenceType,
+                });
+            }
+
+        } catch (error) {
+            console.error('Error handling boss defeat:', error);
+        }
+    }
+
+    /**
+     * Setup victory condition event listeners
+     */
+    private setupVictoryConditionEventListeners(): void {
+        console.log('GameplayScene: Setting up victory condition event listeners');
+
+        // Objective events
+        this.victoryConditionSystem.on('objective-completed', (data: any) => {
+            console.log('Objective completed:', data.objectiveId);
+
+            this.uiManager.showNotification({
+                message: `Objective completed: ${data.description}`,
+                type: 'success',
+                duration: 3000,
+            });
+        });
+
+        // Victory/defeat detection events
+        this.victoryConditionSystem.on('auto-victory-detected', (data: any) => {
+            console.log('Auto victory detected');
+            this.handleStageVictory();
+        });
+
+        this.victoryConditionSystem.on('auto-defeat-detected', (data: any) => {
+            console.log('Auto defeat detected:', data.triggeredConditions);
+            this.handleStageDefeat(data.triggeredConditions[0]?.description || 'All units defeated');
+        });
+
+        // Boss defeat events
+        this.victoryConditionSystem.on('boss-defeated-integrated', (data: any) => {
+            console.log('Boss defeated (integrated):', data);
+        });
+
+        // Stage completion events
+        this.victoryConditionSystem.on('stage-complete', (data: StageCompleteResult) => {
+            console.log('Stage complete event:', data);
+            this.showStageCompleteScreen(data);
+        });
+
+        this.victoryConditionSystem.on('stage-failure', (data: StageFailureResult) => {
+            console.log('Stage failure event:', data);
+            this.showStageFailureScreen(data);
+        });
+
+        // Turn end processing
+        this.events.on('turn-changed', (data: any) => {
+            this.victoryConditionSystem.onTurnEnd(this.gameStateManager.getGameState());
+        });
+
+        console.log('GameplayScene: Victory condition event listeners setup completed');
+    }
+
+    /**
+     * Handle stage victory
+     * 要件3.7: 勝利状態に遷移するとき、ゲーム進行を停止する
+     */
+    private async handleStageVictory(): Promise<void> {
+        console.log('GameplayScene: Handling stage victory');
+
+        try {
+            // Stop game progression
+            this.isPaused = true;
+
+            // Get all units for recruitment completion
+            const allUnits = this.stageData
+                ? [...this.stageData.playerUnits, ...this.stageData.enemyUnits]
+                : [];
+
+            // Process stage completion through victory condition system
+            const completeResult = await this.victoryConditionSystem.handleStageComplete(
+                this.gameStateManager.getGameState(),
+                allUnits
+            );
+
+            console.log('Stage completion processed:', completeResult);
+
+            // The stage-complete event will trigger showStageCompleteScreen
+
+        } catch (error) {
+            console.error('Error handling stage victory:', error);
+
+            // Fallback: show basic victory screen
+            this.uiManager.showNotification({
+                message: 'Stage Complete!',
+                type: 'success',
+                duration: 5000,
+            });
+        }
+    }
+
+    /**
+     * Handle stage defeat
+     * 要件3.8: 敗北状態に遷移するとき、ゲーム進行を停止する
+     * @param reason - Defeat reason
+     */
+    private async handleStageDefeat(reason: string): Promise<void> {
+        console.log('GameplayScene: Handling stage defeat:', reason);
+
+        try {
+            // Stop game progression
+            this.isPaused = true;
+
+            // Process stage failure through victory condition system
+            const failureResult = await this.victoryConditionSystem.handleStageFailure(
+                reason,
+                this.gameStateManager.getGameState()
+            );
+
+            console.log('Stage failure processed:', failureResult);
+
+            // The stage-failure event will trigger showStageFailureScreen
+
+        } catch (error) {
+            console.error('Error handling stage defeat:', error);
+
+            // Fallback: show basic defeat screen
+            this.uiManager.showNotification({
+                message: `Stage Failed: ${reason}`,
+                type: 'error',
+                duration: 5000,
+            });
+        }
+    }
+
+    /**
+     * Show stage complete screen with rewards
+     * 要件4.6: 報酬が計算されるとき、報酬表示UIを表示する
+     * @param result - Stage completion result
+     */
+    private showStageCompleteScreen(result: StageCompleteResult): void {
+        console.log('GameplayScene: Showing stage complete screen');
+
+        // Create victory overlay
+        const victoryOverlay = this.add
+            .graphics()
+            .fillStyle(0x000000, 0.8)
+            .fillRect(0, 0, this.cameras.main.width, this.cameras.main.height)
+            .setScrollFactor(0)
+            .setDepth(2000);
+
+        // Victory title
+        const victoryTitle = this.add
+            .text(this.cameras.main.width / 2, 100, 'Stage Complete!', {
+                fontSize: '48px',
+                color: '#FFD700',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+            })
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(2001);
+
+        // Stage name
+        const stageName = this.add
+            .text(this.cameras.main.width / 2, 160, result.stageName, {
+                fontSize: '24px',
+                color: '#ffffff',
+                fontFamily: 'Arial',
+            })
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(2001);
+
+        // Clear rating
+        const ratingText = this.add
+            .text(this.cameras.main.width / 2, 220, `Clear Rating: ${result.clearRating}`, {
+                fontSize: '32px',
+                color: this.getRatingColor(result.clearRating),
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+            })
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(2001);
+
+        // Rewards summary
+        let yPos = 280;
+        const rewardTexts: Phaser.GameObjects.Text[] = [];
+
+        // Base experience
+        rewardTexts.push(
+            this.add
+                .text(
+                    this.cameras.main.width / 2,
+                    yPos,
+                    `Base Experience: ${result.rewards.baseExperience}`,
+                    {
+                        fontSize: '20px',
+                        color: '#ffffff',
+                        fontFamily: 'Arial',
+                    }
+                )
+                .setOrigin(0.5)
+                .setScrollFactor(0)
+                .setDepth(2001)
+        );
+        yPos += 30;
+
+        // Boss rewards
+        if (result.rewards.bossRewards.length > 0) {
+            result.rewards.bossRewards.forEach(bossReward => {
+                rewardTexts.push(
+                    this.add
+                        .text(
+                            this.cameras.main.width / 2,
+                            yPos,
+                            `${bossReward.bossName}: ${bossReward.roseEssenceAmount} Rose Essence`,
+                            {
+                                fontSize: '20px',
+                                color: '#FF69B4',
+                                fontFamily: 'Arial',
+                            }
+                        )
+                        .setOrigin(0.5)
+                        .setScrollFactor(0)
+                        .setDepth(2001)
+                );
+                yPos += 30;
+            });
+        }
+
+        // Recruitment rewards
+        if (result.rewards.recruitmentRewards.length > 0) {
+            rewardTexts.push(
+                this.add
+                    .text(
+                        this.cameras.main.width / 2,
+                        yPos,
+                        `Recruited: ${result.rewards.recruitmentRewards.length} characters`,
+                        {
+                            fontSize: '20px',
+                            color: '#00FF00',
+                            fontFamily: 'Arial',
+                        }
+                    )
+                    .setOrigin(0.5)
+                    .setScrollFactor(0)
+                    .setDepth(2001)
+            );
+            yPos += 30;
+        }
+
+        // Performance stats
+        yPos += 20;
+        rewardTexts.push(
+            this.add
+                .text(
+                    this.cameras.main.width / 2,
+                    yPos,
+                    `Turns: ${result.performance.turnsUsed} | Enemies Defeated: ${result.performance.enemiesDefeated}`,
+                    {
+                        fontSize: '18px',
+                        color: '#CCCCCC',
+                        fontFamily: 'Arial',
+                    }
+                )
+                .setOrigin(0.5)
+                .setScrollFactor(0)
+                .setDepth(2001)
+        );
+
+        // Continue button
+        const continueButton = this.createPauseMenuButton(
+            this.cameras.main.width / 2,
+            this.cameras.main.height - 100,
+            'Continue',
+            () => {
+                this.handleStageCompleteConfirm(result);
+            }
+        );
+        continueButton.setScrollFactor(0).setDepth(2001);
+
+        // Store references for cleanup
+        this.data.set('victoryOverlay', victoryOverlay);
+        this.data.set('victoryTitle', victoryTitle);
+        this.data.set('stageName', stageName);
+        this.data.set('ratingText', ratingText);
+        this.data.set('rewardTexts', rewardTexts);
+        this.data.set('continueButton', continueButton);
+    }
+
+    /**
+     * Show stage failure screen
+     * @param result - Stage failure result
+     */
+    private showStageFailureScreen(result: StageFailureResult): void {
+        console.log('GameplayScene: Showing stage failure screen');
+
+        // Create defeat overlay
+        const defeatOverlay = this.add
+            .graphics()
+            .fillStyle(0x000000, 0.9)
+            .fillRect(0, 0, this.cameras.main.width, this.cameras.main.height)
+            .setScrollFactor(0)
+            .setDepth(2000);
+
+        // Defeat title
+        const defeatTitle = this.add
+            .text(this.cameras.main.width / 2, 150, 'Stage Failed', {
+                fontSize: '48px',
+                color: '#FF0000',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+            })
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(2001);
+
+        // Defeat reason
+        const reasonText = this.add
+            .text(this.cameras.main.width / 2, 220, result.defeatReason, {
+                fontSize: '24px',
+                color: '#ffffff',
+                fontFamily: 'Arial',
+            })
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(2001);
+
+        // Retry button
+        const retryButton = this.createPauseMenuButton(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2 + 50,
+            'Retry Stage',
+            () => {
+                this.handleStageRetry();
+            }
+        );
+        retryButton.setScrollFactor(0).setDepth(2001);
+
+        // Return to stage select button
+        const returnButton = this.createPauseMenuButton(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2 + 110,
+            'Return to Stage Select',
+            () => {
+                this.returnToStageSelect();
+            }
+        );
+        returnButton.setScrollFactor(0).setDepth(2001);
+
+        // Store references for cleanup
+        this.data.set('defeatOverlay', defeatOverlay);
+        this.data.set('defeatTitle', defeatTitle);
+        this.data.set('reasonText', reasonText);
+        this.data.set('retryButton', retryButton);
+        this.data.set('returnButton', returnButton);
+    }
+
+    /**
+     * Handle stage complete confirmation
+     * 要件10.7: 報酬受け取り後の次ステージ遷移を実装
+     * @param result - Stage completion result
+     */
+    private async handleStageCompleteConfirm(result: StageCompleteResult): Promise<void> {
+        console.log('GameplayScene: Handling stage complete confirmation');
+
+        try {
+            // Distribute rewards through victory condition system
+            await this.victoryConditionSystem.distributeRewards(result.rewards);
+
+            // Clean up victory screen
+            this.cleanupVictoryScreen();
+
+            // Return to stage select
+            await this.returnToStageSelect();
+
+        } catch (error) {
+            console.error('Error handling stage complete confirmation:', error);
+            await this.returnToStageSelect();
+        }
+    }
+
+    /**
+     * Handle stage retry
+     */
+    private handleStageRetry(): void {
+        console.log('GameplayScene: Retrying stage');
+
+        // Clean up defeat screen
+        this.cleanupDefeatScreen();
+
+        // Restart the scene
+        this.scene.restart();
+    }
+
+    /**
+     * Clean up victory screen
+     */
+    private cleanupVictoryScreen(): void {
+        const victoryOverlay = this.data.get('victoryOverlay');
+        const victoryTitle = this.data.get('victoryTitle');
+        const stageName = this.data.get('stageName');
+        const ratingText = this.data.get('ratingText');
+        const rewardTexts = this.data.get('rewardTexts');
+        const continueButton = this.data.get('continueButton');
+
+        if (victoryOverlay) victoryOverlay.destroy();
+        if (victoryTitle) victoryTitle.destroy();
+        if (stageName) stageName.destroy();
+        if (ratingText) ratingText.destroy();
+        if (rewardTexts) rewardTexts.forEach((text: any) => text.destroy());
+        if (continueButton) continueButton.destroy();
+
+        this.data.remove('victoryOverlay');
+        this.data.remove('victoryTitle');
+        this.data.remove('stageName');
+        this.data.remove('ratingText');
+        this.data.remove('rewardTexts');
+        this.data.remove('continueButton');
+    }
+
+    /**
+     * Clean up defeat screen
+     */
+    private cleanupDefeatScreen(): void {
+        const defeatOverlay = this.data.get('defeatOverlay');
+        const defeatTitle = this.data.get('defeatTitle');
+        const reasonText = this.data.get('reasonText');
+        const retryButton = this.data.get('retryButton');
+        const returnButton = this.data.get('returnButton');
+
+        if (defeatOverlay) defeatOverlay.destroy();
+        if (defeatTitle) defeatTitle.destroy();
+        if (reasonText) reasonText.destroy();
+        if (retryButton) retryButton.destroy();
+        if (returnButton) returnButton.destroy();
+
+        this.data.remove('defeatOverlay');
+        this.data.remove('defeatTitle');
+        this.data.remove('reasonText');
+        this.data.remove('retryButton');
+        this.data.remove('returnButton');
+    }
+
+    /**
+     * Get color for clear rating
+     * @param rating - Clear rating
+     * @returns Color string
+     */
+    private getRatingColor(rating: string): string {
+        switch (rating) {
+            case 'S':
+                return '#FFD700'; // Gold
+            case 'A':
+                return '#C0C0C0'; // Silver
+            case 'B':
+                return '#CD7F32'; // Bronze
+            case 'C':
+                return '#FFFFFF'; // White
+            case 'D':
+                return '#CCCCCC'; // Gray
+            default:
+                return '#FFFFFF';
+        }
+    }
+
+    /**
+     * Check stage completion with recruitment
+     * Called when all enemies are defeated or converted
+     */
+    private checkStageCompletionWithRecruitment(): void {
+        console.log('GameplayScene: Checking stage completion with recruitment');
+
+        // Trigger victory through victory condition system
+        this.handleStageVictory();
+    }
+
+    /**
+     * Handle stage victory
+     */
+    private handleStageVictory(): void {
+        console.log('GameplayScene: Stage victory detected');
+        // Victory will be handled by VictoryConditionSystem auto-detection
+    }
+
+    /**
+     * Check if a unit is a boss
+     * 要件4.1: ボス撃破時の薔薇の力獲得判定
+     */
+    private isBossUnit(unit: Unit): boolean {
+        // Check if unit is a boss based on various criteria
+
+        // Check name for boss indicators
+        const name = unit.name.toLowerCase();
+        if (name.includes('boss') || name.includes('dragon') || name.includes('lord') || name.includes('king')) {
+            return true;
+        }
+
+        // Check stats for boss-level power
+        if (unit.stats.maxHP > 200) {
+            return true;
+        }
+
+        // Check metadata for boss flag
+        if (unit.metadata && (unit.metadata as any).isBoss) {
+            return true;
+        }
+
+        return false;
+    }
 }

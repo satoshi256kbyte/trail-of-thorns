@@ -105,6 +105,14 @@ export interface GameSaveData {
         roseEssenceTransactions: any[];
     };
 
+    // ボス戦・勝利条件システム情報
+    victoryConditionSystem?: {
+        stageClearData: Record<string, any>;
+        roseEssenceData: any;
+        rewardHistory: any[];
+        previousStageStates: any[];
+    };
+
     // 統計情報
     statistics: {
         totalBattles: number;

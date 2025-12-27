@@ -188,6 +188,9 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     private jobSystem: any = null;
     private battleJobIntegration: any = null;
 
+    // Victory condition system integration
+    private victoryConditionSystem: any = null;
+
     // Battle data
     private allUnits: Unit[] = [];
     private mapData: MapData | null = null;
@@ -363,6 +366,23 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
      */
     public hasJobSystem(): boolean {
         return this.jobSystem !== null;
+    }
+
+    /**
+     * Set victory condition system for integration
+     * @param victoryConditionSystem - Victory condition system instance
+     */
+    public setVictoryConditionSystem(victoryConditionSystem: any): void {
+        this.victoryConditionSystem = victoryConditionSystem;
+        this.log('Victory condition system integrated with battle system');
+    }
+
+    /**
+     * Check if victory condition system is integrated
+     * @returns True if victory condition system is available
+     */
+    public hasVictoryConditionSystem(): boolean {
+        return this.victoryConditionSystem !== null;
     }
 
     /**
@@ -1061,9 +1081,56 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     // =============================================================================
 
     /**
+     * Get boss data for AI system integration
+     * @param unitId - Unit ID to check
+     * @returns Boss data if unit is a boss, null otherwise
+     */
+    public getBossDataForAI(unitId: string): any | null {
+        if (!this.victoryConditionSystem) {
+            return null;
+        }
+
+        try {
+            const bossSystem = this.victoryConditionSystem.getBossSystem();
+            if (bossSystem && bossSystem.isBoss(unitId)) {
+                return bossSystem.getBossData(unitId);
+            }
+        } catch (error) {
+            this.log('Error getting boss data for AI', {
+                error: error.message,
+                unitId
+            });
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if a unit is a boss (for AI system)
+     * @param unitId - Unit ID to check
+     * @returns True if unit is a boss
+     */
+    public isBossForAI(unitId: string): boolean {
+        if (!this.victoryConditionSystem) {
+            return this.isBossUnit({ id: unitId } as Unit);
+        }
+
+        try {
+            const bossSystem = this.victoryConditionSystem.getBossSystem();
+            return bossSystem ? bossSystem.isBoss(unitId) : false;
+        } catch (error) {
+            this.log('Error checking if unit is boss for AI', {
+                error: error.message,
+                unitId
+            });
+            return false;
+        }
+    }
+
+    /**
      * Check if a unit is a boss
      * @param unit - Unit to check
-     * @returns True if the unit is a boss
+     * @returns True if unit is a boss
      */
     private isBossUnit(unit: Unit): boolean {
         // Check various indicators that a unit is a boss
@@ -1349,6 +1416,21 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     private getCurrentTurn(): number {
         // This would be provided by the turn manager in full implementation
         return 1;
+    }
+
+    /**
+     * Create game state for victory/defeat condition checking
+     * @returns Game state object
+     */
+    private createGameStateForConditionCheck(): any {
+        return {
+            currentTurn: this.getCurrentTurn(),
+            activePlayer: 'player', // This would come from turn manager
+            phase: 'select',
+            gameResult: null,
+            turnOrder: this.allUnits.filter(u => u.currentHP > 0),
+            activeUnitIndex: 0,
+        };
     }
 
     /**
@@ -1755,9 +1837,41 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
                 if (battleResult.targetDefeated && this.isBossUnit(target)) {
                     try {
                         await this.handleBossDefeat(target, attacker);
+                        
+                        // Notify victory condition system of boss defeat
+                        if (this.victoryConditionSystem) {
+                            try {
+                                await this.victoryConditionSystem.handleBossDefeat(target);
+                                this.log('Victory condition system notified of boss defeat', {
+                                    boss: target.name,
+                                    bossId: target.id
+                                });
+                            } catch (vcError) {
+                                this.log('Error notifying victory condition system of boss defeat', {
+                                    error: vcError.message,
+                                    boss: target.name
+                                });
+                            }
+                        }
                     } catch (error) {
                         this.log('Error handling boss defeat', { error: error.message });
                         // Don't throw - battle should continue even if boss defeat handling fails
+                    }
+                }
+
+                // Notify victory condition system of enemy defeat
+                if (battleResult.targetDefeated && target.faction === 'enemy' && this.victoryConditionSystem) {
+                    try {
+                        this.victoryConditionSystem.recordEnemyDefeat(target.id);
+                        this.log('Victory condition system notified of enemy defeat', {
+                            enemy: target.name,
+                            enemyId: target.id
+                        });
+                    } catch (vcError) {
+                        this.log('Error notifying victory condition system of enemy defeat', {
+                            error: vcError.message,
+                            enemy: target.name
+                        });
                     }
                 }
 
@@ -1817,6 +1931,34 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
                     await this.battleAnimator.animateHPChange(target, oldHP, target.currentHP);
                 }
 
+                // Check for boss phase change if target is a boss and still alive
+                if (!battleResult.targetDefeated && this.isBossUnit(target) && this.victoryConditionSystem) {
+                    try {
+                        const bossSystem = this.victoryConditionSystem.getBossSystem();
+                        if (bossSystem && bossSystem.isBoss(target.id)) {
+                            const phaseChanged = bossSystem.checkPhaseChange(target);
+                            if (phaseChanged) {
+                                this.log('Boss phase changed during battle', {
+                                    boss: target.name,
+                                    currentHP: target.currentHP,
+                                    maxHP: target.stats.maxHP
+                                });
+                                
+                                this.emit('boss-phase-changed-in-battle', {
+                                    boss: target,
+                                    battleResult,
+                                    timestamp: Date.now()
+                                });
+                            }
+                        }
+                    } catch (phaseError) {
+                        this.log('Error checking boss phase change', {
+                            error: phaseError.message,
+                            boss: target.name
+                        });
+                    }
+                }
+
                 // Play defeat animation if target was defeated
                 if (
                     battleResult.targetDefeated &&
@@ -1856,6 +1998,22 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
                             critical: damageContext.isCritical,
                         });
 
+                        // Notify victory condition system of unit lost
+                        if (this.victoryConditionSystem) {
+                            try {
+                                this.victoryConditionSystem.recordUnitLost(target.id);
+                                this.log('Victory condition system notified of unit lost', {
+                                    unit: target.name,
+                                    unitId: target.id
+                                });
+                            } catch (vcError) {
+                                this.log('Error notifying victory condition system of unit lost', {
+                                    error: vcError.message,
+                                    unit: target.name
+                                });
+                            }
+                        }
+
                         // Emit character loss event
                         this.emit('character-lost', {
                             unit: target,
@@ -1881,12 +2039,68 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
                 weapon
             );
 
+            // Record damage dealt and taken for victory condition system
+            if (this.victoryConditionSystem && !damageContext.isEvaded) {
+                try {
+                    const damageDealt = attacker.faction === 'player' ? damageContext.finalDamage : 0;
+                    const damageTaken = target.faction === 'player' ? damageContext.finalDamage : 0;
+                    this.victoryConditionSystem.recordDamage(damageDealt, damageTaken);
+                } catch (vcError) {
+                    this.log('Error recording damage to victory condition system', {
+                        error: vcError.message
+                    });
+                }
+            }
+
             // Record battle result
             this.battleStateManager.recordBattleResult(battleResult);
             this.battleHistory.push(battleResult);
 
             // Update post-battle state
             this.battleStateManager.updatePostBattle(battleResult, this.allUnits);
+
+            // Check victory and defeat conditions after battle
+            if (this.victoryConditionSystem) {
+                try {
+                    // Create game state for condition checking
+                    const gameState = this.createGameStateForConditionCheck();
+                    
+                    // Check victory conditions
+                    const victoryResult = this.victoryConditionSystem.checkVictoryConditions(gameState);
+                    if (victoryResult.isVictory) {
+                        this.log('Victory conditions met after battle', {
+                            attacker: attacker.name,
+                            target: target.name
+                        });
+                        
+                        this.emit('victory-conditions-met-after-battle', {
+                            battleResult,
+                            victoryResult,
+                            timestamp: Date.now()
+                        });
+                    }
+                    
+                    // Check defeat conditions
+                    const defeatResult = this.victoryConditionSystem.checkDefeatConditions(gameState);
+                    if (defeatResult.isDefeat) {
+                        this.log('Defeat conditions met after battle', {
+                            attacker: attacker.name,
+                            target: target.name,
+                            reason: defeatResult.message
+                        });
+                        
+                        this.emit('defeat-conditions-met-after-battle', {
+                            battleResult,
+                            defeatResult,
+                            timestamp: Date.now()
+                        });
+                    }
+                } catch (vcError) {
+                    this.log('Error checking victory/defeat conditions after battle', {
+                        error: vcError.message
+                    });
+                }
+            }
 
             // Update system state
             this.state.lastBattleResult = battleResult;

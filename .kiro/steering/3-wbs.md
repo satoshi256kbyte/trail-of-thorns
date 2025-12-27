@@ -306,33 +306,33 @@
 ### 3.3 ボス戦・勝利条件システム（ゲーム固有）
 
 - [x] ボス戦・勝利条件システムの基本データ構造と型定義を作成
-- [ ] ObjectiveManagerクラスで目標管理システムを実装
-- [ ] ObjectiveTrackerクラスで目標追跡システムを実装
-- [ ] BossSystemクラスでボス戦管理システムを実装
-- [ ] BossAIクラスでボス専用AI行動パターンを実装
-- [ ] BossEffectsクラスでボス戦演出システムを実装
-- [ ] VictoryConditionManagerクラスで勝利・敗北判定システムを実装
-- [ ] GameResultHandlerクラスでゲーム結果処理システムを実装
-- [ ] RewardCalculatorクラスで報酬計算システムを実装
-- [ ] RoseEssenceGrantクラスで薔薇の力付与システムを実装
-- [ ] RewardDistributorクラスで報酬配布システムを実装
-- [ ] ObjectiveUIクラスで目標表示UIシステムを実装
-- [ ] BossUIクラスでボス情報UIシステムを実装
-- [ ] RewardUIクラスで報酬表示UIシステムを実装
-- [ ] VictoryConditionSystemメインコントローラークラスを実装
-- [ ] BattleSystemとの統合機能を実装
-- [ ] ExperienceSystemとの統合機能を実装
-- [ ] JobSystemとの統合機能を実装
-- [ ] RecruitmentSystemとの統合機能を実装
-- [ ] CharacterLossManagerとの統合機能を実装
-- [ ] TurnManagerとの統合機能を実装
-- [ ] GameplaySceneとの統合と入力処理システムを実装
-- [ ] データ永続化とセーブ・ロード連携機能を実装
-- [ ] ステージデータJSONとボスデータ定義を実装
-- [ ] エラーハンドリングとユーザーフィードバックシステムを実装
-- [ ] パフォーマンス最適化とメモリ管理を実装
-- [ ] デバッグツールと開発支援機能を実装
-- [ ] 包括的テストスイートと品質保証を実装
+- [x] ObjectiveManagerクラスで目標管理システムを実装
+- [x] ObjectiveTrackerクラスで目標追跡システムを実装
+- [x] BossSystemクラスでボス戦管理システムを実装
+- [x] BossAIクラスでボス専用AI行動パターンを実装
+- [x] BossEffectsクラスでボス戦演出システムを実装
+- [x] VictoryConditionManagerクラスで勝利・敗北判定システムを実装
+- [x] GameResultHandlerクラスでゲーム結果処理システムを実装
+- [x] RewardCalculatorクラスで報酬計算システムを実装
+- [x] RoseEssenceGrantクラスで薔薇の力付与システムを実装
+- [x] RewardDistributorクラスで報酬配布システムを実装
+- [x] ObjectiveUIクラスで目標表示UIシステムを実装
+- [x] BossUIクラスでボス情報UIシステムを実装
+- [x] RewardUIクラスで報酬表示UIシステムを実装
+- [x] VictoryConditionSystemメインコントローラークラスを実装
+- [x] BattleSystemとの統合機能を実装
+- [x] ExperienceSystemとの統合機能を実装
+- [x] JobSystemとの統合機能を実装
+- [x] RecruitmentSystemとの統合機能を実装
+- [x] CharacterLossManagerとの統合機能を実装
+- [x] TurnManagerとの統合機能を実装
+- [x] GameplaySceneとの統合と入力処理システムを実装
+- [x] データ永続化とセーブ・ロード連携機能を実装
+- [x] ステージデータJSONとボスデータ定義を実装
+- [x] エラーハンドリングとユーザーフィードバックシステムを実装
+- [x] パフォーマンス最適化とメモリ管理を実装
+- [x] デバッグツールと開発支援機能を実装
+- [-] 包括的テストスイートと品質保証を実装
 - [Spec](.kiro/specs/3.3-boss-victory-system)
 
 ### 3.4 章・ステージ管理システム（ゲーム固有）

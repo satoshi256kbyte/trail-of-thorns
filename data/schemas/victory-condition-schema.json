@@ -1,0 +1,222 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Victory and Defeat Conditions Schema",
+  "description": "Schema for stage victory and defeat conditions",
+  "definitions": {
+    "VictoryCondition": {
+      "type": "object",
+      "required": ["type", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique condition identifier"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "defeat_boss",
+            "defeat_all_enemies",
+            "reach_destination",
+            "reach_position",
+            "survive_turns",
+            "protect_unit",
+            "collect_items",
+            "custom"
+          ],
+          "description": "Victory condition type"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable condition description"
+        },
+        "isRequired": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this condition is required for victory"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Type-specific parameters",
+          "properties": {
+            "bossId": {
+              "type": "string",
+              "description": "Boss ID for defeat_boss type"
+            },
+            "targetPosition": {
+              "type": "object",
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" }
+              },
+              "required": ["x", "y"],
+              "description": "Target position for reach_position type"
+            },
+            "targetArea": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" }
+                },
+                "required": ["x", "y"]
+              },
+              "description": "Target area for reach_destination type"
+            },
+            "requiredTurns": {
+              "type": "number",
+              "minimum": 1,
+              "description": "Number of turns to survive"
+            },
+            "protectUnitId": {
+              "type": "string",
+              "description": "Unit ID to protect"
+            },
+            "itemIds": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Item IDs to collect"
+            },
+            "itemCount": {
+              "type": "number",
+              "minimum": 1,
+              "description": "Number of items to collect"
+            }
+          }
+        }
+      }
+    },
+    "DefeatCondition": {
+      "type": "object",
+      "required": ["type", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique condition identifier"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "all_allies_defeated",
+            "all_units_defeated",
+            "main_character_defeated",
+            "protected_unit_defeated",
+            "turn_limit_exceeded",
+            "custom"
+          ],
+          "description": "Defeat condition type"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable condition description"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Type-specific parameters",
+          "properties": {
+            "mainCharacterId": {
+              "type": "string",
+              "description": "Main character ID"
+            },
+            "protectedUnitId": {
+              "type": "string",
+              "description": "Protected unit ID"
+            },
+            "maxTurns": {
+              "type": "number",
+              "minimum": 1,
+              "description": "Maximum number of turns allowed"
+            }
+          }
+        }
+      }
+    },
+    "Objective": {
+      "type": "object",
+      "required": ["id", "type", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique objective identifier"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "defeat_boss",
+            "defeat_all_enemies",
+            "reach_position",
+            "survive_turns",
+            "protect_unit",
+            "collect_items",
+            "custom"
+          ],
+          "description": "Objective type"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Objective description"
+        },
+        "isRequired": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this objective is required"
+        },
+        "isComplete": {
+          "type": "boolean",
+          "default": false,
+          "description": "Completion status"
+        },
+        "progress": {
+          "type": "object",
+          "properties": {
+            "current": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Current progress"
+            },
+            "target": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Target progress"
+            }
+          },
+          "required": ["current", "target"]
+        },
+        "targetData": {
+          "type": "object",
+          "description": "Objective-specific target data",
+          "properties": {
+            "bossId": { "type": "string" },
+            "targetPosition": {
+              "type": "object",
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" }
+              }
+            },
+            "targetArea": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" }
+                }
+              }
+            },
+            "surviveTurns": { "type": "number" },
+            "protectUnitId": { "type": "string" },
+            "itemIds": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "itemCount": { "type": "number" }
+          }
+        }
+      }
+    }
+  }
+}
