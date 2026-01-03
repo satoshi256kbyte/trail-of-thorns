@@ -1,81 +1,58 @@
-// Vitest setup file for mocking Phaser and other dependencies
-import { vi, beforeAll, afterAll } from 'vitest';
+/**
+ * Vitestテストセットアップファイル
+ * 全テストの前に実行される共通設定
+ */
 
-// Mock phaser3spectorjs before Phaser is imported
-vi.mock('phaser3spectorjs', () => ({}));
+import { vi } from 'vitest';
 
-// Mock HTMLCanvasElement.getContext to avoid jsdom issues
-Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
-  value: vi.fn((contextType: string) => {
-    if (contextType === '2d') {
-      return {
-        fillStyle: '',
-        fillRect: vi.fn(),
-        clearRect: vi.fn(),
-        getImageData: vi.fn(() => ({ data: new Array(4) })),
-        putImageData: vi.fn(),
-        createImageData: vi.fn(() => ({ data: new Array(4) })),
-        setTransform: vi.fn(),
-        drawImage: vi.fn(),
-        save: vi.fn(),
-        restore: vi.fn(),
-        beginPath: vi.fn(),
-        moveTo: vi.fn(),
-        lineTo: vi.fn(),
-        closePath: vi.fn(),
-        stroke: vi.fn(),
-        fill: vi.fn(),
-        measureText: vi.fn(() => ({ width: 0 })),
-        transform: vi.fn(),
-        translate: vi.fn(),
-        scale: vi.fn(),
-        rotate: vi.fn(),
-        arc: vi.fn(),
-        fillText: vi.fn(),
-        strokeText: vi.fn(),
-      };
+// Phaserのグローバルモック
+global.Phaser = {
+    Events: {
+        EventEmitter: class MockEventEmitter {
+            private listeners: Map<string, Function[]> = new Map();
+
+            on(event: string, fn: Function) {
+                if (!this.listeners.has(event)) {
+                    this.listeners.set(event, []);
+                }
+                this.listeners.get(event)!.push(fn);
+                return this;
+            }
+
+            emit(event: string, ...args: any[]) {
+                const listeners = this.listeners.get(event);
+                if (listeners) {
+                    listeners.forEach(fn => fn(...args));
+                }
+                return this;
+            }
+
+            removeAllListeners() {
+                this.listeners.clear();
+                return this;
+            }
+
+            off(event: string, fn?: Function) {
+                if (!fn) {
+                    this.listeners.delete(event);
+                } else {
+                    const listeners = this.listeners.get(event);
+                    if (listeners) {
+                        const index = listeners.indexOf(fn);
+                        if (index > -1) {
+                            listeners.splice(index, 1);
+                        }
+                    }
+                }
+                return this;
+            }
+        }
+    },
+    Scene: class MockScene {
+        add = { text: vi.fn(), image: vi.fn(), container: vi.fn(), group: vi.fn() };
+        load = { json: vi.fn(), image: vi.fn() };
+        input = { on: vi.fn() };
+        events = { on: vi.fn(), emit: vi.fn() };
+        cameras = { main: { scrollX: 0, scrollY: 0 } };
     }
-    if (contextType === 'webgl' || contextType === 'experimental-webgl') {
-      return {
-        getExtension: vi.fn(),
-        getParameter: vi.fn(),
-        createShader: vi.fn(),
-        shaderSource: vi.fn(),
-        compileShader: vi.fn(),
-        createProgram: vi.fn(),
-        attachShader: vi.fn(),
-        linkProgram: vi.fn(),
-        useProgram: vi.fn(),
-        createBuffer: vi.fn(),
-        bindBuffer: vi.fn(),
-        bufferData: vi.fn(),
-        enableVertexAttribArray: vi.fn(),
-        vertexAttribPointer: vi.fn(),
-        drawArrays: vi.fn(),
-        clear: vi.fn(),
-        clearColor: vi.fn(),
-        viewport: vi.fn(),
-      };
-    }
-    return null;
-  }),
-});
-
-// Suppress console errors during tests
-const originalError = console.error;
-beforeAll(() => {
-  console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === 'string' &&
-      (args[0].includes('Not implemented: HTMLCanvasElement.prototype.getContext') ||
-        args[0].includes('Error: Not implemented'))
-    ) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
-});
-
-afterAll(() => {
-  console.error = originalError;
-});
+} as any;
