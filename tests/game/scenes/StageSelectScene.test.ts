@@ -401,3 +401,339 @@ describe('StageSelectScene - Stage Selection Functionality', () => {
     });
   });
 });
+
+describe('StageSelectScene - Chapter-Stage Management Integration', () => {
+  let scene: StageSelectScene;
+  let mockStageData: StageData[];
+  let mockChapterData: any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    mockStageData = [
+      {
+        id: 'stage-1-1',
+        name: 'Village Anomaly',
+        description: 'Strange events in the village',
+        isUnlocked: true,
+        difficulty: 1,
+        order: 1,
+      },
+      {
+        id: 'stage-1-2',
+        name: 'Forest Investigation',
+        description: 'Investigate the forest',
+        isUnlocked: false,
+        difficulty: 2,
+        order: 2,
+      },
+      {
+        id: 'stage-1-3',
+        name: 'Rose Garden',
+        description: 'The source of corruption',
+        isUnlocked: false,
+        difficulty: 3,
+        order: 3,
+      },
+    ];
+
+    mockChapterData = {
+      id: 'chapter-1',
+      name: '薔薇の目覚め',
+      storyDescription: '平和な村に突如現れた魔性の薔薇...',
+      stageIds: ['stage-1-1', 'stage-1-2', 'stage-1-3'],
+      recommendedLevel: 1,
+    };
+
+    scene = new StageSelectScene();
+
+    scene.cache.json.get = jest.fn().mockReturnValue({
+      stages: mockStageData,
+    });
+
+    scene.cameras.main.once = jest.fn().mockImplementation((event, callback) => {
+      callback();
+    });
+  });
+
+  describe('Chapter Data Integration', () => {
+    it('should accept and store chapter data from scene transition', () => {
+      const sceneData = {
+        chapterData: mockChapterData,
+        fromScene: 'ChapterSelectScene',
+      };
+
+      scene.create(sceneData);
+
+      // Verify chapter data is stored
+      expect((scene as any).currentChapterData).toEqual(mockChapterData);
+    });
+
+    it('should display chapter information when chapter data is provided', () => {
+      const sceneData = {
+        chapterData: mockChapterData,
+      };
+
+      scene.create(sceneData);
+
+      // Verify chapter info text was created
+      expect(scene.add.text).toHaveBeenCalledWith(
+        expect.any(Number),
+        140,
+        expect.stringContaining(mockChapterData.name),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle missing chapter data gracefully', () => {
+      scene.create();
+
+      // Should not throw error
+      expect((scene as any).currentChapterData).toBeUndefined();
+    });
+  });
+
+  describe('Stage Progress Manager Integration', () => {
+    it('should initialize StageProgressManager on scene creation', () => {
+      scene.create();
+
+      expect((scene as any).stageProgressManager).toBeDefined();
+    });
+
+    it('should check stage unlock status from progress manager', () => {
+      const sceneData = {
+        chapterData: mockChapterData,
+      };
+
+      scene.create(sceneData);
+
+      const progressManager = (scene as any).stageProgressManager;
+      expect(progressManager).toBeDefined();
+    });
+  });
+
+  describe('Stage Info Panel Display', () => {
+    it('should create stage info panel on initialization', () => {
+      scene.create();
+
+      const stageInfoPanel = (scene as any).stageInfoPanel;
+      expect(stageInfoPanel).toBeDefined();
+      expect(scene.add.container).toHaveBeenCalled();
+    });
+
+    it('should show stage info panel on stage hover', () => {
+      scene.create();
+
+      const stageInfoPanel = (scene as any).stageInfoPanel;
+      const showStageInfo = (scene as any).showStageInfo.bind(scene);
+
+      // Mock setVisible method
+      stageInfoPanel.setVisible = jest.fn();
+
+      showStageInfo(mockStageData[0]);
+
+      expect(stageInfoPanel.setVisible).toHaveBeenCalledWith(true);
+    });
+
+    it('should hide stage info panel when hover ends', () => {
+      scene.create();
+
+      const stageInfoPanel = (scene as any).stageInfoPanel;
+      const hideStageInfo = (scene as any).hideStageInfo.bind(scene);
+
+      stageInfoPanel.setVisible = jest.fn();
+
+      hideStageInfo();
+
+      expect(stageInfoPanel.setVisible).toHaveBeenCalledWith(false);
+    });
+
+    it('should display stage details including difficulty and recommended level', () => {
+      scene.create();
+
+      const stageInfoPanel = (scene as any).stageInfoPanel;
+      const showStageInfo = (scene as any).showStageInfo.bind(scene);
+
+      // Mock getData to return text objects
+      const mockNameText = { setText: jest.fn() };
+      const mockDifficultyText = { setText: jest.fn() };
+      const mockLevelText = { setText: jest.fn() };
+      const mockStatusText = { setText: jest.fn(), setColor: jest.fn() };
+      const mockUnlockText = { setText: jest.fn() };
+
+      stageInfoPanel.getData = jest.fn((key: string) => {
+        switch (key) {
+          case 'nameText':
+            return mockNameText;
+          case 'difficultyText':
+            return mockDifficultyText;
+          case 'levelText':
+            return mockLevelText;
+          case 'statusText':
+            return mockStatusText;
+          case 'unlockConditionText':
+            return mockUnlockText;
+        }
+      });
+
+      stageInfoPanel.setVisible = jest.fn();
+
+      showStageInfo(mockStageData[0]);
+
+      expect(mockNameText.setText).toHaveBeenCalledWith(
+        expect.stringContaining(mockStageData[0].name)
+      );
+      expect(mockDifficultyText.setText).toHaveBeenCalledWith(expect.stringContaining('難易度'));
+      expect(mockLevelText.setText).toHaveBeenCalledWith(expect.stringContaining('推奨レベル'));
+      expect(mockStatusText.setText).toHaveBeenCalled();
+    });
+  });
+
+  describe('Stage Selection with Unlock Validation', () => {
+    it('should allow selection of unlocked stages', async () => {
+      scene.create();
+
+      const handleStageSelect = (scene as any).handleStageSelect.bind(scene);
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      await handleStageSelect(mockStageData[0]);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining(`Stage selected: ${mockStageData[0].name}`)
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should prevent selection of locked stages', async () => {
+      scene.create();
+
+      const handleStageSelect = (scene as any).handleStageSelect.bind(scene);
+      const showUnlockMessage = jest.spyOn(scene as any, 'showUnlockConditionMessage');
+
+      await handleStageSelect(mockStageData[1]); // Locked stage
+
+      expect(showUnlockMessage).toHaveBeenCalledWith(mockStageData[1]);
+    });
+
+    it('should display unlock condition message for locked stages', () => {
+      scene.create();
+
+      const showUnlockMessage = (scene as any).showUnlockConditionMessage.bind(scene);
+
+      // Mock add methods for message display
+      const mockOverlay = { destroy: jest.fn(), setDepth: jest.fn() };
+      const mockPanel = { destroy: jest.fn(), setDepth: jest.fn() };
+      const mockText = { destroy: jest.fn(), setOrigin: jest.fn().mockReturnThis(), setDepth: jest.fn() };
+
+      scene.add.graphics = jest.fn()
+        .mockReturnValueOnce(mockOverlay)
+        .mockReturnValueOnce(mockPanel);
+      scene.add.text = jest.fn().mockReturnValue(mockText);
+
+      showUnlockMessage(mockStageData[1]);
+
+      expect(scene.add.graphics).toHaveBeenCalled();
+      expect(scene.add.text).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.any(Number),
+        expect.stringContaining('未解放'),
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('Scene Navigation', () => {
+    it('should navigate back to ChapterSelectScene when chapter data exists', async () => {
+      const sceneData = {
+        chapterData: mockChapterData,
+      };
+
+      scene.create(sceneData);
+
+      const handleBack = (scene as any).handleBack.bind(scene);
+
+      // Mock SceneTransition
+      const mockTransitionTo = jest.fn();
+      (scene as any).constructor.transitionTo = mockTransitionTo;
+
+      await handleBack();
+
+      // Should attempt to go back to ChapterSelectScene
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('returning to previous screen')
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('should navigate back to TitleScene when no chapter data exists', async () => {
+      scene.create(); // No chapter data
+
+      const handleBack = (scene as any).handleBack.bind(scene);
+
+      await handleBack();
+
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('returning to previous screen')
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('should pass stage and chapter data to GameplayScene on selection', async () => {
+      const sceneData = {
+        chapterData: mockChapterData,
+      };
+
+      scene.create(sceneData);
+
+      const handleStageSelect = (scene as any).handleStageSelect.bind(scene);
+
+      await handleStageSelect(mockStageData[0]);
+
+      // Verify console log includes chapter data
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Transitioning to GameplayScene'),
+        expect.objectContaining({
+          selectedStage: mockStageData[0],
+          chapterData: mockChapterData,
+        })
+      );
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('Cleanup and Memory Management', () => {
+    it('should cleanup chapter data on scene destroy', () => {
+      const sceneData = {
+        chapterData: mockChapterData,
+      };
+
+      scene.create(sceneData);
+      scene.destroy();
+
+      expect((scene as any).currentChapterData).toBeUndefined();
+    });
+
+    it('should cleanup stage progress manager on scene destroy', () => {
+      scene.create();
+      scene.destroy();
+
+      expect((scene as any).stageProgressManager).toBeUndefined();
+    });
+
+    it('should cleanup stage info panel on scene destroy', () => {
+      scene.create();
+
+      const stageInfoPanel = (scene as any).stageInfoPanel;
+      stageInfoPanel.destroy = jest.fn();
+
+      scene.destroy();
+
+      expect(stageInfoPanel.destroy).toHaveBeenCalled();
+      expect((scene as any).stageInfoPanel).toBeUndefined();
+    });
+  });
+});

@@ -5,6 +5,9 @@
 
 import { vi } from 'vitest';
 
+// phaser3spectorjsのモック（Phaserのインポート前に必要）
+vi.mock('phaser3spectorjs', () => ({}));
+
 // Phaserのグローバルモック
 global.Phaser = {
     Events: {

@@ -41,3 +41,6 @@ export * from './reward';
 
 // Stage data types
 export * from './StageData';
+
+// Chapter-Stage management system types
+export * from './chapterStage';

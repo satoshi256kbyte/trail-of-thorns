@@ -263,21 +263,21 @@ export class TitleScene extends Phaser.Scene {
 
   /**
    * Private helper method: Handle Game Start button click
-   * Transition to stage selection scene
-   * Implements requirement 2.2: Transition to stage selection screen
+   * Transition to chapter selection scene
+   * Implements requirement 2.2: Transition to chapter selection screen
    */
   private async handleGameStart(): Promise<void> {
     try {
-      console.log('Game Start button clicked - transitioning to stage selection');
+      console.log('Game Start button clicked - transitioning to chapter selection');
 
       // Validate target scene exists
-      if (!SceneTransition.validateSceneKey(this, 'StageSelectScene')) {
-        console.error('StageSelectScene not found');
+      if (!SceneTransition.validateSceneKey(this, 'ChapterSelectScene')) {
+        console.error('ChapterSelectScene not found');
         return;
       }
 
-      // Use smooth transition to stage selection
-      await SceneTransition.transitionTo(this, 'StageSelectScene', TransitionType.SLIDE_LEFT, {
+      // Use smooth transition to chapter selection
+      await SceneTransition.transitionTo(this, 'ChapterSelectScene', TransitionType.SLIDE_LEFT, {
         fromScene: 'TitleScene',
         action: 'gameStart',
       });

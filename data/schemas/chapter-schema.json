@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chapter Data Schema",
+  "description": "章データのスキーマ定義",
+  "type": "object",
+  "required": ["version", "chapters"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "データバージョン"
+    },
+    "chapters": {
+      "type": "array",
+      "description": "章のリスト",
+      "items": {
+        "$ref": "#/definitions/chapter"
+      }
+    }
+  },
+  "definitions": {
+    "chapter": {
+      "type": "object",
+      "required": ["id", "name", "storyDescription", "recommendedLevel", "initialCharacters", "stages", "unlockCondition"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^chapter-\\d+$",
+          "description": "章の一意識別子"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "章の名前"
+        },
+        "storyDescription": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "章のストーリー説明"
+        },
+        "recommendedLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "推奨レベル"
+        },
+        "initialCharacters": {
+          "type": "array",
+          "description": "章開始時に利用可能なキャラクターIDのリスト",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "stages": {
+          "type": "array",
+          "description": "章内のステージリスト",
+          "items": {
+            "$ref": "#/definitions/stageReference"
+          },
+          "minItems": 1,
+          "maxItems": 24
+        },
+        "unlockCondition": {
+          "$ref": "#/definitions/unlockCondition"
+        }
+      }
+    },
+    "stageReference": {
+      "type": "object",
+      "required": ["id", "name", "chapterId", "difficulty", "recommendedLevel", "unlockCondition", "rewards"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^stage-\\d+-\\d+$",
+          "description": "ステージの一意識別子"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "ステージの名前"
+        },
+        "chapterId": {
+          "type": "string",
+          "pattern": "^chapter-\\d+$",
+          "description": "所属する章のID"
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "難易度"
+        },
+        "recommendedLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "推奨レベル"
+        },
+        "unlockCondition": {
+          "$ref": "#/definitions/stageUnlockCondition"
+        },
+        "rewards": {
+          "type": "array",
+          "description": "ステージクリア報酬",
+          "items": {
+            "$ref": "#/definitions/reward"
+          }
+        }
+      }
+    },
+    "unlockCondition": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["NONE", "PREVIOUS_CHAPTER"],
+          "description": "解放条件のタイプ"
+        },
+        "requiredChapterId": {
+          "type": "string",
+          "pattern": "^chapter-\\d+$",
+          "description": "必要な章のID（PREVIOUS_CHAPTERの場合）"
+        }
+      }
+    },
+    "stageUnlockCondition": {
+      "type": "object",
+      "required": ["type", "requiredStageIds"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["PREVIOUS_STAGE", "MULTIPLE_STAGES", "CHAPTER_COMPLETE"],
+          "description": "解放条件のタイプ"
+        },
+        "requiredStageIds": {
+          "type": "array",
+          "description": "必要なステージIDのリスト",
+          "items": {
+            "type": "string",
+            "pattern": "^stage-\\d+-\\d+$"
+          }
+        }
+      }
+    },
+    "reward": {
+      "type": "object",
+      "required": ["type", "amount", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["experience", "gold", "rose_essence", "item"],
+          "description": "報酬のタイプ"
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "報酬の量"
+        },
+        "description": {
+          "type": "string",
+          "description": "報酬の説明"
+        },
+        "itemId": {
+          "type": "string",
+          "description": "アイテムID（typeがitemの場合）"
+        }
+      }
+    }
+  }
+}

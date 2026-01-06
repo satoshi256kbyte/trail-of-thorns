@@ -48,6 +48,7 @@ import { VictoryConditionSystem, VictoryStageData } from '../systems/victory/Vic
 import { Objective, ObjectiveType } from '../types/victory';
 import { BossData } from '../types/boss';
 import { StageCompleteResult, StageFailureResult } from '../types/reward';
+import { ChapterStageIntegration, StageStartData, StageClearData } from '../systems/chapterStage/ChapterStageIntegration';
 
 /**
  * GameplayScene configuration interface
@@ -87,6 +88,7 @@ export class GameplayScene extends Phaser.Scene {
     private jobSystem!: JobSystem;
     private jobUI!: JobUI;
     private victoryConditionSystem!: VictoryConditionSystem;
+    private chapterStageIntegration!: ChapterStageIntegration;
 
     // Scene data and state
     private stageData?: StageData;
@@ -271,6 +273,9 @@ export class GameplayScene extends Phaser.Scene {
 
             // Initialize victory condition system with stage data
             this.initializeVictoryConditionSystem();
+
+            // Setup chapter-stage integration for stage start
+            this.setupStageStart();
 
             // Setup input handling
             this.setupInputHandling();
@@ -717,6 +722,12 @@ export class GameplayScene extends Phaser.Scene {
             autoCheckConditions: true,
             checkOnTurnEnd: true,
             checkOnBossDefeat: true,
+        });
+
+        // Initialize ChapterStageIntegration
+        this.chapterStageIntegration = new ChapterStageIntegration({
+            enableAutoSave: true,
+            debugMode: this.config.debugMode,
         });
 
         console.log('GameplayScene: Manager systems initialized');
@@ -3163,6 +3174,7 @@ export class GameplayScene extends Phaser.Scene {
 
     /**
      * Handle unit defeated event
+     * 要件: タスク10 - キャラクターロスト時の状態更新
      * @param data - Unit defeat data
      */
     private handleUnitDefeated(data: any): void {
@@ -3177,9 +3189,17 @@ export class GameplayScene extends Phaser.Scene {
                 this.victoryConditionSystem.recordEnemyDefeat(data.unit.id);
             }
 
-            // Record unit lost in victory condition system
+            // Record unit lost in victory condition system and chapter-stage integration
             if (data.unit.faction === 'player') {
                 this.victoryConditionSystem.recordUnitLost(data.unit.id);
+
+                // Handle character loss through integration
+                const lossResult = this.chapterStageIntegration.handleCharacterLoss(data.unit.id);
+                if (lossResult.success) {
+                    console.log('Character loss recorded:', lossResult.message);
+                } else {
+                    console.warn('Character loss recording failed:', lossResult.message);
+                }
             }
 
             // Check if this was a boss and award rose essence
@@ -5450,10 +5470,52 @@ this.inputHandler.disable();
      * Handle stage complete
      * 要件4.6: 報酬表示UIを表示する
      * 要件10.7: 報酬受け取り後の次ステージ遷移
+     * 要件: タスク10 - ステージクリア時の進行状況更新
      */
     private async handleStageComplete(result: StageCompleteResult): Promise<void> {
         try {
             console.log('Handling stage complete with rewards:', result);
+
+            // Calculate play time
+            const startTime = this.data.get('startTime') || Date.now();
+            const clearTime = Date.now() - startTime;
+
+            // Get surviving and lost characters
+            const allUnits = this.getAllUnits();
+            const survivingCharacters = allUnits
+                .filter(unit => unit.faction === 'player' && unit.currentHP > 0)
+                .map(unit => unit.id);
+            const lostCharacters = allUnits
+                .filter(unit => unit.faction === 'player' && unit.currentHP <= 0)
+                .map(unit => unit.id);
+
+            // Create stage clear data
+            const stageClearData: StageClearData = {
+                stageId: this.stageData?.id || 'unknown',
+                rewards: result.rewards,
+                clearTime: clearTime,
+                survivingCharacters: survivingCharacters,
+                lostCharacters: lostCharacters,
+            };
+
+            // Handle stage clear through integration
+            const clearResult = this.chapterStageIntegration.handleStageClear(stageClearData);
+
+            if (clearResult.success) {
+                console.log('Stage clear processed:', clearResult.message);
+
+                // Check if chapter was completed
+                if (clearResult.details?.chapterCompleted) {
+                    console.log('Chapter completed!');
+                    this.uiManager.showNotification({
+                        message: 'Chapter Complete!',
+                        type: 'success',
+                        duration: 3000,
+                    });
+                }
+            } else {
+                console.warn('Stage clear processing failed:', clearResult.message);
+            }
 
             // Show victory screen with rewards
             // TODO: Implement victory screen UI
@@ -5817,6 +5879,45 @@ this.inputHandler.disable();
 
         } catch (error) {
             console.error('Error handling boss defeat:', error);
+        }
+    }
+
+    /**
+     * Setup stage start with chapter-stage integration
+     * 要件: タスク10 - ステージ開始時のパーティ設定
+     */
+    private setupStageStart(): void {
+        try {
+            if (!this.stageData) {
+                console.warn('Cannot setup stage start: no stage data');
+                return;
+            }
+
+            // Create party composition from player units
+            const partyComposition = {
+                members: this.stageData.playerUnits.map(unit => unit.id),
+                formation: 'BALANCED' as const,
+            };
+
+            // Create stage start data
+            const stageStartData: StageStartData = {
+                stageId: this.stageData.id,
+                party: partyComposition,
+                stageData: this.stageData,
+            };
+
+            // Setup stage start through integration
+            const result = this.chapterStageIntegration.setupStageStart(stageStartData);
+
+            if (result.success) {
+                console.log('Stage start setup successful:', result.message);
+            } else {
+                console.warn('Stage start setup failed:', result.message);
+                // Continue anyway for now - this is optional integration
+            }
+        } catch (error) {
+            console.error('Error setting up stage start:', error);
+            // Continue anyway - don't block gameplay
         }
     }
 

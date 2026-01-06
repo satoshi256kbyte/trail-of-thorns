@@ -3,6 +3,8 @@ import { GameConfig } from '../game/src/config/GameConfig';
 import { TitleScene } from '../game/src/scenes/TitleScene';
 import { ConfigScene } from '../game/src/scenes/ConfigScene';
 import { StageSelectScene } from '../game/src/scenes/StageSelectScene';
+import { ChapterSelectScene } from '../game/src/scenes/ChapterSelectScene';
+import { PartyFormationScene } from '../game/src/scenes/PartyFormationScene';
 
 // Global type declarations for debugging objects
 declare global {
@@ -83,9 +85,19 @@ class GameInitializer {
           description: 'Configuration screen with settings options',
         },
         {
+          key: 'ChapterSelectScene',
+          sceneClass: ChapterSelectScene,
+          description: 'Chapter selection screen with available chapters',
+        },
+        {
           key: 'StageSelectScene',
           sceneClass: StageSelectScene,
           description: 'Stage selection screen with available stages',
+        },
+        {
+          key: 'PartyFormationScene',
+          sceneClass: PartyFormationScene,
+          description: 'Party formation screen for character selection',
         },
       ];
 

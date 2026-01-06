@@ -5,22 +5,30 @@ import { NavigableStageButton } from '../ui/NavigableStageButton';
 import { KeyboardNavigationManager } from '../utils/KeyboardNavigationManager';
 import { StageData, StagesConfig, StageLoadResult } from '../types/StageData';
 import { SceneTransition, TransitionType, SceneData } from '../utils/SceneTransition';
+import { StageProgressManager } from '../systems/chapterStage/StageProgressManager';
+import { StageMetadata, StageProgress, ChapterData } from '../types/chapterStage';
 
 /**
  * StageSelectScene class
  * Implements stage selection interface with grid layout system
  * Loads stage data from JSON configuration and provides navigation
- * Implements requirements 6.1, 6.5 from the title-menu-screen specification
+ * Implements requirements 6.1, 6.2, 6.3, 6.4, 6.5 from the chapter-stage-management specification
  */
 export class StageSelectScene extends Phaser.Scene {
     // Private properties for scene elements
     private backgroundGraphics?: Phaser.GameObjects.Graphics;
     private titleText?: Phaser.GameObjects.Text;
+    private chapterInfoText?: Phaser.GameObjects.Text;
     private backButton?: NavigableMenuButton;
     private stageData: StageData[] = [];
     private stageButtons: NavigableStageButton[] = [];
     private loadingText?: Phaser.GameObjects.Text;
     private keyboardNavigation?: KeyboardNavigationManager;
+    
+    // Chapter-Stage Management System integration
+    private stageProgressManager?: StageProgressManager;
+    private currentChapterData?: ChapterData;
+    private stageInfoPanel?: Phaser.GameObjects.Container;
 
     // Grid layout configuration
     private static readonly GRID_CONFIG = {
@@ -59,10 +67,19 @@ export class StageSelectScene extends Phaser.Scene {
     /**
      * Phaser lifecycle method: create
      * Initialize the scene and create all game objects
-     * @param data - Optional data passed from previous scene
+     * @param data - Optional data passed from previous scene (includes chapter data)
      */
     public create(data?: SceneData): void {
         console.log('StageSelectScene: create phase', data ? 'with data' : '');
+
+        // Initialize stage progress manager
+        this.stageProgressManager = new StageProgressManager();
+        
+        // Extract chapter data from scene data
+        if (data && data.chapterData) {
+            this.currentChapterData = data.chapterData as ChapterData;
+            console.log('Chapter data received:', this.currentChapterData);
+        }
 
         // Create entrance transition effect
         SceneTransition.createEntranceTransition(this, TransitionType.SLIDE_RIGHT, 300);
@@ -70,14 +87,18 @@ export class StageSelectScene extends Phaser.Scene {
         // Setup background
         this.setupBackground();
 
-        // Create title
+        // Create title and chapter info
         this.createTitle();
+        this.createChapterInfo();
 
         // Load and process stage data
         this.loadStageData();
 
         // Create stage selection grid
         this.createStageGrid();
+        
+        // Create stage info panel
+        this.createStageInfoPanel();
 
         // Create back button
         this.createBackButton();
@@ -208,13 +229,48 @@ export class StageSelectScene extends Phaser.Scene {
                 align: 'center',
             };
 
-            this.titleText = this.add.text(GameConfig.GAME_WIDTH / 2, 120, 'Stage Selection', titleStyle);
+            this.titleText = this.add.text(GameConfig.GAME_WIDTH / 2, 80, 'Stage Selection', titleStyle);
 
             this.titleText.setOrigin(0.5, 0.5);
 
             console.log('Stage selection title created');
         } catch (error) {
             console.error('Error creating title:', error);
+        }
+    }
+    
+    /**
+     * Private helper method: Create chapter info
+     * Display chapter information (name, recommended level, stage count)
+     * Implements requirement 6.1: Display chapter context
+     */
+    private createChapterInfo(): void {
+        try {
+            if (!this.currentChapterData) {
+                return;
+            }
+            
+            const chapterInfoStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+                fontSize: '24px',
+                color: '#ecf0f1',
+                fontFamily: 'Arial, sans-serif',
+                align: 'center',
+            };
+            
+            const chapterInfo = `${this.currentChapterData.name} - 推奨レベル: ${this.currentChapterData.recommendedLevel}`;
+            
+            this.chapterInfoText = this.add.text(
+                GameConfig.GAME_WIDTH / 2, 
+                140, 
+                chapterInfo, 
+                chapterInfoStyle
+            );
+            
+            this.chapterInfoText.setOrigin(0.5, 0.5);
+            
+            console.log('Chapter info created');
+        } catch (error) {
+            console.error('Error creating chapter info:', error);
         }
     }
 
@@ -407,7 +463,7 @@ export class StageSelectScene extends Phaser.Scene {
      * @returns Created StageButton instance
      */
     private createStageButton(stage: StageData, x: number, y: number): NavigableStageButton {
-        return new NavigableStageButton(
+        const button = new NavigableStageButton(
             this,
             x,
             y,
@@ -415,17 +471,204 @@ export class StageSelectScene extends Phaser.Scene {
             (selectedStage: StageData) => this.handleStageSelect(selectedStage),
             `stage-button-${stage.id}`
         );
+        
+        // Add hover event to show stage info
+        button.on('pointerover', () => {
+            this.showStageInfo(stage);
+        });
+        
+        button.on('pointerout', () => {
+            this.hideStageInfo();
+        });
+        
+        return button;
+    }
+    
+    /**
+     * Private helper method: Create stage info panel
+     * Creates a panel to display detailed stage information
+     * Implements requirement 6.2: Display stage details on hover
+     */
+    private createStageInfoPanel(): void {
+        try {
+            // Create container for stage info panel
+            this.stageInfoPanel = this.add.container(GameConfig.GAME_WIDTH - 300, 200);
+            this.stageInfoPanel.setVisible(false);
+            this.stageInfoPanel.setDepth(100);
+            
+            // Background panel
+            const panelBg = this.add.graphics();
+            panelBg.fillStyle(0x2c3e50, 0.95);
+            panelBg.fillRoundedRect(0, 0, 280, 300, 10);
+            panelBg.lineStyle(2, 0x3498db, 1);
+            panelBg.strokeRoundedRect(0, 0, 280, 300, 10);
+            
+            // Title text
+            const titleText = this.add.text(140, 20, 'ステージ情報', {
+                fontSize: '20px',
+                color: '#ffffff',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+            }).setOrigin(0.5, 0);
+            
+            // Info text placeholders (will be updated dynamically)
+            const nameText = this.add.text(20, 60, '', {
+                fontSize: '18px',
+                color: '#ecf0f1',
+                fontFamily: 'Arial',
+                wordWrap: { width: 240 },
+            });
+            
+            const difficultyText = this.add.text(20, 110, '', {
+                fontSize: '16px',
+                color: '#f39c12',
+                fontFamily: 'Arial',
+            });
+            
+            const levelText = this.add.text(20, 140, '', {
+                fontSize: '16px',
+                color: '#3498db',
+                fontFamily: 'Arial',
+            });
+            
+            const statusText = this.add.text(20, 170, '', {
+                fontSize: '16px',
+                color: '#2ecc71',
+                fontFamily: 'Arial',
+            });
+            
+            const unlockConditionText = this.add.text(20, 210, '', {
+                fontSize: '14px',
+                color: '#95a5a6',
+                fontFamily: 'Arial',
+                wordWrap: { width: 240 },
+            });
+            
+            // Add all elements to container
+            this.stageInfoPanel.add([
+                panelBg,
+                titleText,
+                nameText,
+                difficultyText,
+                levelText,
+                statusText,
+                unlockConditionText,
+            ]);
+            
+            // Store references for updating
+            this.stageInfoPanel.setData('nameText', nameText);
+            this.stageInfoPanel.setData('difficultyText', difficultyText);
+            this.stageInfoPanel.setData('levelText', levelText);
+            this.stageInfoPanel.setData('statusText', statusText);
+            this.stageInfoPanel.setData('unlockConditionText', unlockConditionText);
+            
+            console.log('Stage info panel created');
+        } catch (error) {
+            console.error('Error creating stage info panel:', error);
+        }
+    }
+    
+    /**
+     * Private helper method: Show stage info
+     * Display detailed information about a stage
+     * Implements requirement 6.2, 6.3: Show stage details and unlock conditions
+     * 
+     * @param stage - Stage data to display
+     */
+    private showStageInfo(stage: StageData): void {
+        if (!this.stageInfoPanel) {
+            return;
+        }
+        
+        try {
+            // Get stage progress if available
+            const progress = this.stageProgressManager?.getStageProgress(stage.id);
+            
+            // Update text elements
+            const nameText = this.stageInfoPanel.getData('nameText') as Phaser.GameObjects.Text;
+            const difficultyText = this.stageInfoPanel.getData('difficultyText') as Phaser.GameObjects.Text;
+            const levelText = this.stageInfoPanel.getData('levelText') as Phaser.GameObjects.Text;
+            const statusText = this.stageInfoPanel.getData('statusText') as Phaser.GameObjects.Text;
+            const unlockConditionText = this.stageInfoPanel.getData('unlockConditionText') as Phaser.GameObjects.Text;
+            
+            if (nameText) {
+                nameText.setText(`名前: ${stage.name}`);
+            }
+            
+            if (difficultyText) {
+                const difficultyStars = '★'.repeat(stage.difficulty);
+                difficultyText.setText(`難易度: ${difficultyStars}`);
+            }
+            
+            if (levelText) {
+                // For now, use stage difficulty as recommended level
+                // This should be replaced with actual recommended level from metadata
+                levelText.setText(`推奨レベル: ${stage.difficulty * 5}`);
+            }
+            
+            if (statusText) {
+                let statusColor = '#95a5a6'; // Gray for locked
+                let statusLabel = '未解放';
+                
+                if (progress?.isCompleted) {
+                    statusColor = '#2ecc71'; // Green for completed
+                    statusLabel = 'クリア済み';
+                } else if (progress?.isUnlocked || stage.isUnlocked) {
+                    statusColor = '#3498db'; // Blue for unlocked
+                    statusLabel = '解放済み';
+                }
+                
+                statusText.setText(`状態: ${statusLabel}`);
+                statusText.setColor(statusColor);
+            }
+            
+            if (unlockConditionText) {
+                if (!stage.isUnlocked && !(progress?.isUnlocked)) {
+                    // Show unlock condition for locked stages
+                    unlockConditionText.setText('解放条件:\n前のステージをクリア');
+                } else {
+                    unlockConditionText.setText('');
+                }
+            }
+            
+            // Show the panel
+            this.stageInfoPanel.setVisible(true);
+            
+        } catch (error) {
+            console.error('Error showing stage info:', error);
+        }
+    }
+    
+    /**
+     * Private helper method: Hide stage info
+     * Hide the stage info panel
+     */
+    private hideStageInfo(): void {
+        if (this.stageInfoPanel) {
+            this.stageInfoPanel.setVisible(false);
+        }
     }
 
     /**
      * Private helper method: Handle stage selection
-     * Process stage selection and transition to gameplay
-     * Implements scene data passing for selected stages
+     * Process stage selection and transition to party composition or gameplay
+     * Implements requirement 6.4: Stage selection with unlock validation
+     * Implements requirement 6.5: Scene transitions
      * @param stage - Selected stage data
      */
     private async handleStageSelect(stage: StageData): Promise<void> {
         try {
             console.log(`Stage selected: ${stage.name} (${stage.id})`);
+            
+            // Check if stage is unlocked
+            const progress = this.stageProgressManager?.getStageProgress(stage.id);
+            const isUnlocked = progress?.isUnlocked || stage.isUnlocked;
+            
+            if (!isUnlocked) {
+                // Stage is locked - show unlock condition message
+                this.showUnlockConditionMessage(stage);
+                return;
+            }
 
             // Validate that GameplayScene exists
             if (!SceneTransition.validateSceneKey(this, 'GameplayScene')) {
@@ -443,6 +686,8 @@ export class StageSelectScene extends Phaser.Scene {
                 fromScene: 'StageSelectScene',
                 action: 'stageSelected',
                 timestamp: Date.now(),
+                chapterData: this.currentChapterData,
+                stageProgress: progress,
                 playerData: {
                     // Placeholder for future player data integration
                     level: 1,
@@ -459,7 +704,8 @@ export class StageSelectScene extends Phaser.Scene {
 
             console.log(`Transitioning to GameplayScene with stage data:`, stageSceneData);
 
-            // Use smooth transition to GameplayScene with stage data
+            // TODO: In future, transition to PartyCompositionScene first
+            // For now, transition directly to GameplayScene
             await SceneTransition.transitionTo(
                 this,
                 'GameplayScene',
@@ -473,6 +719,86 @@ export class StageSelectScene extends Phaser.Scene {
         } finally {
             // Hide loading state
             this.hideLoadingState();
+        }
+    }
+    
+    /**
+     * Private helper method: Show unlock condition message
+     * Display message explaining why stage is locked
+     * Implements requirement 6.3: Show unlock conditions for locked stages
+     * 
+     * @param stage - Locked stage data
+     */
+    private showUnlockConditionMessage(stage: StageData): void {
+        try {
+            // Create overlay
+            const overlay = this.add.graphics();
+            overlay.fillStyle(0x000000, 0.7);
+            overlay.fillRect(0, 0, GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT);
+            overlay.setDepth(500);
+            
+            // Create message panel
+            const panelWidth = 500;
+            const panelHeight = 300;
+            const panelX = (GameConfig.GAME_WIDTH - panelWidth) / 2;
+            const panelY = (GameConfig.GAME_HEIGHT - panelHeight) / 2;
+            
+            const panel = this.add.graphics();
+            panel.fillStyle(0x2c3e50, 1);
+            panel.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 10);
+            panel.lineStyle(3, 0xe74c3c, 1);
+            panel.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 10);
+            panel.setDepth(501);
+            
+            // Title
+            const titleText = this.add.text(
+                GameConfig.GAME_WIDTH / 2,
+                panelY + 40,
+                'ステージ未解放',
+                {
+                    fontSize: '28px',
+                    color: '#e74c3c',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold',
+                }
+            ).setOrigin(0.5, 0).setDepth(502);
+            
+            // Message
+            const messageText = this.add.text(
+                GameConfig.GAME_WIDTH / 2,
+                panelY + 100,
+                `「${stage.name}」はまだ解放されていません。\n\n解放条件:\n前のステージをクリアしてください。`,
+                {
+                    fontSize: '18px',
+                    color: '#ecf0f1',
+                    fontFamily: 'Arial',
+                    align: 'center',
+                    wordWrap: { width: panelWidth - 60 },
+                }
+            ).setOrigin(0.5, 0).setDepth(502);
+            
+            // OK button
+            const okButton = new NavigableMenuButton(
+                this,
+                GameConfig.GAME_WIDTH / 2,
+                panelY + panelHeight - 60,
+                'OK',
+                () => {
+                    // Clean up message elements
+                    overlay.destroy();
+                    panel.destroy();
+                    titleText.destroy();
+                    messageText.destroy();
+                    okButton.destroy();
+                },
+                150,
+                50,
+                'unlock-message-ok-button'
+            );
+            okButton.setDepth(502);
+            
+        } catch (error) {
+            console.error('Error showing unlock condition message:', error);
         }
     }
 
@@ -629,20 +955,24 @@ export class StageSelectScene extends Phaser.Scene {
 
     /**
      * Private helper method: Handle back button click
-     * Return to title screen with transition effect
+     * Return to chapter selection or title screen with transition effect
+     * Implements requirement 6.5: Navigation back to previous screen
      */
     private async handleBack(): Promise<void> {
         try {
-            console.log('Back button clicked - returning to title screen');
+            console.log('Back button clicked - returning to previous screen');
 
+            // Determine target scene based on whether we have chapter data
+            const targetScene = this.currentChapterData ? 'ChapterSelectScene' : 'TitleScene';
+            
             // Validate target scene exists
-            if (!SceneTransition.validateSceneKey(this, 'TitleScene')) {
-                console.error('TitleScene not found');
+            if (!SceneTransition.validateSceneKey(this, targetScene)) {
+                console.error(`${targetScene} not found`);
                 return;
             }
 
-            // Use smooth transition back to title screen
-            await SceneTransition.transitionTo(this, 'TitleScene', TransitionType.SLIDE_RIGHT, {
+            // Use smooth transition back to previous screen
+            await SceneTransition.transitionTo(this, targetScene, TransitionType.SLIDE_RIGHT, {
                 fromScene: 'StageSelectScene',
                 action: 'back',
             });
@@ -702,6 +1032,18 @@ export class StageSelectScene extends Phaser.Scene {
             this.titleText.destroy();
             this.titleText = undefined;
         }
+        
+        // Clean up chapter info text
+        if (this.chapterInfoText) {
+            this.chapterInfoText.destroy();
+            this.chapterInfoText = undefined;
+        }
+        
+        // Clean up stage info panel
+        if (this.stageInfoPanel) {
+            this.stageInfoPanel.destroy();
+            this.stageInfoPanel = undefined;
+        }
 
         // Clean up back button
         if (this.backButton) {
@@ -720,6 +1062,10 @@ export class StageSelectScene extends Phaser.Scene {
 
         // Clear stage data
         this.stageData = [];
+        
+        // Clear stage progress manager
+        this.stageProgressManager = undefined;
+        this.currentChapterData = undefined;
 
         console.log('StageSelectScene: cleanup completed');
     }

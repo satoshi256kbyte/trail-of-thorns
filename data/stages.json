@@ -1,17 +1,24 @@
 {
+  "version": "1.0.0",
   "stages": [
     {
-      "id": "stage-001",
-      "name": "Forest Path",
-      "description": "A peaceful introduction to the world",
-      "isUnlocked": true,
-      "thumbnail": "assets/thumbnails/forest-path.png",
+      "id": "stage-1-1",
+      "name": "村の異変",
+      "chapterId": "chapter-1",
+      "description": "平和だった村に異変が起きた。薔薇の影響で村人が次々と正気を失っている。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/village-crisis.png",
       "difficulty": 1,
+      "recommendedLevel": 1,
       "order": 1,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": []
+      },
       "mapData": {
         "width": 12,
         "height": 8,
-        "tileset": "forest"
+        "tileset": "village"
       },
       "playerUnits": [
         {
@@ -56,34 +63,52 @@
           "type": "all_allies_defeated",
           "description": "味方が全滅する"
         }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 50,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 100,
+          "description": "ステージクリア報酬"
+        }
       ]
     },
     {
-      "id": "stage-002",
-      "name": "Mountain Pass",
-      "description": "Treacherous terrain awaits",
+      "id": "stage-1-2",
+      "name": "森の探索",
+      "chapterId": "chapter-1",
+      "description": "村の異変の原因を探るため、森の奥へと進む。",
       "isUnlocked": false,
-      "thumbnail": "assets/thumbnails/mountain-pass.png",
+      "thumbnail": "assets/thumbnails/forest-exploration.png",
       "difficulty": 2,
+      "recommendedLevel": 2,
       "order": 2,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-1-1"]
+      },
       "mapData": {
         "width": 14,
         "height": 10,
-        "tileset": "mountain"
+        "tileset": "forest"
       },
       "playerUnits": [
         {
           "characterId": "protagonist",
           "startPosition": {
             "x": 2,
-            "y": 8
+            "y": 5
           }
         },
         {
           "characterId": "ally_mage",
           "startPosition": {
             "x": 1,
-            "y": 7
+            "y": 4
           }
         }
       ],
@@ -92,7 +117,7 @@
           "characterId": "enemy_archer_01",
           "startPosition": {
             "x": 12,
-            "y": 2
+            "y": 5
           }
         }
       ],
@@ -114,20 +139,38 @@
           "type": "all_allies_defeated",
           "description": "味方が全滅する"
         }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 75,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 150,
+          "description": "ステージクリア報酬"
+        }
       ]
     },
     {
-      "id": "stage-003",
-      "name": "Dark Cave",
-      "description": "Mysterious depths hide ancient secrets",
+      "id": "stage-1-3",
+      "name": "薔薇の根源",
+      "chapterId": "chapter-1",
+      "description": "ついに魔性の薔薇の根源を発見した。堕落した聖騎士がその力を守っている。",
       "isUnlocked": false,
-      "thumbnail": "assets/thumbnails/dark-cave.png",
+      "thumbnail": "assets/thumbnails/rose-source.png",
       "difficulty": 3,
+      "recommendedLevel": 3,
       "order": 3,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-1-2"]
+      },
       "mapData": {
         "width": 16,
         "height": 12,
-        "tileset": "cave"
+        "tileset": "corrupted_shrine"
       },
       "playerUnits": [
         {
@@ -198,20 +241,300 @@
             "maxTurns": 20
           }
         }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 100,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 200,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "rose_essence",
+          "amount": 3,
+          "description": "ボス撃破報酬：薔薇の力"
+        }
       ]
     },
     {
-      "id": "stage-004",
-      "name": "Crystal Lake",
-      "description": "Serene waters with hidden dangers",
+      "id": "stage-1-4",
+      "name": "村の防衛",
+      "chapterId": "chapter-1",
+      "description": "薔薇の根源を破壊したが、残党が村を襲撃してきた。村を守り抜け。",
       "isUnlocked": false,
-      "thumbnail": "assets/thumbnails/crystal-lake.png",
+      "thumbnail": "assets/thumbnails/village-defense.png",
       "difficulty": 2,
+      "recommendedLevel": 3,
       "order": 4,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-1-3"]
+      },
+      "mapData": {
+        "width": 14,
+        "height": 10,
+        "tileset": "village"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 7,
+            "y": 5
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 6,
+            "y": 4
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "survive_turns",
+          "description": "10ターン生存する",
+          "parameters": {
+            "requiredTurns": 10
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 80,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 180,
+          "description": "ステージクリア報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-1-5",
+      "name": "隠された洞窟",
+      "chapterId": "chapter-1",
+      "description": "村の近くに隠された洞窟が発見された。薔薇の影響を受けた魔物が潜んでいる。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/hidden-cave.png",
+      "difficulty": 3,
+      "recommendedLevel": 4,
+      "order": 5,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-1-2"]
+      },
+      "mapData": {
+        "width": 16,
+        "height": 12,
+        "tileset": "cave"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 6
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 5
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 90,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 200,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "item",
+          "amount": 1,
+          "description": "鉄の剣",
+          "itemId": "iron_sword"
+        }
+      ]
+    },
+    {
+      "id": "stage-1-6",
+      "name": "最後の抵抗",
+      "chapterId": "chapter-1",
+      "description": "薔薇の残党が最後の抵抗を試みている。村の平和を完全に取り戻せ。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/final-resistance.png",
+      "difficulty": 3,
+      "recommendedLevel": 4,
+      "order": 6,
+      "unlockCondition": {
+        "type": "MULTIPLE_STAGES",
+        "requiredStageIds": ["stage-1-4", "stage-1-5"]
+      },
       "mapData": {
         "width": 18,
         "height": 14,
-        "tileset": "lake"
+        "tileset": "village"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 7
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 6
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 120,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 250,
+          "description": "ステージクリア報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-2-1",
+      "name": "街道の危機",
+      "chapterId": "chapter-2",
+      "description": "街道を行く商人たちが薔薇の影響を受けた盗賊に襲われている。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/road-crisis.png",
+      "difficulty": 3,
+      "recommendedLevel": 5,
+      "order": 1,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": []
+      },
+      "mapData": {
+        "width": 16,
+        "height": 10,
+        "tileset": "road"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 5
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 4
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 120,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 250,
+          "description": "ステージクリア報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-2-2",
+      "name": "古城の秘密",
+      "chapterId": "chapter-2",
+      "description": "廃墟と化した古城に薔薇の力が集まっている。その秘密を探れ。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/old-castle.png",
+      "difficulty": 4,
+      "recommendedLevel": 6,
+      "order": 2,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-2-1"]
+      },
+      "mapData": {
+        "width": 18,
+        "height": 14,
+        "tileset": "castle"
       },
       "playerUnits": [
         {
@@ -248,16 +571,381 @@
           "type": "all_allies_defeated",
           "description": "味方が全滅する"
         }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 150,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 300,
+          "description": "ステージクリア報酬"
+        }
       ]
     },
     {
-      "id": "stage-005",
-      "name": "Ancient Ruins",
-      "description": "Forgotten civilization's last remnants",
+      "id": "stage-2-3",
+      "name": "腐敗の王",
+      "chapterId": "chapter-2",
+      "description": "古城の最深部で、薔薇の力を完全に取り込んだ腐敗の王が待ち受けている。",
       "isUnlocked": false,
-      "thumbnail": "assets/thumbnails/ancient-ruins.png",
+      "thumbnail": "assets/thumbnails/corruption-king.png",
+      "difficulty": 5,
+      "recommendedLevel": 7,
+      "order": 3,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-2-2"]
+      },
+      "mapData": {
+        "width": 20,
+        "height": 16,
+        "tileset": "throne_room"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 8
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 7
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_boss",
+          "description": "ボスを撃破する",
+          "parameters": {
+            "bossId": "boss_corruption_king"
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        },
+        {
+          "type": "turn_limit_exceeded",
+          "description": "25ターン以内にクリアできない",
+          "parameters": {
+            "maxTurns": 25
+          }
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 200,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 400,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "rose_essence",
+          "amount": 5,
+          "description": "ボス撃破報酬：薔薇の力"
+        }
+      ]
+    },
+    {
+      "id": "stage-2-4",
+      "name": "商人の護衛",
+      "chapterId": "chapter-2",
+      "description": "重要な物資を運ぶ商人を護衛し、目的地まで無事に送り届けよ。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/merchant-escort.png",
+      "difficulty": 3,
+      "recommendedLevel": 6,
+      "order": 4,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-2-1"]
+      },
+      "mapData": {
+        "width": 18,
+        "height": 12,
+        "tileset": "road"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 6
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 5
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "protect_npc",
+          "description": "商人を守りながら目的地に到達する",
+          "parameters": {
+            "npcId": "merchant_npc",
+            "targetPosition": {
+              "x": 16,
+              "y": 6
+            }
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        },
+        {
+          "type": "npc_defeated",
+          "description": "商人が倒される",
+          "parameters": {
+            "npcId": "merchant_npc"
+          }
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 130,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 280,
+          "description": "ステージクリア報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-2-5",
+      "name": "橋の攻防",
+      "chapterId": "chapter-2",
+      "description": "重要な橋を敵の手から奪還せよ。両側から攻撃を受ける難関だ。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/bridge-battle.png",
       "difficulty": 4,
+      "recommendedLevel": 7,
       "order": 5,
+      "unlockCondition": {
+        "type": "MULTIPLE_STAGES",
+        "requiredStageIds": ["stage-2-2", "stage-2-4"]
+      },
+      "mapData": {
+        "width": 20,
+        "height": 10,
+        "tileset": "bridge"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 10,
+            "y": 5
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 9,
+            "y": 4
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 180,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 350,
+          "description": "ステージクリア報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-2-6",
+      "name": "廃墟の探索",
+      "chapterId": "chapter-2",
+      "description": "古い廃墟に薔薇の力が集まっている。貴重な情報が眠っているかもしれない。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/ruins-exploration.png",
+      "difficulty": 3,
+      "recommendedLevel": 6,
+      "order": 6,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-2-1"]
+      },
+      "mapData": {
+        "width": 16,
+        "height": 12,
+        "tileset": "ruins"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 6
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 5
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 140,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 280,
+          "description": "ステージクリア報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-2-7",
+      "name": "薔薇の庭園",
+      "chapterId": "chapter-2",
+      "description": "腐敗の王が守っていた秘密の庭園。ここには強大な力が眠っている。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/rose-garden.png",
+      "difficulty": 5,
+      "recommendedLevel": 8,
+      "order": 7,
+      "unlockCondition": {
+        "type": "MULTIPLE_STAGES",
+        "requiredStageIds": ["stage-2-3", "stage-2-5", "stage-2-6"]
+      },
+      "mapData": {
+        "width": 20,
+        "height": 16,
+        "tileset": "garden"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 8
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 7
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_boss",
+          "description": "隠しボスを撃破する",
+          "parameters": {
+            "bossId": "boss_garden_guardian"
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 220,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 450,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "rose_essence",
+          "amount": 2,
+          "description": "隠しボス撃破報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-3-1",
+      "name": "遺跡の入口",
+      "chapterId": "chapter-3",
+      "description": "古代の遺跡に到着した。薔薇の真実がここに眠っている。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/ruins-entrance.png",
+      "difficulty": 5,
+      "recommendedLevel": 10,
+      "order": 1,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": []
+      },
       "mapData": {
         "width": 20,
         "height": 16,
@@ -267,14 +955,14 @@
         {
           "characterId": "protagonist",
           "startPosition": {
-            "x": 3,
+            "x": 2,
             "y": 8
           }
         },
         {
           "characterId": "ally_mage",
           "startPosition": {
-            "x": 2,
+            "x": 1,
             "y": 7
           }
         }
@@ -283,11 +971,8 @@
       "recruitableCharacters": [],
       "victoryConditions": [
         {
-          "type": "survive_turns",
-          "description": "15ターン生存する",
-          "parameters": {
-            "requiredTurns": 15
-          }
+          "type": "defeat_all_enemies",
+          "description": "全ての敵を撃破する"
         }
       ],
       "defeatConditions": [
@@ -295,20 +980,38 @@
           "type": "all_allies_defeated",
           "description": "味方が全滅する"
         }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 250,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 500,
+          "description": "ステージクリア報酬"
+        }
       ]
     },
     {
-      "id": "stage-006",
-      "name": "Dragon's Lair",
-      "description": "The ultimate challenge awaits brave heroes",
+      "id": "stage-3-2",
+      "name": "封印の間",
+      "chapterId": "chapter-3",
+      "description": "遺跡の奥深くに封印された間がある。古代の力が眠る場所だ。",
       "isUnlocked": false,
-      "thumbnail": "assets/thumbnails/dragons-lair.png",
-      "difficulty": 5,
-      "order": 6,
+      "thumbnail": "assets/thumbnails/sealed-chamber.png",
+      "difficulty": 6,
+      "recommendedLevel": 12,
+      "order": 2,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-3-1"]
+      },
       "mapData": {
-        "width": 24,
+        "width": 22,
         "height": 18,
-        "tileset": "lair"
+        "tileset": "sealed_chamber"
       },
       "playerUnits": [
         {
@@ -330,6 +1033,148 @@
       "recruitableCharacters": [],
       "victoryConditions": [
         {
+          "type": "survive_turns",
+          "description": "15ターン生存する",
+          "parameters": {
+            "requiredTurns": 15
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 300,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 600,
+          "description": "ステージクリア報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-3-3",
+      "name": "薔薇の女王",
+      "chapterId": "chapter-3",
+      "description": "ついに薔薇の力の源、薔薇の女王と対峙する。世界の運命がここで決まる。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/rose-queen.png",
+      "difficulty": 7,
+      "recommendedLevel": 15,
+      "order": 3,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-3-2"]
+      },
+      "mapData": {
+        "width": 24,
+        "height": 20,
+        "tileset": "throne_of_roses"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 10
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 9
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_boss",
+          "description": "薔薇の女王を撃破する",
+          "parameters": {
+            "bossId": "boss_rose_queen"
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        },
+        {
+          "type": "turn_limit_exceeded",
+          "description": "30ターン以内にクリアできない",
+          "parameters": {
+            "maxTurns": 30
+          }
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 500,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 1000,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "rose_essence",
+          "amount": 10,
+          "description": "ボス撃破報酬：薔薇の力"
+        }
+      ]
+    },
+    {
+      "id": "stage-3-4",
+      "name": "古代の試練",
+      "chapterId": "chapter-3",
+      "description": "遺跡には古代の試練が残されている。これを乗り越えることで真実に近づける。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/ancient-trial.png",
+      "difficulty": 6,
+      "recommendedLevel": 11,
+      "order": 4,
+      "unlockCondition": {
+        "type": "PREVIOUS_STAGE",
+        "requiredStageIds": ["stage-3-1"]
+      },
+      "mapData": {
+        "width": 20,
+        "height": 16,
+        "tileset": "trial_chamber"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 8
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 7
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
           "type": "defeat_all_enemies",
           "description": "全ての敵を撃破する"
         }
@@ -338,6 +1183,102 @@
         {
           "type": "all_allies_defeated",
           "description": "味方が全滅する"
+        },
+        {
+          "type": "turn_limit_exceeded",
+          "description": "20ターン以内にクリアできない",
+          "parameters": {
+            "maxTurns": 20
+          }
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 280,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 550,
+          "description": "ステージクリア報酬"
+        }
+      ]
+    },
+    {
+      "id": "stage-3-5",
+      "name": "守護者の間",
+      "chapterId": "chapter-3",
+      "description": "遺跡の守護者が眠る間。薔薇の女王に辿り着く前に、この守護者を倒さなければならない。",
+      "isUnlocked": false,
+      "thumbnail": "assets/thumbnails/guardian-chamber.png",
+      "difficulty": 7,
+      "recommendedLevel": 13,
+      "order": 5,
+      "unlockCondition": {
+        "type": "MULTIPLE_STAGES",
+        "requiredStageIds": ["stage-3-2", "stage-3-4"]
+      },
+      "mapData": {
+        "width": 22,
+        "height": 18,
+        "tileset": "guardian_chamber"
+      },
+      "playerUnits": [
+        {
+          "characterId": "protagonist",
+          "startPosition": {
+            "x": 2,
+            "y": 9
+          }
+        },
+        {
+          "characterId": "ally_mage",
+          "startPosition": {
+            "x": 1,
+            "y": 8
+          }
+        }
+      ],
+      "enemyUnits": [],
+      "recruitableCharacters": [],
+      "victoryConditions": [
+        {
+          "type": "defeat_boss",
+          "description": "守護者を撃破する",
+          "parameters": {
+            "bossId": "boss_ancient_guardian"
+          }
+        }
+      ],
+      "defeatConditions": [
+        {
+          "type": "all_allies_defeated",
+          "description": "味方が全滅する"
+        },
+        {
+          "type": "turn_limit_exceeded",
+          "description": "25ターン以内にクリアできない",
+          "parameters": {
+            "maxTurns": 25
+          }
+        }
+      ],
+      "rewards": [
+        {
+          "type": "experience",
+          "amount": 350,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "gold",
+          "amount": 700,
+          "description": "ステージクリア報酬"
+        },
+        {
+          "type": "rose_essence",
+          "amount": 3,
+          "description": "守護者撃破報酬"
         }
       ]
     }

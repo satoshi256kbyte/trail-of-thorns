@@ -1,0 +1,488 @@
+{
+  "version": "1.0.0",
+  "chapters": [
+    {
+      "id": "chapter-1",
+      "name": "薔薇の目覚め",
+      "storyDescription": "平和な村に突如現れた魔性の薔薇。村人たちは次々と正気を失い、怪物が徘徊し始めた。あなたは冒険者として、この異変の原因を探るため村へと向かう。",
+      "recommendedLevel": 1,
+      "initialCharacters": ["protagonist", "ally_mage"],
+      "stages": [
+        {
+          "id": "stage-1-1",
+          "name": "村の異変",
+          "chapterId": "chapter-1",
+          "difficulty": 1,
+          "recommendedLevel": 1,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": []
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 50,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 100,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-1-2",
+          "name": "森の探索",
+          "chapterId": "chapter-1",
+          "difficulty": 2,
+          "recommendedLevel": 2,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-1-1"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 75,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 150,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-1-3",
+          "name": "薔薇の根源",
+          "chapterId": "chapter-1",
+          "difficulty": 3,
+          "recommendedLevel": 3,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-1-2"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 100,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 200,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "rose_essence",
+              "amount": 3,
+              "description": "ボス撃破報酬：薔薇の力"
+            }
+          ]
+        },
+        {
+          "id": "stage-1-4",
+          "name": "村の防衛",
+          "chapterId": "chapter-1",
+          "difficulty": 2,
+          "recommendedLevel": 3,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-1-3"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 80,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 180,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-1-5",
+          "name": "隠された洞窟",
+          "chapterId": "chapter-1",
+          "difficulty": 3,
+          "recommendedLevel": 4,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-1-2"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 90,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 200,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "item",
+              "amount": 1,
+              "description": "鉄の剣",
+              "itemId": "iron_sword"
+            }
+          ]
+        },
+        {
+          "id": "stage-1-6",
+          "name": "最後の抵抗",
+          "chapterId": "chapter-1",
+          "difficulty": 3,
+          "recommendedLevel": 4,
+          "unlockCondition": {
+            "type": "MULTIPLE_STAGES",
+            "requiredStageIds": ["stage-1-4", "stage-1-5"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 120,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 250,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        }
+      ],
+      "unlockCondition": {
+        "type": "NONE"
+      }
+    },
+    {
+      "id": "chapter-2",
+      "name": "腐敗の拡散",
+      "storyDescription": "村を救ったあなたは、薔薇の脅威が一つの村だけの問題ではないことを知る。腐敗は広がり続け、より強大な敵が待ち受けている。",
+      "recommendedLevel": 5,
+      "initialCharacters": ["protagonist", "ally_mage"],
+      "stages": [
+        {
+          "id": "stage-2-1",
+          "name": "街道の危機",
+          "chapterId": "chapter-2",
+          "difficulty": 3,
+          "recommendedLevel": 5,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": []
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 120,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 250,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-2-2",
+          "name": "古城の秘密",
+          "chapterId": "chapter-2",
+          "difficulty": 4,
+          "recommendedLevel": 6,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-2-1"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 150,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 300,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-2-3",
+          "name": "腐敗の王",
+          "chapterId": "chapter-2",
+          "difficulty": 5,
+          "recommendedLevel": 7,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-2-2"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 200,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 400,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "rose_essence",
+              "amount": 5,
+              "description": "ボス撃破報酬：薔薇の力"
+            }
+          ]
+        },
+        {
+          "id": "stage-2-4",
+          "name": "商人の護衛",
+          "chapterId": "chapter-2",
+          "difficulty": 3,
+          "recommendedLevel": 6,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-2-1"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 130,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 280,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-2-5",
+          "name": "橋の攻防",
+          "chapterId": "chapter-2",
+          "difficulty": 4,
+          "recommendedLevel": 7,
+          "unlockCondition": {
+            "type": "MULTIPLE_STAGES",
+            "requiredStageIds": ["stage-2-2", "stage-2-4"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 180,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 350,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-2-6",
+          "name": "廃墟の探索",
+          "chapterId": "chapter-2",
+          "difficulty": 3,
+          "recommendedLevel": 6,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-2-1"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 140,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 280,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-2-7",
+          "name": "薔薇の庭園",
+          "chapterId": "chapter-2",
+          "difficulty": 5,
+          "recommendedLevel": 8,
+          "unlockCondition": {
+            "type": "MULTIPLE_STAGES",
+            "requiredStageIds": ["stage-2-3", "stage-2-5", "stage-2-6"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 220,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 450,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "rose_essence",
+              "amount": 2,
+              "description": "隠しボス撃破報酬"
+            }
+          ]
+        }
+      ],
+      "unlockCondition": {
+        "type": "PREVIOUS_CHAPTER",
+        "requiredChapterId": "chapter-1"
+      }
+    },
+    {
+      "id": "chapter-3",
+      "name": "真実への道",
+      "storyDescription": "薔薇の力の源を追い、あなたは古代の遺跡へと辿り着く。そこには薔薇の真実と、世界を救う鍵が隠されていた。",
+      "recommendedLevel": 10,
+      "initialCharacters": ["protagonist", "ally_mage"],
+      "stages": [
+        {
+          "id": "stage-3-1",
+          "name": "遺跡の入口",
+          "chapterId": "chapter-3",
+          "difficulty": 5,
+          "recommendedLevel": 10,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": []
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 250,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 500,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-3-2",
+          "name": "封印の間",
+          "chapterId": "chapter-3",
+          "difficulty": 6,
+          "recommendedLevel": 12,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-3-1"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 300,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 600,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-3-3",
+          "name": "薔薇の女王",
+          "chapterId": "chapter-3",
+          "difficulty": 7,
+          "recommendedLevel": 15,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-3-2"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 500,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 1000,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "rose_essence",
+              "amount": 10,
+              "description": "ボス撃破報酬：薔薇の力"
+            }
+          ]
+        },
+        {
+          "id": "stage-3-4",
+          "name": "古代の試練",
+          "chapterId": "chapter-3",
+          "difficulty": 6,
+          "recommendedLevel": 11,
+          "unlockCondition": {
+            "type": "PREVIOUS_STAGE",
+            "requiredStageIds": ["stage-3-1"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 280,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 550,
+              "description": "ステージクリア報酬"
+            }
+          ]
+        },
+        {
+          "id": "stage-3-5",
+          "name": "守護者の間",
+          "chapterId": "chapter-3",
+          "difficulty": 7,
+          "recommendedLevel": 13,
+          "unlockCondition": {
+            "type": "MULTIPLE_STAGES",
+            "requiredStageIds": ["stage-3-2", "stage-3-4"]
+          },
+          "rewards": [
+            {
+              "type": "experience",
+              "amount": 350,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "gold",
+              "amount": 700,
+              "description": "ステージクリア報酬"
+            },
+            {
+              "type": "rose_essence",
+              "amount": 3,
+              "description": "守護者撃破報酬"
+            }
+          ]
+        }
+      ],
+      "unlockCondition": {
+        "type": "PREVIOUS_CHAPTER",
+        "requiredChapterId": "chapter-2"
+      }
+    }
+  ]
+}

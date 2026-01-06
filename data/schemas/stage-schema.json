@@ -1,0 +1,277 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Stage Data Schema",
+  "description": "ステージデータのスキーマ定義",
+  "type": "object",
+  "required": ["version", "stages"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "データバージョン"
+    },
+    "stages": {
+      "type": "array",
+      "description": "ステージのリスト",
+      "items": {
+        "$ref": "#/definitions/stage"
+      }
+    }
+  },
+  "definitions": {
+    "stage": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "chapterId",
+        "description",
+        "isUnlocked",
+        "thumbnail",
+        "difficulty",
+        "recommendedLevel",
+        "order",
+        "unlockCondition",
+        "mapData",
+        "playerUnits",
+        "enemyUnits",
+        "recruitableCharacters",
+        "victoryConditions",
+        "defeatConditions",
+        "rewards"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^stage-\\d+-\\d+$",
+          "description": "ステージの一意識別子"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "ステージの名前"
+        },
+        "chapterId": {
+          "type": "string",
+          "pattern": "^chapter-\\d+$",
+          "description": "所属する章のID"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "ステージの説明"
+        },
+        "isUnlocked": {
+          "type": "boolean",
+          "description": "初期解放状態"
+        },
+        "thumbnail": {
+          "type": "string",
+          "description": "サムネイル画像のパス"
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "難易度"
+        },
+        "recommendedLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "推奨レベル"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "章内での順序"
+        },
+        "unlockCondition": {
+          "$ref": "#/definitions/unlockCondition"
+        },
+        "mapData": {
+          "$ref": "#/definitions/mapData"
+        },
+        "playerUnits": {
+          "type": "array",
+          "description": "プレイヤーユニットの配置",
+          "items": {
+            "$ref": "#/definitions/unitPlacement"
+          }
+        },
+        "enemyUnits": {
+          "type": "array",
+          "description": "敵ユニットの配置",
+          "items": {
+            "$ref": "#/definitions/unitPlacement"
+          }
+        },
+        "recruitableCharacters": {
+          "type": "array",
+          "description": "仲間化可能なキャラクター",
+          "items": {
+            "$ref": "#/definitions/recruitableCharacter"
+          }
+        },
+        "victoryConditions": {
+          "type": "array",
+          "description": "勝利条件",
+          "items": {
+            "$ref": "#/definitions/condition"
+          },
+          "minItems": 1
+        },
+        "defeatConditions": {
+          "type": "array",
+          "description": "敗北条件",
+          "items": {
+            "$ref": "#/definitions/condition"
+          },
+          "minItems": 1
+        },
+        "rewards": {
+          "type": "array",
+          "description": "ステージクリア報酬",
+          "items": {
+            "$ref": "#/definitions/reward"
+          }
+        }
+      }
+    },
+    "unlockCondition": {
+      "type": "object",
+      "required": ["type", "requiredStageIds"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["PREVIOUS_STAGE", "MULTIPLE_STAGES", "CHAPTER_COMPLETE"],
+          "description": "解放条件のタイプ"
+        },
+        "requiredStageIds": {
+          "type": "array",
+          "description": "必要なステージIDのリスト",
+          "items": {
+            "type": "string",
+            "pattern": "^stage-\\d+-\\d+$"
+          }
+        }
+      }
+    },
+    "mapData": {
+      "type": "object",
+      "required": ["width", "height", "tileset"],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 32,
+          "description": "マップの幅"
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 32,
+          "description": "マップの高さ"
+        },
+        "tileset": {
+          "type": "string",
+          "description": "使用するタイルセット"
+        }
+      }
+    },
+    "unitPlacement": {
+      "type": "object",
+      "required": ["characterId", "startPosition"],
+      "properties": {
+        "characterId": {
+          "type": "string",
+          "description": "キャラクターID"
+        },
+        "startPosition": {
+          "$ref": "#/definitions/position"
+        }
+      }
+    },
+    "position": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "X座標"
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Y座標"
+        }
+      }
+    },
+    "recruitableCharacter": {
+      "type": "object",
+      "required": ["characterId", "isActive", "stageSpecificConditions"],
+      "properties": {
+        "characterId": {
+          "type": "string",
+          "description": "仲間化可能なキャラクターID"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "このステージで仲間化が有効か"
+        },
+        "stageSpecificConditions": {
+          "type": "array",
+          "description": "ステージ固有の仲間化条件",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "required": ["type", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "条件のタイプ"
+        },
+        "description": {
+          "type": "string",
+          "description": "条件の説明"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "条件のパラメータ"
+        }
+      }
+    },
+    "reward": {
+      "type": "object",
+      "required": ["type", "amount", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["experience", "gold", "rose_essence", "item"],
+          "description": "報酬のタイプ"
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "報酬の量"
+        },
+        "description": {
+          "type": "string",
+          "description": "報酬の説明"
+        },
+        "itemId": {
+          "type": "string",
+          "description": "アイテムID（typeがitemの場合）"
+        }
+      }
+    }
+  }
+}
