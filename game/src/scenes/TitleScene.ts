@@ -14,6 +14,7 @@ export class TitleScene extends Phaser.Scene {
   private gameTitle?: Phaser.GameObjects.Text;
   private backgroundGraphics?: Phaser.GameObjects.Graphics;
   private gameStartButton?: NavigableMenuButton;
+  private saveLoadButton?: NavigableMenuButton;
   private configButton?: NavigableMenuButton;
   private keyboardNavigation?: KeyboardNavigationManager;
 
@@ -217,11 +218,23 @@ export class TitleScene extends Phaser.Scene {
         'title-game-start-button'
       );
 
+      // Create "セーブ・ロード" button with keyboard navigation support
+      this.saveLoadButton = new NavigableMenuButton(
+        this,
+        centerX,
+        buttonStartY + buttonSpacing,
+        'セーブ・ロード',
+        () => this.handleSaveLoad(),
+        220, // width
+        60, // height
+        'title-saveload-button'
+      );
+
       // Create "Config" button with keyboard navigation support
       this.configButton = new NavigableMenuButton(
         this,
         centerX,
-        buttonStartY + buttonSpacing,
+        buttonStartY + buttonSpacing * 2,
         'Config',
         () => this.handleConfig(),
         220, // width
@@ -230,7 +243,7 @@ export class TitleScene extends Phaser.Scene {
       );
 
       console.log(
-        `Navigation buttons created at positions: Game Start (${centerX}, ${buttonStartY}), Config (${centerX}, ${buttonStartY + buttonSpacing})`
+        `Navigation buttons created at positions: Game Start (${centerX}, ${buttonStartY}), Save/Load (${centerX}, ${buttonStartY + buttonSpacing}), Config (${centerX}, ${buttonStartY + buttonSpacing * 2})`
       );
     } catch (error) {
       console.error('Error creating navigation buttons:', error);
@@ -250,6 +263,9 @@ export class TitleScene extends Phaser.Scene {
       // Add navigable elements in order
       if (this.gameStartButton) {
         this.keyboardNavigation.addElement(this.gameStartButton);
+      }
+      if (this.saveLoadButton) {
+        this.keyboardNavigation.addElement(this.saveLoadButton);
       }
       if (this.configButton) {
         this.keyboardNavigation.addElement(this.configButton);
@@ -283,6 +299,31 @@ export class TitleScene extends Phaser.Scene {
       });
     } catch (error) {
       console.error('Error handling game start:', error);
+    }
+  }
+
+  /**
+   * Private helper method: Handle Save/Load button click
+   * Transition to save/load scene
+   */
+  private async handleSaveLoad(): Promise<void> {
+    try {
+      console.log('Save/Load button clicked - transitioning to save/load screen');
+
+      // Validate target scene exists
+      if (!SceneTransition.validateSceneKey(this, 'SaveLoadScene')) {
+        console.error('SaveLoadScene not found');
+        return;
+      }
+
+      // Use smooth transition to save/load scene
+      await SceneTransition.transitionTo(this, 'SaveLoadScene', TransitionType.FADE, {
+        fromScene: 'TitleScene',
+        mode: 'load',
+        action: 'saveLoad',
+      });
+    } catch (error) {
+      console.error('Error handling save/load:', error);
     }
   }
 
@@ -338,6 +379,11 @@ export class TitleScene extends Phaser.Scene {
     if (this.gameStartButton) {
       this.gameStartButton.destroy();
       this.gameStartButton = undefined;
+    }
+
+    if (this.saveLoadButton) {
+      this.saveLoadButton.destroy();
+      this.saveLoadButton = undefined;
     }
 
     if (this.configButton) {
