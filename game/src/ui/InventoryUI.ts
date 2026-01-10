@@ -853,9 +853,10 @@ export class InventoryUI extends Phaser.Events.EventEmitter {
       return;
     }
 
-    const allItems = this.inventoryManager.getAllItems();
-    const fromItem = allItems[fromSlot];
-    const toItem = allItems[toSlot];
+    // インベントリデータを直接取得（参照を取得）
+    const inventoryData = this.inventoryManager.getInventoryData();
+    const fromItem = inventoryData.slots[fromSlot];
+    const toItem = inventoryData.slots[toSlot];
 
     if (!fromItem || !toItem) {
       return;
@@ -866,15 +867,12 @@ export class InventoryUI extends Phaser.Events.EventEmitter {
       // 両方にアイテムがある場合は入れ替え
       const tempItem = fromItem.item;
       const tempQuantity = fromItem.quantity;
-      const tempIsEmpty = fromItem.isEmpty;
 
       fromItem.item = toItem.item;
       fromItem.quantity = toItem.quantity;
-      fromItem.isEmpty = toItem.isEmpty;
 
       toItem.item = tempItem;
       toItem.quantity = tempQuantity;
-      toItem.isEmpty = tempIsEmpty;
     } else if (!fromItem.isEmpty && toItem.isEmpty) {
       // fromにアイテムがあり、toが空の場合は移動
       toItem.item = fromItem.item;
@@ -884,6 +882,10 @@ export class InventoryUI extends Phaser.Events.EventEmitter {
       fromItem.item = null;
       fromItem.quantity = 0;
       fromItem.isEmpty = true;
+
+      // 使用スロット数を調整
+      inventoryData.usedSlots--;
+      inventoryData.usedSlots++;
     } else if (fromItem.isEmpty && !toItem.isEmpty) {
       // fromが空で、toにアイテムがある場合は移動
       fromItem.item = toItem.item;
@@ -893,6 +895,10 @@ export class InventoryUI extends Phaser.Events.EventEmitter {
       toItem.item = null;
       toItem.quantity = 0;
       toItem.isEmpty = true;
+
+      // 使用スロット数を調整
+      inventoryData.usedSlots--;
+      inventoryData.usedSlots++;
     }
     // 両方空の場合は何もしない
 

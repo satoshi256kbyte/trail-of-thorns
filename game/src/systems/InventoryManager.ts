@@ -551,10 +551,10 @@ export class InventoryManager {
   /**
    * インベントリデータを取得
    * 
-   * @returns インベントリデータ
+   * @returns インベントリデータ（参照）
    */
   getInventoryData(): InventoryData {
-    return { ...this.inventoryData };
+    return this.inventoryData;
   }
 
   /**
