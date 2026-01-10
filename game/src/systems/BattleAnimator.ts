@@ -472,6 +472,105 @@ export class BattleAnimator extends Phaser.Events.EventEmitter {
     }
 
     /**
+     * Play item use animation
+     * Shows visual feedback when a character uses an item in battle
+     * 
+     * @param user - Character using the item
+     * @param targets - Target characters affected by the item
+     * @param item - Item being used
+     * @returns Promise that resolves when animation completes
+     */
+    public async playItemUseAnimation(
+        user: Unit,
+        targets: Unit[],
+        item: any
+    ): Promise<void> {
+        if (!user.sprite) {
+            throw new Error(`${BattleError.ANIMATION_FAILED}: Missing sprite for item use animation`);
+        }
+
+        return new Promise(resolve => {
+            this.animationState = {
+                isPlaying: true,
+                type: 'item_use' as any,
+                startTime: Date.now(),
+                duration: this.config.effectDisplayDuration,
+                attacker: user,
+            };
+
+            // Create item use effect timeline
+            const timeline = this.scene.tweens.createTimeline();
+
+            // Phase 1: User raises item (scale up slightly)
+            timeline.add({
+                targets: user.sprite,
+                scaleX: user.sprite.scaleX * 1.1,
+                scaleY: user.sprite.scaleY * 1.1,
+                duration: 200,
+                ease: 'Back.easeOut',
+            });
+
+            // Phase 2: Flash effect on user
+            timeline.add({
+                targets: user.sprite,
+                tint: 0x00ff00, // Green tint for item use
+                duration: 150,
+                yoyo: true,
+            });
+
+            // Phase 3: Return to normal scale
+            timeline.add({
+                targets: user.sprite,
+                scaleX: user.sprite.scaleX,
+                scaleY: user.sprite.scaleY,
+                duration: 200,
+                ease: 'Back.easeIn',
+            });
+
+            // Add particle effects for each target
+            if (this.config.enableParticleEffects) {
+                targets.forEach((target, index) => {
+                    if (target.sprite) {
+                        // Delay each target's effect slightly for visual appeal
+                        this.scene.time.delayedCall(300 + index * 100, () => {
+                            this.createParticleEffect(
+                                target.sprite!.x,
+                                target.sprite!.y,
+                                0x00ff00, // Green particles for healing/buff items
+                                DamageType.HEALING,
+                                false
+                            );
+
+                            // Flash target sprite
+                            this.scene.tweens.add({
+                                targets: target.sprite,
+                                tint: 0xffffff,
+                                alpha: 1.2,
+                                duration: 200,
+                                yoyo: true,
+                            });
+                        });
+                    }
+                });
+            }
+
+            // Complete animation
+            timeline.add({
+                targets: user.sprite,
+                duration: 100,
+                onComplete: () => {
+                    this.animationState.isPlaying = false;
+                    this.animationState.type = 'idle';
+                    this.emit('item-use-complete', { user, targets, item });
+                    resolve();
+                },
+            });
+
+            timeline.play();
+        });
+    }
+
+    /**
      * Clear all active battle effects and reset state
      */
     public clearBattleEffects(): void {

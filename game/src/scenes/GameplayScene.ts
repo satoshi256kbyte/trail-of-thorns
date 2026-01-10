@@ -49,6 +49,12 @@ import { Objective, ObjectiveType } from '../types/victory';
 import { BossData } from '../types/boss';
 import { StageCompleteResult, StageFailureResult } from '../types/reward';
 import { ChapterStageIntegration, StageStartData, StageClearData } from '../systems/chapterStage/ChapterStageIntegration';
+import { InventoryManager } from '../systems/InventoryManager';
+import { EquipmentManager } from '../systems/EquipmentManager';
+import { InventoryUI } from '../ui/InventoryUI';
+import { EquipmentUI } from '../ui/EquipmentUI';
+import { ItemDataLoader } from '../systems/ItemDataLoader';
+import { ItemEffectSystem } from '../systems/ItemEffectSystem';
 
 /**
  * GameplayScene configuration interface
@@ -89,6 +95,12 @@ export class GameplayScene extends Phaser.Scene {
     private jobUI!: JobUI;
     private victoryConditionSystem!: VictoryConditionSystem;
     private chapterStageIntegration!: ChapterStageIntegration;
+    private itemDataLoader!: ItemDataLoader;
+    private itemEffectSystem!: ItemEffectSystem;
+    private inventoryManager!: InventoryManager;
+    private equipmentManager!: EquipmentManager;
+    private inventoryUI!: InventoryUI;
+    private equipmentUI!: EquipmentUI;
 
     // Scene data and state
     private stageData?: StageData;
@@ -730,6 +742,37 @@ export class GameplayScene extends Phaser.Scene {
             debugMode: this.config.debugMode,
         });
 
+        // Initialize ItemDataLoader
+        this.itemDataLoader = new ItemDataLoader();
+
+        // Initialize ItemEffectSystem
+        this.itemEffectSystem = new ItemEffectSystem();
+
+        // Initialize InventoryManager
+        this.inventoryManager = new InventoryManager(100); // Max 100 items
+        this.inventoryManager.setItemEffectSystem(this.itemEffectSystem);
+
+        // Initialize EquipmentManager
+        this.equipmentManager = new EquipmentManager(this.itemEffectSystem, this.inventoryManager);
+
+        // Initialize InventoryUI
+        this.inventoryUI = new InventoryUI(this, this.inventoryManager, {
+            position: { x: 100, y: 100 },
+            size: { width: 600, height: 500 },
+            gridColumns: 10,
+            enableDragDrop: true,
+            enableSorting: true,
+            enableFiltering: true,
+        });
+
+        // Initialize EquipmentUI
+        this.equipmentUI = new EquipmentUI(this, this.equipmentManager, {
+            position: { x: 750, y: 100 },
+            size: { width: 450, height: 600 },
+            showStatComparison: true,
+            enableQuickEquip: true,
+        });
+
         console.log('GameplayScene: Manager systems initialized');
     }
 
@@ -980,6 +1023,9 @@ export class GameplayScene extends Phaser.Scene {
 
         // AI system event listeners
         this.setupAIEventListeners();
+
+        // Setup inventory and equipment event listeners
+        this.setupInventoryEquipmentEventListeners();
 
         console.log('GameplayScene: Event listeners setup completed');
     }
@@ -1344,6 +1390,112 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     /**
+     * Setup inventory and equipment system event listeners
+     */
+    private setupInventoryEquipmentEventListeners(): void {
+        console.log('GameplayScene: Setting up inventory and equipment event listeners');
+
+        if (!this.inventoryManager || !this.equipmentManager) {
+            console.warn('Inventory/Equipment systems not available for event listener setup');
+            return;
+        }
+
+        // Inventory events
+        this.inventoryManager.on('itemAdded', (data: any) => {
+            console.log('Item added to inventory:', data.item.name, 'x', data.quantity);
+            this.uiManager.showNotification({
+                message: `Obtained ${data.item.name} x${data.quantity}`,
+                type: 'success',
+                duration: 2000,
+            });
+        });
+
+        this.inventoryManager.on('itemRemoved', (data: any) => {
+            console.log('Item removed from inventory:', data.item.name, 'x', data.quantity);
+        });
+
+        this.inventoryManager.on('itemUsed', (data: any) => {
+            console.log('Item used:', data.item.name, 'on', data.targetId);
+            
+            // Apply item effects through ItemEffectSystem
+            if (data.result.success) {
+                this.uiManager.showNotification({
+                    message: `Used ${data.item.name}`,
+                    type: 'success',
+                    duration: 2000,
+                });
+
+                // Update character if item was used on them
+                const target = this.findUnitById(data.targetId);
+                if (target && this.stageData) {
+                    this.characterManager.updateCharacterStats(target.id, target.stats);
+                    const allCharacters = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+                    this.movementSystem.updateUnits(allCharacters);
+                    this.battleSystem.initialize(allCharacters, this.stageData.mapData);
+                }
+            }
+        });
+
+        this.inventoryManager.on('inventoryFull', () => {
+            this.uiManager.showErrorNotification({
+                message: 'Inventory is full',
+                type: 'warning',
+                duration: 2000,
+            });
+        });
+
+        // Equipment events
+        this.equipmentManager.on('equipmentChanged', (data: any) => {
+            console.log('Equipment changed for', data.characterId, ':', data.slot);
+            
+            // Update character stats
+            const character = this.findUnitById(data.characterId);
+            if (character && this.stageData) {
+                this.characterManager.updateCharacterStats(character.id, character.stats);
+                
+                // Update all systems with new stats
+                const allCharacters = [...this.stageData.playerUnits, ...this.stageData.enemyUnits];
+                this.movementSystem.updateUnits(allCharacters);
+                this.battleSystem.initialize(allCharacters, this.stageData.mapData);
+
+                // Show notification
+                if (data.newEquipment) {
+                    this.uiManager.showNotification({
+                        message: `Equipped ${data.newEquipment.name}`,
+                        type: 'success',
+                        duration: 2000,
+                    });
+                } else {
+                    this.uiManager.showNotification({
+                        message: `Unequipped ${data.previousEquipment?.name || 'item'}`,
+                        type: 'info',
+                        duration: 2000,
+                    });
+                }
+            }
+        });
+
+        // InventoryUI events
+        this.inventoryUI.on('equipRequested', (data: any) => {
+            console.log('Equip requested for item:', data.item.name);
+            
+            // Open equipment UI for the selected character
+            const selectedUnit = this.gameStateManager.getSelectedUnit();
+            if (selectedUnit && selectedUnit.faction === 'player') {
+                this.equipmentUI.show(selectedUnit.id);
+            } else {
+                this.uiManager.showErrorNotification({
+                    message: 'Select a player character first',
+                    type: 'warning',
+                    duration: 2000,
+                });
+            }
+        });
+
+        console.log('GameplayScene: Inventory and equipment event listeners setup completed');
+    }
+
+    /**
      * Update character info display with experience information
      */
     private updateCharacterInfoDisplay(character: Unit): void {
@@ -1595,6 +1747,14 @@ export class GameplayScene extends Phaser.Scene {
             case 'S':
             case 's':
                 this.handleSkillShortcut();
+                break;
+            case 'I':
+            case 'i':
+                this.handleInventoryToggle();
+                break;
+            case 'E':
+            case 'e':
+                this.handleEquipmentToggle();
                 break;
             case 'J':
             case 'j':
@@ -2491,6 +2651,61 @@ export class GameplayScene extends Phaser.Scene {
         }
 
         console.log(`Previous unit selected: ${prevUnit.name}`);
+    }
+
+    /**
+     * Handle inventory toggle shortcut (I key)
+     */
+    private handleInventoryToggle(): void {
+        if (!this.inventoryUI) {
+            console.warn('Inventory UI not initialized');
+            return;
+        }
+
+        if (this.inventoryUI.isVisible()) {
+            this.inventoryUI.hide();
+            console.log('Inventory closed');
+        } else {
+            this.inventoryUI.show();
+            console.log('Inventory opened');
+        }
+    }
+
+    /**
+     * Handle equipment toggle shortcut (E key)
+     */
+    private handleEquipmentToggle(): void {
+        if (!this.equipmentUI) {
+            console.warn('Equipment UI not initialized');
+            return;
+        }
+
+        const selectedUnit = this.gameStateManager.getSelectedUnit();
+        if (!selectedUnit) {
+            this.uiManager.showErrorNotification({
+                message: 'Select a character first',
+                type: 'warning',
+                duration: 2000,
+            });
+            return;
+        }
+
+        if (selectedUnit.faction !== 'player') {
+            this.uiManager.showErrorNotification({
+                message: 'Cannot equip items on enemy units',
+                type: 'warning',
+                duration: 2000,
+            });
+            return;
+        }
+
+        if (this.equipmentUI.isVisible()) {
+            this.equipmentUI.hide();
+            console.log('Equipment UI closed');
+        } else {
+            this.equipmentUI.show(selectedUnit.id);
+            console.log(`Equipment UI opened for ${selectedUnit.name}`);
+        }
     }
 
     /**
@@ -3450,6 +3665,22 @@ export class GameplayScene extends Phaser.Scene {
         if (this.jobUI) {
             // JobUI doesn't have a destroy method, but we can clean up references
             console.log('Cleaning up job UI');
+        }
+
+        if (this.inventoryManager) {
+            this.inventoryManager.destroy();
+        }
+
+        if (this.equipmentManager) {
+            this.equipmentManager.destroy();
+        }
+
+        if (this.inventoryUI) {
+            this.inventoryUI.destroy();
+        }
+
+        if (this.equipmentUI) {
+            this.equipmentUI.destroy();
         }
 
         // Cleanup UI elements

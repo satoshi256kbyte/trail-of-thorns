@@ -1,0 +1,37 @@
+# Default Item Icon Placeholder
+
+This file represents where the default item icon should be placed.
+
+## Specifications
+- Filename: default.png
+- Format: PNG with transparency
+- Size: 64x64 pixels
+- Purpose: Fallback icon when specific item icons are not available
+
+## Temporary Solution
+
+Until actual artwork is created, the game will:
+1. Generate colored squares programmatically based on item rarity
+2. Display item names as text overlays
+3. Use this default icon path as a reference
+
+## Creating the Default Icon
+
+To create a proper default icon:
+
+1. Create a 64x64 pixel PNG image
+2. Use a neutral design (e.g., a question mark, generic box, or item silhouette)
+3. Include transparency for the background
+4. Save as `default.png` in this directory
+5. Remove this `.txt` file
+
+## Color Coding by Rarity
+
+The system will use these colors for programmatic placeholders:
+- Common: #FFFFFF (White)
+- Uncommon: #1EFF00 (Green)
+- Rare: #0070DD (Blue)
+- Epic: #A335EE (Purple)
+- Legendary: #FF8000 (Orange)
+
+These colors are defined in `game/src/types/inventory.ts` in the `InventoryUtils.getRarityColor()` method.

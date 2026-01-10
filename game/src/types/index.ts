@@ -44,3 +44,6 @@ export * from './StageData';
 
 // Chapter-Stage management system types
 export * from './chapterStage';
+
+// Inventory and Equipment system types
+export * from './inventory';

@@ -1,0 +1,24 @@
+{
+  "specId": "4.2-inventory-equipment-system",
+  "lastUpdated": "2025-01-10T15:41:00Z",
+  "properties": [
+    {
+      "id": "property-16",
+      "name": "装備条件の視覚的識別",
+      "status": "failing",
+      "runs": 0,
+      "failures": 1,
+      "lastRun": "2025-01-10T15:41:00Z",
+      "failureReason": "Phaser scene initialization timeout in test environment. The test setup requires proper Phaser HEADLESS mode configuration with scene initialization, but the 'ready' event is not firing, causing beforeEach hook to timeout after 10 seconds.",
+      "failingExample": "N/A - Test setup failure, not a property violation",
+      "requirements": ["4.5", "7.5"],
+      "subtask": "9.5"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "passing": 0,
+    "failing": 1,
+    "notRun": 0
+  }
+}

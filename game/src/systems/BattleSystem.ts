@@ -45,6 +45,9 @@ import { SkillSystem } from './skills/SkillSystem';
 import { SkillResult, SkillExecutionContext, SkillUsabilityError } from '../types/skill';
 import { ExperienceSystem } from './experience/ExperienceSystem';
 import { ExperienceAction, ExperienceSource, ExperienceContext, BattleContext as ExpBattleContext } from '../types/experience';
+import { InventoryManager } from './InventoryManager';
+import { EquipmentManager } from './EquipmentManager';
+import { Consumable, ItemUseResult, TargetType as ItemTargetType } from '../types/inventory';
 
 /**
  * Battle system configuration
@@ -190,6 +193,10 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
 
     // Victory condition system integration
     private victoryConditionSystem: any = null;
+
+    // Inventory and Equipment system integration
+    private inventoryManager: InventoryManager | null = null;
+    private equipmentManager: EquipmentManager | null = null;
 
     // Battle data
     private allUnits: Unit[] = [];
@@ -383,6 +390,40 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
      */
     public hasVictoryConditionSystem(): boolean {
         return this.victoryConditionSystem !== null;
+    }
+
+    /**
+     * Set inventory manager for integration
+     * @param inventoryManager - Inventory manager instance
+     */
+    public setInventoryManager(inventoryManager: InventoryManager): void {
+        this.inventoryManager = inventoryManager;
+        this.log('Inventory manager integrated with battle system');
+    }
+
+    /**
+     * Check if inventory manager is integrated
+     * @returns True if inventory manager is available
+     */
+    public hasInventoryManager(): boolean {
+        return this.inventoryManager !== null;
+    }
+
+    /**
+     * Set equipment manager for integration
+     * @param equipmentManager - Equipment manager instance
+     */
+    public setEquipmentManager(equipmentManager: EquipmentManager): void {
+        this.equipmentManager = equipmentManager;
+        this.log('Equipment manager integrated with battle system');
+    }
+
+    /**
+     * Check if equipment manager is integrated
+     * @returns True if equipment manager is available
+     */
+    public hasEquipmentManager(): boolean {
+        return this.equipmentManager !== null;
     }
 
     /**
@@ -1355,6 +1396,474 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
     }
 
     /**
+     * Get usable items for a character during battle
+     * Implements requirement 8.1: Display usable items when player selects item command
+     * 
+     * @param character - Character to get usable items for
+     * @returns Array of usable consumable items
+     */
+    public getBattleUsableItems(character: Unit): Consumable[] {
+        if (!this.inventoryManager) {
+            this.log('Inventory manager not integrated, cannot get usable items');
+            return [];
+        }
+
+        try {
+            // Get all items from inventory
+            const allItems = this.inventoryManager.getAllItems();
+            
+            // Filter for consumable items that are usable in battle
+            const usableItems = allItems.filter(itemSlot => {
+                if (!itemSlot.item || itemSlot.quantity <= 0) {
+                    return false;
+                }
+                
+                // Check if item is a consumable
+                const item = itemSlot.item;
+                if (item.type !== 'consumable') {
+                    return false;
+                }
+                
+                // Cast to Consumable and check if usable in battle
+                const consumable = item as Consumable;
+                return consumable.usableInBattle;
+            }).map(slot => slot.item as Consumable);
+
+            this.log('Retrieved battle usable items', {
+                character: character.name,
+                itemCount: usableItems.length
+            });
+
+            return usableItems;
+        } catch (error) {
+            this.log('Error getting battle usable items', {
+                error: error.message,
+                character: character.name
+            });
+            return [];
+        }
+    }
+
+    /**
+     * Use an item during battle
+     * Implements requirements 8.2 and 8.3: Apply item effects immediately and consume turn
+     * 
+     * @param user - Character using the item
+     * @param itemId - ID of the item to use
+     * @param targetId - ID of the target character (for single target items)
+     * @returns Promise that resolves with item use result
+     */
+    public async useBattleItem(
+        user: Unit,
+        itemId: string,
+        targetId?: string
+    ): Promise<ItemUseResult> {
+        if (!this.inventoryManager) {
+            const errorResult: ItemUseResult = {
+                success: false,
+                effectsApplied: [],
+                itemConsumed: false,
+                remainingQuantity: 0,
+                message: 'Inventory manager not integrated'
+            };
+            return errorResult;
+        }
+
+        try {
+            this.log('Using battle item', {
+                user: user.name,
+                itemId,
+                targetId
+            });
+
+            // Validate user can act
+            if (user.hasActed) {
+                return {
+                    success: false,
+                    effectsApplied: [],
+                    itemConsumed: false,
+                    remainingQuantity: 0,
+                    message: 'Character has already acted this turn'
+                };
+            }
+
+            if (user.currentHP <= 0) {
+                return {
+                    success: false,
+                    effectsApplied: [],
+                    itemConsumed: false,
+                    remainingQuantity: 0,
+                    message: 'Character is defeated and cannot use items'
+                };
+            }
+
+            // Get the item
+            const itemSlot = this.inventoryManager.getItem(itemId);
+            if (!itemSlot || !itemSlot.item || itemSlot.quantity <= 0) {
+                return {
+                    success: false,
+                    effectsApplied: [],
+                    itemConsumed: false,
+                    remainingQuantity: 0,
+                    message: 'Item not found or out of stock'
+                };
+            }
+
+            const item = itemSlot.item as Consumable;
+            
+            // Validate item is usable in battle
+            if (!item.usableInBattle) {
+                return {
+                    success: false,
+                    effectsApplied: [],
+                    itemConsumed: false,
+                    remainingQuantity: itemSlot.quantity,
+                    message: 'Item cannot be used in battle'
+                };
+            }
+
+            // Determine target(s)
+            let targets: Unit[] = [];
+            switch (item.targetType) {
+                case 'self':
+                    targets = [user];
+                    break;
+                case 'single':
+                    if (!targetId) {
+                        return {
+                            success: false,
+                            effectsApplied: [],
+                            itemConsumed: false,
+                            remainingQuantity: itemSlot.quantity,
+                            message: 'Target required for this item'
+                        };
+                    }
+                    const target = this.allUnits.find(u => u.id === targetId);
+                    if (!target) {
+                        return {
+                            success: false,
+                            effectsApplied: [],
+                            itemConsumed: false,
+                            remainingQuantity: itemSlot.quantity,
+                            message: 'Target not found'
+                        };
+                    }
+                    targets = [target];
+                    break;
+                case 'all':
+                    // Target all allies
+                    targets = this.allUnits.filter(u => u.faction === user.faction && u.currentHP > 0);
+                    break;
+                case 'area':
+                    // For area items, would need position-based targeting
+                    // For now, treat as single target
+                    if (!targetId) {
+                        return {
+                            success: false,
+                            effectsApplied: [],
+                            itemConsumed: false,
+                            remainingQuantity: itemSlot.quantity,
+                            message: 'Target required for this item'
+                        };
+                    }
+                    const areaTarget = this.allUnits.find(u => u.id === targetId);
+                    if (areaTarget) {
+                        targets = [areaTarget];
+                    }
+                    break;
+            }
+
+            if (targets.length === 0) {
+                return {
+                    success: false,
+                    effectsApplied: [],
+                    itemConsumed: false,
+                    remainingQuantity: itemSlot.quantity,
+                    message: 'No valid targets for item'
+                };
+            }
+
+            // Use the item through inventory manager
+            const useResult = this.inventoryManager.useItem(itemId, user.id, targetId);
+            
+            if (!useResult.success) {
+                return useResult;
+            }
+
+            // Apply visual effects for item usage
+            if (this.battleAnimator) {
+                await this.battleAnimator.playItemUseAnimation(user, targets, item);
+            }
+
+            // Mark user as having acted (requirement 8.3)
+            user.hasActed = true;
+
+            // Emit event for item usage
+            this.emit('battle-item-used', {
+                user,
+                item,
+                targets,
+                result: useResult
+            });
+
+            this.log('Battle item used successfully', {
+                user: user.name,
+                item: item.name,
+                targets: targets.map(t => t.name),
+                effectsApplied: useResult.effectsApplied.length,
+                remainingQuantity: useResult.remainingQuantity
+            });
+
+            return useResult;
+
+        } catch (error) {
+            this.log('Error using battle item', {
+                error: error.message,
+                user: user.name,
+                itemId
+            });
+            
+            return {
+                success: false,
+                effectsApplied: [],
+                itemConsumed: false,
+                remainingQuantity: 0,
+                message: `Error using item: ${error.message}`
+            };
+        }
+    }
+
+    /**
+     * Show battle item menu for a character
+     * Helper method to display usable items and handle selection
+     * 
+     * @param character - Character to show items for
+     * @returns Array of usable items with display information
+     */
+    public showBattleItemMenu(character: Unit): Array<{
+        item: Consumable;
+        quantity: number;
+        canUse: boolean;
+        reason?: string;
+    }> {
+        const usableItems = this.getBattleUsableItems(character);
+        
+        return usableItems.map(item => {
+            const itemSlot = this.inventoryManager?.getItem(item.id);
+            const quantity = itemSlot?.quantity || 0;
+            
+            // Check if item can be used
+            let canUse = true;
+            let reason: string | undefined;
+            
+            if (character.hasActed) {
+                canUse = false;
+                reason = 'Character has already acted';
+            } else if (character.currentHP <= 0) {
+                canUse = false;
+                reason = 'Character is defeated';
+            } else if (quantity <= 0) {
+                canUse = false;
+                reason = 'Out of stock';
+            }
+            
+            return {
+                item,
+                quantity,
+                canUse,
+                reason
+            };
+        });
+    }
+
+    /**
+     * Get equipment stat bonuses for a character
+     * Implements requirement 8.4: Reflect equipment effects in battle calculations
+     * 
+     * @param character - Character to get equipment bonuses for
+     * @returns Equipment stat bonuses
+     */
+    private getEquipmentBonuses(character: Unit): {
+        attack: number;
+        defense: number;
+        speed: number;
+        accuracy: number;
+        evasion: number;
+        hp: number;
+        mp: number;
+    } {
+        const bonuses = {
+            attack: 0,
+            defense: 0,
+            speed: 0,
+            accuracy: 0,
+            evasion: 0,
+            hp: 0,
+            mp: 0
+        };
+
+        if (!this.equipmentManager) {
+            return bonuses;
+        }
+
+        try {
+            // Get character's equipment set
+            const equipmentSet = this.equipmentManager.getEquipmentSet(character.id);
+            
+            if (!equipmentSet) {
+                return bonuses;
+            }
+
+            // Sum up bonuses from all equipped items
+            const equipments = [
+                equipmentSet.weapon,
+                equipmentSet.armor,
+                equipmentSet.accessory1,
+                equipmentSet.accessory2
+            ];
+
+            for (const equipment of equipments) {
+                if (equipment && equipment.stats) {
+                    bonuses.attack += equipment.stats.attack || 0;
+                    bonuses.defense += equipment.stats.defense || 0;
+                    bonuses.speed += equipment.stats.speed || 0;
+                    bonuses.accuracy += equipment.stats.accuracy || 0;
+                    bonuses.evasion += equipment.stats.evasion || 0;
+                    bonuses.hp += equipment.stats.hp || 0;
+                    bonuses.mp += equipment.stats.mp || 0;
+                }
+            }
+
+            this.log('Equipment bonuses calculated', {
+                character: character.name,
+                bonuses
+            });
+
+        } catch (error) {
+            this.log('Error calculating equipment bonuses', {
+                error: error.message,
+                character: character.name
+            });
+        }
+
+        return bonuses;
+    }
+
+    /**
+     * Apply equipment bonuses to unit stats temporarily for battle
+     * Creates a modified copy of the unit with equipment bonuses applied
+     * 
+     * @param unit - Unit to apply bonuses to
+     * @returns Unit with equipment bonuses applied
+     */
+    private applyEquipmentBonusesToUnit(unit: Unit): Unit {
+        if (!this.equipmentManager) {
+            return unit;
+        }
+
+        const bonuses = this.getEquipmentBonuses(unit);
+        
+        // Create a shallow copy of the unit with modified stats
+        const modifiedUnit: Unit = {
+            ...unit,
+            stats: {
+                ...unit.stats,
+                attack: unit.stats.attack + bonuses.attack,
+                defense: unit.stats.defense + bonuses.defense,
+                speed: unit.stats.speed + bonuses.speed,
+                maxHP: unit.stats.maxHP + bonuses.hp,
+                maxMP: unit.stats.maxMP + bonuses.mp
+            }
+        };
+
+        // Note: accuracy and evasion bonuses would be applied in damage calculation
+        // as they affect hit/evade chances rather than base stats
+
+        return modifiedUnit;
+    }
+
+    /**
+     * Decrease equipment durability after battle
+     * Implements requirement 8.5: Decrease equipment durability during battle
+     * 
+     * @param character - Character whose equipment durability should decrease
+     * @param amount - Amount to decrease durability by (default: 1)
+     */
+    private async decreaseEquipmentDurability(character: Unit, amount: number = 1): Promise<void> {
+        if (!this.equipmentManager) {
+            return;
+        }
+
+        try {
+            // Get character's equipment set
+            const equipmentSet = this.equipmentManager.getEquipmentSet(character.id);
+            
+            if (!equipmentSet) {
+                return;
+            }
+
+            // Decrease durability for weapon (primary equipment used in battle)
+            if (equipmentSet.weapon && equipmentSet.weapon.durability !== undefined) {
+                const newDurability = Math.max(0, equipmentSet.weapon.durability - amount);
+                equipmentSet.weapon.durability = newDurability;
+
+                this.log('Equipment durability decreased', {
+                    character: character.name,
+                    equipment: equipmentSet.weapon.name,
+                    oldDurability: equipmentSet.weapon.durability + amount,
+                    newDurability,
+                    maxDurability: equipmentSet.weapon.maxDurability
+                });
+
+                // Check if equipment is broken (durability reached 0)
+                if (newDurability === 0) {
+                    this.log('Equipment broken', {
+                        character: character.name,
+                        equipment: equipmentSet.weapon.name
+                    });
+
+                    // Emit event for equipment broken
+                    this.emit('equipment-broken', {
+                        character,
+                        equipment: equipmentSet.weapon
+                    });
+
+                    // Optionally auto-unequip broken equipment
+                    // For now, we'll leave it equipped but with 0 durability
+                    // The equipment manager can handle this in its own logic
+                }
+
+                // Emit event for durability change
+                this.emit('equipment-durability-changed', {
+                    character,
+                    equipment: equipmentSet.weapon,
+                    durability: newDurability,
+                    maxDurability: equipmentSet.weapon.maxDurability
+                });
+            }
+
+            // Optionally decrease durability for armor if it was hit
+            if (equipmentSet.armor && equipmentSet.armor.durability !== undefined) {
+                const newDurability = Math.max(0, equipmentSet.armor.durability - Math.floor(amount / 2));
+                equipmentSet.armor.durability = newDurability;
+
+                if (newDurability === 0) {
+                    this.emit('equipment-broken', {
+                        character,
+                        equipment: equipmentSet.armor
+                    });
+                }
+            }
+
+        } catch (error) {
+            this.log('Error decreasing equipment durability', {
+                error: error.message,
+                character: character.name
+            });
+        }
+    }
+
+    /**
      * Create battlefield state for skill system integration
      * @returns Battlefield state object
      */
@@ -1743,17 +2252,46 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
             const jobMods = this.applyJobModificationsToBattle(attacker, target, weapon);
             const modifiedWeapon = jobMods.modifiedWeapon;
 
-            // Combine custom modifiers with job modifiers
+            // Apply equipment bonuses to attacker and target (requirement 8.4)
+            const attackerWithEquipment = this.applyEquipmentBonusesToUnit(attacker);
+            const targetWithEquipment = this.applyEquipmentBonusesToUnit(target);
+
+            // Get equipment accuracy/evasion bonuses for damage calculation
+            const attackerEquipmentBonuses = this.getEquipmentBonuses(attacker);
+            const targetEquipmentBonuses = this.getEquipmentBonuses(target);
+
+            // Combine custom modifiers with job modifiers and equipment modifiers
+            const equipmentModifiers: any[] = [];
+            
+            if (attackerEquipmentBonuses.attack > 0) {
+                equipmentModifiers.push({
+                    type: 'weapon',
+                    multiplier: 1 + (attackerEquipmentBonuses.attack / 100),
+                    description: `Equipment Attack Bonus: +${attackerEquipmentBonuses.attack}`,
+                    source: 'equipment'
+                });
+            }
+            
+            if (targetEquipmentBonuses.defense > 0) {
+                equipmentModifiers.push({
+                    type: 'weapon',
+                    multiplier: 1 - (targetEquipmentBonuses.defense / 200), // Defense reduces damage
+                    description: `Equipment Defense Bonus: +${targetEquipmentBonuses.defense}`,
+                    source: 'equipment'
+                });
+            }
+
             const allModifiers = [
                 ...(options?.customModifiers || []),
                 ...(jobMods.attackerMods?.damageModifiers || []),
-                ...(jobMods.defenderMods?.damageModifiers || [])
+                ...(jobMods.defenderMods?.damageModifiers || []),
+                ...equipmentModifiers
             ];
 
-            // Calculate damage with job modifications
+            // Calculate damage with job modifications and equipment bonuses
             const damageContext = this.damageCalculator.performCompleteCalculation(
-                attacker,
-                target,
+                attackerWithEquipment,
+                targetWithEquipment,
                 modifiedWeapon,
                 allModifiers
             );
@@ -2106,6 +2644,13 @@ export class BattleSystem extends Phaser.Events.EventEmitter {
             this.state.lastBattleResult = battleResult;
             this.state.isAnimating = false;
             this.state.phase = 'cleanup';
+
+            // Decrease equipment durability after battle (requirement 8.5)
+            await this.decreaseEquipmentDurability(attacker, 1);
+            if (!damageContext.isEvaded && target.currentHP > 0) {
+                // Target's equipment also takes durability damage if they survived
+                await this.decreaseEquipmentDurability(target, 1);
+            }
 
             // Clean up visual elements
             this.clearRangeHighlights();

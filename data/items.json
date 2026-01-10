@@ -1,0 +1,730 @@
+{
+  "weapons": [
+    {
+      "id": "weapon_iron_sword",
+      "name": "Iron Sword",
+      "description": "A basic iron sword. Reliable and well-balanced.",
+      "type": "weapon",
+      "rarity": "common",
+      "iconPath": "assets/items/weapons/iron_sword.png",
+      "maxStack": 1,
+      "sellPrice": 50,
+      "buyPrice": 100,
+      "slot": "weapon",
+      "stats": {
+        "attack": 15,
+        "accuracy": 85
+      },
+      "requirements": {
+        "level": 1
+      },
+      "durability": 50,
+      "maxDurability": 50,
+      "effects": []
+    },
+    {
+      "id": "weapon_flame_blade",
+      "name": "Flame Blade",
+      "description": "A sword imbued with fire magic. Burns enemies on contact.",
+      "type": "weapon",
+      "rarity": "rare",
+      "iconPath": "assets/items/weapons/flame_blade.png",
+      "maxStack": 1,
+      "sellPrice": 200,
+      "buyPrice": 400,
+      "slot": "weapon",
+      "stats": {
+        "attack": 20,
+        "accuracy": 80
+      },
+      "requirements": {
+        "level": 5
+      },
+      "durability": 40,
+      "maxDurability": 40,
+      "effects": [
+        {
+          "id": "burn_effect",
+          "type": "status_inflict",
+          "target": "status",
+          "value": 5,
+          "duration": 3,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ]
+    },
+    {
+      "id": "weapon_hunters_bow",
+      "name": "Hunter's Bow",
+      "description": "A well-crafted bow with excellent range and accuracy.",
+      "type": "weapon",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/weapons/hunters_bow.png",
+      "maxStack": 1,
+      "sellPrice": 120,
+      "buyPrice": 240,
+      "slot": "weapon",
+      "stats": {
+        "attack": 12,
+        "accuracy": 90
+      },
+      "requirements": {
+        "level": 3
+      },
+      "durability": 60,
+      "maxDurability": 60,
+      "effects": []
+    },
+    {
+      "id": "weapon_healing_staff",
+      "name": "Healing Staff",
+      "description": "A staff blessed with healing magic. Restores HP to allies.",
+      "type": "weapon",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/weapons/healing_staff.png",
+      "maxStack": 1,
+      "sellPrice": 150,
+      "buyPrice": 300,
+      "slot": "weapon",
+      "stats": {
+        "attack": 8,
+        "accuracy": 95
+      },
+      "requirements": {
+        "level": 4,
+        "job": "Cleric"
+      },
+      "durability": 30,
+      "maxDurability": 30,
+      "effects": [
+        {
+          "id": "heal_effect",
+          "type": "hp_recovery",
+          "target": "hp",
+          "value": 15,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ]
+    },
+    {
+      "id": "weapon_steel_spear",
+      "name": "Steel Spear",
+      "description": "A long steel spear with extended reach.",
+      "type": "weapon",
+      "rarity": "common",
+      "iconPath": "assets/items/weapons/steel_spear.png",
+      "maxStack": 1,
+      "sellPrice": 80,
+      "buyPrice": 160,
+      "slot": "weapon",
+      "stats": {
+        "attack": 18,
+        "accuracy": 75
+      },
+      "requirements": {
+        "level": 2
+      },
+      "durability": 45,
+      "maxDurability": 45,
+      "effects": []
+    },
+    {
+      "id": "weapon_legendary_sword",
+      "name": "Legendary Sword",
+      "description": "A legendary blade forged by ancient masters. Radiates immense power.",
+      "type": "weapon",
+      "rarity": "legendary",
+      "iconPath": "assets/items/weapons/legendary_sword.png",
+      "maxStack": 1,
+      "sellPrice": 5000,
+      "buyPrice": 10000,
+      "slot": "weapon",
+      "stats": {
+        "attack": 50,
+        "accuracy": 95,
+        "speed": 5
+      },
+      "requirements": {
+        "level": 20
+      },
+      "durability": 100,
+      "maxDurability": 100,
+      "effects": [
+        {
+          "id": "legendary_power",
+          "type": "stat_boost",
+          "target": "attack",
+          "value": 10,
+          "duration": 0,
+          "isPermanent": true,
+          "stackable": false
+        }
+      ]
+    }
+  ],
+  "armor": [
+    {
+      "id": "armor_leather_armor",
+      "name": "Leather Armor",
+      "description": "Basic leather armor providing light protection.",
+      "type": "armor",
+      "rarity": "common",
+      "iconPath": "assets/items/armor/leather_armor.png",
+      "maxStack": 1,
+      "sellPrice": 40,
+      "buyPrice": 80,
+      "slot": "armor",
+      "stats": {
+        "defense": 5,
+        "hp": 10
+      },
+      "requirements": {
+        "level": 1
+      },
+      "durability": 40,
+      "maxDurability": 40,
+      "effects": []
+    },
+    {
+      "id": "armor_chain_mail",
+      "name": "Chain Mail",
+      "description": "Interlocked metal rings providing balanced protection.",
+      "type": "armor",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/armor/chain_mail.png",
+      "maxStack": 1,
+      "sellPrice": 100,
+      "buyPrice": 200,
+      "slot": "armor",
+      "stats": {
+        "defense": 10,
+        "hp": 20
+      },
+      "requirements": {
+        "level": 3
+      },
+      "durability": 60,
+      "maxDurability": 60,
+      "effects": []
+    },
+    {
+      "id": "armor_plate_armor",
+      "name": "Plate Armor",
+      "description": "Heavy metal plates offering maximum protection.",
+      "type": "armor",
+      "rarity": "rare",
+      "iconPath": "assets/items/armor/plate_armor.png",
+      "maxStack": 1,
+      "sellPrice": 300,
+      "buyPrice": 600,
+      "slot": "armor",
+      "stats": {
+        "defense": 18,
+        "hp": 40
+      },
+      "requirements": {
+        "level": 8
+      },
+      "durability": 80,
+      "maxDurability": 80,
+      "effects": []
+    },
+    {
+      "id": "armor_fire_cloak",
+      "name": "Fire Resistant Cloak",
+      "description": "A cloak woven with fire-resistant materials.",
+      "type": "armor",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/armor/fire_cloak.png",
+      "maxStack": 1,
+      "sellPrice": 150,
+      "buyPrice": 300,
+      "slot": "armor",
+      "stats": {
+        "defense": 3,
+        "evasion": 5
+      },
+      "requirements": {
+        "level": 5
+      },
+      "durability": 35,
+      "maxDurability": 35,
+      "effects": [
+        {
+          "id": "fire_resistance",
+          "type": "stat_boost",
+          "target": "defense",
+          "value": 10,
+          "duration": 0,
+          "isPermanent": true,
+          "stackable": false
+        }
+      ]
+    },
+    {
+      "id": "armor_dragon_scale",
+      "name": "Dragon Scale Armor",
+      "description": "Armor crafted from dragon scales. Provides exceptional protection.",
+      "type": "armor",
+      "rarity": "epic",
+      "iconPath": "assets/items/armor/dragon_scale.png",
+      "maxStack": 1,
+      "sellPrice": 2000,
+      "buyPrice": 4000,
+      "slot": "armor",
+      "stats": {
+        "defense": 30,
+        "hp": 60,
+        "evasion": 10
+      },
+      "requirements": {
+        "level": 15
+      },
+      "durability": 120,
+      "maxDurability": 120,
+      "effects": []
+    }
+  ],
+  "accessories": [
+    {
+      "id": "accessory_power_ring",
+      "name": "Power Ring",
+      "description": "A ring that enhances the wearer's attack power.",
+      "type": "accessory",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/accessories/power_ring.png",
+      "maxStack": 1,
+      "sellPrice": 80,
+      "buyPrice": 160,
+      "slot": "accessory1",
+      "stats": {
+        "attack": 3
+      },
+      "requirements": {
+        "level": 2
+      },
+      "durability": 100,
+      "maxDurability": 100,
+      "effects": []
+    },
+    {
+      "id": "accessory_shield_amulet",
+      "name": "Shield Amulet",
+      "description": "An amulet that provides additional defense.",
+      "type": "accessory",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/accessories/shield_amulet.png",
+      "maxStack": 1,
+      "sellPrice": 90,
+      "buyPrice": 180,
+      "slot": "accessory1",
+      "stats": {
+        "defense": 5
+      },
+      "requirements": {
+        "level": 2
+      },
+      "durability": 100,
+      "maxDurability": 100,
+      "effects": []
+    },
+    {
+      "id": "accessory_speed_boots",
+      "name": "Speed Boots",
+      "description": "Boots that increase movement speed and range.",
+      "type": "accessory",
+      "rarity": "rare",
+      "iconPath": "assets/items/accessories/speed_boots.png",
+      "maxStack": 1,
+      "sellPrice": 200,
+      "buyPrice": 400,
+      "slot": "accessory2",
+      "stats": {
+        "speed": 2
+      },
+      "requirements": {
+        "level": 4
+      },
+      "durability": 50,
+      "maxDurability": 50,
+      "effects": []
+    },
+    {
+      "id": "accessory_hp_pendant",
+      "name": "HP Pendant",
+      "description": "A pendant that increases maximum HP.",
+      "type": "accessory",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/accessories/hp_pendant.png",
+      "maxStack": 1,
+      "sellPrice": 100,
+      "buyPrice": 200,
+      "slot": "accessory1",
+      "stats": {
+        "hp": 30
+      },
+      "requirements": {
+        "level": 3
+      },
+      "durability": 100,
+      "maxDurability": 100,
+      "effects": []
+    },
+    {
+      "id": "accessory_lucky_charm",
+      "name": "Lucky Charm",
+      "description": "A charm that increases accuracy and evasion.",
+      "type": "accessory",
+      "rarity": "rare",
+      "iconPath": "assets/items/accessories/lucky_charm.png",
+      "maxStack": 1,
+      "sellPrice": 250,
+      "buyPrice": 500,
+      "slot": "accessory2",
+      "stats": {
+        "accuracy": 10,
+        "evasion": 10
+      },
+      "requirements": {
+        "level": 6
+      },
+      "durability": 100,
+      "maxDurability": 100,
+      "effects": []
+    }
+  ],
+  "consumables": [
+    {
+      "id": "consumable_health_potion",
+      "name": "Health Potion",
+      "description": "Restores 50 HP to a single ally.",
+      "type": "consumable",
+      "rarity": "common",
+      "iconPath": "assets/items/consumables/health_potion.png",
+      "maxStack": 10,
+      "sellPrice": 20,
+      "buyPrice": 40,
+      "consumableType": "healing",
+      "effects": [
+        {
+          "id": "heal_50",
+          "type": "hp_recovery",
+          "target": "hp",
+          "value": 50,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    },
+    {
+      "id": "consumable_mana_potion",
+      "name": "Mana Potion",
+      "description": "Restores 30 MP to a single ally.",
+      "type": "consumable",
+      "rarity": "common",
+      "iconPath": "assets/items/consumables/mana_potion.png",
+      "maxStack": 10,
+      "sellPrice": 25,
+      "buyPrice": 50,
+      "consumableType": "healing",
+      "effects": [
+        {
+          "id": "restore_mp_30",
+          "type": "mp_recovery",
+          "target": "mp",
+          "value": 30,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    },
+    {
+      "id": "consumable_elixir",
+      "name": "Elixir",
+      "description": "Fully restores HP and MP to a single ally.",
+      "type": "consumable",
+      "rarity": "rare",
+      "iconPath": "assets/items/consumables/elixir.png",
+      "maxStack": 5,
+      "sellPrice": 200,
+      "buyPrice": 400,
+      "consumableType": "healing",
+      "effects": [
+        {
+          "id": "full_heal",
+          "type": "hp_recovery",
+          "target": "hp",
+          "value": 9999,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        },
+        {
+          "id": "full_mp",
+          "type": "mp_recovery",
+          "target": "mp",
+          "value": 9999,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    },
+    {
+      "id": "consumable_strength_tonic",
+      "name": "Strength Tonic",
+      "description": "Temporarily increases attack power by 10 for 3 turns.",
+      "type": "consumable",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/consumables/strength_tonic.png",
+      "maxStack": 10,
+      "sellPrice": 50,
+      "buyPrice": 100,
+      "consumableType": "buff",
+      "effects": [
+        {
+          "id": "attack_buff",
+          "type": "stat_boost",
+          "target": "attack",
+          "value": 10,
+          "duration": 3,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    },
+    {
+      "id": "consumable_defense_tonic",
+      "name": "Defense Tonic",
+      "description": "Temporarily increases defense by 8 for 3 turns.",
+      "type": "consumable",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/consumables/defense_tonic.png",
+      "maxStack": 10,
+      "sellPrice": 50,
+      "buyPrice": 100,
+      "consumableType": "buff",
+      "effects": [
+        {
+          "id": "defense_buff",
+          "type": "stat_boost",
+          "target": "defense",
+          "value": 8,
+          "duration": 3,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    },
+    {
+      "id": "consumable_speed_tonic",
+      "name": "Speed Tonic",
+      "description": "Temporarily increases speed by 5 for 3 turns.",
+      "type": "consumable",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/consumables/speed_tonic.png",
+      "maxStack": 10,
+      "sellPrice": 50,
+      "buyPrice": 100,
+      "consumableType": "buff",
+      "effects": [
+        {
+          "id": "speed_buff",
+          "type": "stat_boost",
+          "target": "speed",
+          "value": 5,
+          "duration": 3,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    },
+    {
+      "id": "consumable_antidote",
+      "name": "Antidote",
+      "description": "Cures poison status effect.",
+      "type": "consumable",
+      "rarity": "common",
+      "iconPath": "assets/items/consumables/antidote.png",
+      "maxStack": 10,
+      "sellPrice": 15,
+      "buyPrice": 30,
+      "consumableType": "cure",
+      "effects": [
+        {
+          "id": "cure_poison",
+          "type": "status_cure",
+          "target": "status",
+          "value": 1,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    },
+    {
+      "id": "consumable_revive_herb",
+      "name": "Revive Herb",
+      "description": "Revives a fallen ally with 50% HP.",
+      "type": "consumable",
+      "rarity": "rare",
+      "iconPath": "assets/items/consumables/revive_herb.png",
+      "maxStack": 3,
+      "sellPrice": 300,
+      "buyPrice": 600,
+      "consumableType": "revive",
+      "effects": [
+        {
+          "id": "revive_50",
+          "type": "hp_recovery",
+          "target": "hp",
+          "value": 50,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    },
+    {
+      "id": "consumable_group_heal",
+      "name": "Group Heal Potion",
+      "description": "Restores 30 HP to all allies.",
+      "type": "consumable",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/consumables/group_heal.png",
+      "maxStack": 5,
+      "sellPrice": 100,
+      "buyPrice": 200,
+      "consumableType": "healing",
+      "effects": [
+        {
+          "id": "group_heal_30",
+          "type": "hp_recovery",
+          "target": "hp",
+          "value": 30,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "all"
+    },
+    {
+      "id": "consumable_bomb",
+      "name": "Bomb",
+      "description": "Deals 40 damage to a single enemy.",
+      "type": "consumable",
+      "rarity": "uncommon",
+      "iconPath": "assets/items/consumables/bomb.png",
+      "maxStack": 5,
+      "sellPrice": 80,
+      "buyPrice": 160,
+      "consumableType": "debuff",
+      "effects": [
+        {
+          "id": "bomb_damage",
+          "type": "damage",
+          "target": "hp",
+          "value": 40,
+          "duration": 0,
+          "isPermanent": false,
+          "stackable": false
+        }
+      ],
+      "usableInBattle": true,
+      "targetType": "single"
+    }
+  ],
+  "materials": [
+    {
+      "id": "material_iron_ore",
+      "name": "Iron Ore",
+      "description": "Raw iron ore used for crafting weapons and armor.",
+      "type": "material",
+      "rarity": "common",
+      "iconPath": "assets/items/materials/iron_ore.png",
+      "maxStack": 99,
+      "sellPrice": 5,
+      "buyPrice": 10
+    },
+    {
+      "id": "material_leather",
+      "name": "Leather",
+      "description": "Tanned leather used for crafting armor.",
+      "type": "material",
+      "rarity": "common",
+      "iconPath": "assets/items/materials/leather.png",
+      "maxStack": 99,
+      "sellPrice": 3,
+      "buyPrice": 6
+    },
+    {
+      "id": "material_magic_crystal",
+      "name": "Magic Crystal",
+      "description": "A crystal infused with magical energy.",
+      "type": "material",
+      "rarity": "rare",
+      "iconPath": "assets/items/materials/magic_crystal.png",
+      "maxStack": 50,
+      "sellPrice": 50,
+      "buyPrice": 100
+    },
+    {
+      "id": "material_dragon_scale",
+      "name": "Dragon Scale",
+      "description": "A scale from a dragon. Extremely durable.",
+      "type": "material",
+      "rarity": "epic",
+      "iconPath": "assets/items/materials/dragon_scale.png",
+      "maxStack": 20,
+      "sellPrice": 200,
+      "buyPrice": 400
+    }
+  ],
+  "key_items": [
+    {
+      "id": "key_old_key",
+      "name": "Old Key",
+      "description": "An old rusty key. Opens a specific door.",
+      "type": "key",
+      "rarity": "common",
+      "iconPath": "assets/items/keys/old_key.png",
+      "maxStack": 1,
+      "sellPrice": 0,
+      "buyPrice": 0
+    },
+    {
+      "id": "key_rose_fragment",
+      "name": "Rose Fragment",
+      "description": "A fragment of the magical rose. Holds mysterious power.",
+      "type": "key",
+      "rarity": "legendary",
+      "iconPath": "assets/items/keys/rose_fragment.png",
+      "maxStack": 1,
+      "sellPrice": 0,
+      "buyPrice": 0
+    }
+  ]
+}

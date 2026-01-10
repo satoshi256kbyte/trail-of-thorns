@@ -1,0 +1,277 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Item Data Schema",
+  "description": "Schema for validating item data in the inventory system",
+  "type": "object",
+  "properties": {
+    "weapons": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/equipment"
+      }
+    },
+    "armor": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/equipment"
+      }
+    },
+    "accessories": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/equipment"
+      }
+    },
+    "consumables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/consumable"
+      }
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/baseItem"
+      }
+    },
+    "key_items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/baseItem"
+      }
+    }
+  },
+  "definitions": {
+    "baseItem": {
+      "type": "object",
+      "required": ["id", "name", "description", "type", "rarity", "iconPath", "maxStack", "sellPrice", "buyPrice"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z_]+$",
+          "description": "Unique identifier for the item"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Display name of the item"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Item description"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["weapon", "armor", "accessory", "consumable", "material", "key"],
+          "description": "Item type"
+        },
+        "rarity": {
+          "type": "string",
+          "enum": ["common", "uncommon", "rare", "epic", "legendary"],
+          "description": "Item rarity level"
+        },
+        "iconPath": {
+          "type": "string",
+          "pattern": "^assets/items/",
+          "description": "Path to item icon"
+        },
+        "maxStack": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "Maximum stack size"
+        },
+        "sellPrice": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sell price in gold"
+        },
+        "buyPrice": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Buy price in gold"
+        }
+      }
+    },
+    "equipment": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/baseItem"
+        },
+        {
+          "type": "object",
+          "required": ["slot", "stats", "requirements", "durability", "maxDurability", "effects"],
+          "properties": {
+            "slot": {
+              "type": "string",
+              "enum": ["weapon", "armor", "accessory1", "accessory2"],
+              "description": "Equipment slot"
+            },
+            "stats": {
+              "$ref": "#/definitions/equipmentStats"
+            },
+            "requirements": {
+              "$ref": "#/definitions/equipmentRequirements"
+            },
+            "durability": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Current durability"
+            },
+            "maxDurability": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum durability"
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/itemEffect"
+              },
+              "description": "Equipment effects"
+            }
+          }
+        }
+      ]
+    },
+    "consumable": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/baseItem"
+        },
+        {
+          "type": "object",
+          "required": ["consumableType", "effects", "usableInBattle", "targetType"],
+          "properties": {
+            "consumableType": {
+              "type": "string",
+              "enum": ["healing", "buff", "debuff", "cure", "revive"],
+              "description": "Consumable type"
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/itemEffect"
+              },
+              "minItems": 1,
+              "description": "Consumable effects"
+            },
+            "usableInBattle": {
+              "type": "boolean",
+              "description": "Can be used in battle"
+            },
+            "targetType": {
+              "type": "string",
+              "enum": ["self", "single", "all", "area"],
+              "description": "Target type"
+            }
+          }
+        }
+      ]
+    },
+    "equipmentStats": {
+      "type": "object",
+      "properties": {
+        "hp": {
+          "type": "integer",
+          "description": "HP bonus"
+        },
+        "mp": {
+          "type": "integer",
+          "description": "MP bonus"
+        },
+        "attack": {
+          "type": "integer",
+          "description": "Attack bonus"
+        },
+        "defense": {
+          "type": "integer",
+          "description": "Defense bonus"
+        },
+        "speed": {
+          "type": "integer",
+          "description": "Speed bonus"
+        },
+        "accuracy": {
+          "type": "integer",
+          "description": "Accuracy bonus"
+        },
+        "evasion": {
+          "type": "integer",
+          "description": "Evasion bonus"
+        }
+      },
+      "additionalProperties": false
+    },
+    "equipmentRequirements": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "Required level"
+        },
+        "job": {
+          "type": "string",
+          "description": "Required job"
+        },
+        "stats": {
+          "$ref": "#/definitions/equipmentStats"
+        }
+      },
+      "additionalProperties": false
+    },
+    "itemEffect": {
+      "type": "object",
+      "required": ["id", "type", "target", "value", "duration", "isPermanent", "stackable"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$",
+          "description": "Effect identifier"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "stat_boost",
+            "stat_reduction",
+            "hp_recovery",
+            "mp_recovery",
+            "status_cure",
+            "status_inflict",
+            "damage",
+            "shield"
+          ],
+          "description": "Effect type"
+        },
+        "target": {
+          "type": "string",
+          "enum": ["hp", "mp", "attack", "defense", "speed", "accuracy", "evasion", "status"],
+          "description": "Effect target"
+        },
+        "value": {
+          "type": "integer",
+          "description": "Effect value"
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Effect duration in turns (0 = instant)"
+        },
+        "isPermanent": {
+          "type": "boolean",
+          "description": "Is permanent effect"
+        },
+        "stackable": {
+          "type": "boolean",
+          "description": "Can stack with other effects"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
